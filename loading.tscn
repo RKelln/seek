@@ -1,0 +1,52 @@
+[gd_scene format=3 uid="uid://b5s2uoafrntnx"]
+
+[node name="GUI" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="ButtonContainer" type="VBoxContainer" parent="CenterContainer"]
+offset_left = 864.0
+offset_top = 507.0
+offset_right = 1055.0
+offset_bottom = 573.0
+
+[node name="ChooseImagesButton" type="Button" parent="CenterContainer/ButtonContainer"]
+offset_right = 191.0
+offset_bottom = 31.0
+text = "Choose image directory"
+
+[node name="LoadSequenceButton" type="Button" parent="CenterContainer/ButtonContainer"]
+offset_top = 35.0
+offset_right = 191.0
+offset_bottom = 66.0
+text = "Load sequence"
+
+[node name="LoadingContainer" type="VBoxContainer" parent="CenterContainer"]
+offset_left = 922.0
+offset_top = 511.0
+offset_right = 997.0
+offset_bottom = 568.0
+
+[node name="Loading" type="Label" parent="CenterContainer/LoadingContainer"]
+offset_right = 75.0
+offset_bottom = 26.0
+text = "Loading..."
+
+[node name="ProgressBar" type="ProgressBar" parent="CenterContainer/LoadingContainer"]
+offset_top = 30.0
+offset_right = 75.0
+offset_bottom = 57.0
+step = 1.0
+rounded = true
+
+[node name="ImagesFileDialog" type="FileDialog" parent="."]
+title = "Open a Directory"
+ok_button_text = "Select Current Folder"
+dialog_text = "Choose the folder containing the images to be loaded"
+dialog_hide_on_ok = true
+file_mode = 2
+access = 2
