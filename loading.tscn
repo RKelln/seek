@@ -1,52 +1,171 @@
-[gd_scene format=3 uid="uid://b5s2uoafrntnx"]
+[gd_scene load_steps=4 format=3 uid="uid://b5s2uoafrntnx"]
+
+[ext_resource type="Theme" uid="uid://tw57akexx0f2" path="res://GUI_theme.tres" id="1_cyymp"]
+[ext_resource type="Script" path="res://GUI.gd" id="2_yrso3"]
+[ext_resource type="Script" path="res://AnimationNamePopup.gd" id="3_byous"]
 
 [node name="GUI" type="Control"]
 anchor_right = 1.0
 anchor_bottom = 1.0
+theme = ExtResource("1_cyymp")
+script = ExtResource("2_yrso3")
+metadata/loadingContainer = NodePath("MainCenterContainer/LoadingContainer")
 
-[node name="CenterContainer" type="CenterContainer" parent="."]
+[node name="LoadingSprite2D" type="Sprite2D" parent="."]
+
+[node name="MainCenterContainer" type="CenterContainer" parent="."]
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+metadata/_edit_layout_mode = 1
 
-[node name="ButtonContainer" type="VBoxContainer" parent="CenterContainer"]
-offset_left = 864.0
-offset_top = 507.0
-offset_right = 1055.0
-offset_bottom = 573.0
+[node name="ActiveContainer" type="VBoxContainer" parent="MainCenterContainer"]
+offset_left = 884.0
+offset_top = 438.0
+offset_right = 1036.0
+offset_bottom = 642.0
+theme_override_constants/separation = 50
 
-[node name="ChooseImagesButton" type="Button" parent="CenterContainer/ButtonContainer"]
-offset_right = 191.0
+[node name="ButtonContainer" type="VBoxContainer" parent="MainCenterContainer/ActiveContainer"]
+offset_right = 152.0
+offset_bottom = 154.0
+size_flags_vertical = 3
+size_flags_stretch_ratio = 2.0
+theme_override_constants/separation = 10
+
+[node name="CreateImagePackButton" type="Button" parent="MainCenterContainer/ActiveContainer/ButtonContainer"]
+offset_right = 152.0
 offset_bottom = 31.0
-text = "Choose image directory"
+text = "Create Image Pack
+"
 
-[node name="LoadSequenceButton" type="Button" parent="CenterContainer/ButtonContainer"]
-offset_top = 35.0
-offset_right = 191.0
-offset_bottom = 66.0
+[node name="LoadPackButton" type="Button" parent="MainCenterContainer/ActiveContainer/ButtonContainer"]
+offset_top = 41.0
+offset_right = 152.0
+offset_bottom = 72.0
+text = "Load Image Pack"
+
+[node name="LoadSequenceButton" type="Button" parent="MainCenterContainer/ActiveContainer/ButtonContainer"]
+offset_top = 82.0
+offset_right = 152.0
+offset_bottom = 113.0
+disabled = true
 text = "Load sequence"
 
-[node name="LoadingContainer" type="VBoxContainer" parent="CenterContainer"]
+[node name="StartButton" type="Button" parent="MainCenterContainer/ActiveContainer/ButtonContainer"]
+offset_top = 123.0
+offset_right = 152.0
+offset_bottom = 154.0
+disabled = true
+text = "Start"
+
+[node name="PresetsHFlowContainer" type="HFlowContainer" parent="MainCenterContainer/ActiveContainer"]
+offset_top = 204.0
+offset_right = 152.0
+offset_bottom = 204.0
+size_flags_vertical = 10
+
+[node name="Panel" type="Panel" parent="MainCenterContainer/ActiveContainer/PresetsHFlowContainer"]
+
+[node name="Label" type="Label" parent="MainCenterContainer/ActiveContainer/PresetsHFlowContainer/Panel"]
+offset_right = 40.0
+offset_bottom = 23.0
+text = "This is just an example"
+
+[node name="LoadingContainer" type="VBoxContainer" parent="MainCenterContainer"]
+visible = false
 offset_left = 922.0
 offset_top = 511.0
 offset_right = 997.0
 offset_bottom = 568.0
 
-[node name="Loading" type="Label" parent="CenterContainer/LoadingContainer"]
+[node name="Loading" type="Label" parent="MainCenterContainer/LoadingContainer"]
 offset_right = 75.0
 offset_bottom = 26.0
 text = "Loading..."
 
-[node name="ProgressBar" type="ProgressBar" parent="CenterContainer/LoadingContainer"]
+[node name="ProgressBar" type="ProgressBar" parent="MainCenterContainer/LoadingContainer"]
 offset_top = 30.0
 offset_right = 75.0
 offset_bottom = 57.0
-step = 1.0
 rounded = true
 
 [node name="ImagesFileDialog" type="FileDialog" parent="."]
 title = "Open a Directory"
+size = Vector2i(2415, 600)
+min_size = Vector2i(600, 400)
 ok_button_text = "Select Current Folder"
 dialog_text = "Choose the folder containing the images to be loaded"
 dialog_hide_on_ok = true
 file_mode = 2
 access = 2
+
+[node name="SequenceFileDialog" type="FileDialog" parent="."]
+title = "Open a File"
+size = Vector2i(600, 600)
+min_size = Vector2i(600, 600)
+ok_button_text = "Open"
+file_mode = 0
+access = 2
+filters = PackedStringArray("*.txt", "*.seq")
+
+[node name="PackFileDialog" type="FileDialog" parent="."]
+title = "Open a File"
+size = Vector2i(600, 600)
+min_size = Vector2i(600, 600)
+ok_button_text = "Open"
+file_mode = 0
+access = 1
+filters = PackedStringArray("*.res")
+
+[node name="AnimationNamePopup" type="Popup" parent="."]
+title = "Choose a name for this series of images"
+size = Vector2i(400, 200)
+unresizable = false
+min_size = Vector2i(400, 200)
+max_size = Vector2i(1920, 1080)
+script = ExtResource("3_byous")
+
+[node name="NamePanel" type="Panel" parent="AnimationNamePopup"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_cyymp")
+
+[node name="NameVBoxContainer" type="VBoxContainer" parent="AnimationNamePopup/NamePanel"]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="NameChooseLabel" type="Label" parent="AnimationNamePopup/NamePanel/NameVBoxContainer"]
+offset_right = 284.0
+offset_bottom = 26.0
+size_flags_vertical = 0
+text = "Choose a name for this image series:"
+
+[node name="NameTextEdit" type="TextEdit" parent="AnimationNamePopup/NamePanel/NameVBoxContainer"]
+custom_minimum_size = Vector2(0, 40)
+offset_top = 30.0
+offset_right = 284.0
+offset_bottom = 70.0
+size_flags_vertical = 3
+hint_tooltip = "Enter the name of the image pack"
+placeholder_text = "Enter name here"
+caret_blink = true
+
+[node name="Button" type="Button" parent="AnimationNamePopup/NamePanel/NameVBoxContainer"]
+offset_top = 74.0
+offset_right = 284.0
+offset_bottom = 105.0
+text = "OK"
+
+[connection signal="pressed" from="MainCenterContainer/ActiveContainer/ButtonContainer/CreateImagePackButton" to="." method="_on_create_image_pack_button_pressed"]
+[connection signal="pressed" from="MainCenterContainer/ActiveContainer/ButtonContainer/LoadPackButton" to="." method="_on_load_pack_button_pressed"]
+[connection signal="pressed" from="MainCenterContainer/ActiveContainer/ButtonContainer/LoadSequenceButton" to="." method="_on_load_sequence_button_pressed"]
+[connection signal="pressed" from="MainCenterContainer/ActiveContainer/ButtonContainer/StartButton" to="." method="_on_start_button_pressed"]
+[connection signal="dir_selected" from="ImagesFileDialog" to="." method="_on_images_file_dialog_dir_selected"]
+[connection signal="file_selected" from="SequenceFileDialog" to="." method="_on_sequence_file_dialog_file_selected"]
+[connection signal="file_selected" from="PackFileDialog" to="." method="_on_pack_file_dialog_file_selected"]
+[connection signal="text_changed" from="AnimationNamePopup/NamePanel/NameVBoxContainer/NameTextEdit" to="AnimationNamePopup" method="_on_name_text_edit_text_changed"]
+[connection signal="pressed" from="AnimationNamePopup/NamePanel/NameVBoxContainer/Button" to="." method="_on_name_button_pressed"]

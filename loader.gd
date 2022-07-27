@@ -1,24 +1,29 @@
 extends Node
 
-var animation_name : String = "images"
-# '/media/storage/media/Datasets/nebula/'
-# '/media/storage/media/Datasets/cliff_waves/'
-# '/media/storage/media/Datasets/beach_trees/'
-# '/home/ryankelln/Documents/Projects/Gifts/Laura Soch/Birthday 2021/slideshow/food/rotated'
-# '/media/storage/media/Datasets/Alexandra/plant_stills_hd'
-var image_dir : String = '/media/storage/media/Datasets/Alexandra/plant_stills_hd/'
-var saved_images_path : String = 'user://test_godot4_framedata_plant_stills_hd_1994.res'
-var saved_sequence : String = 'plant_stills_2k_sequence_1222.txt'
-var file_list_path : String = '' #'seasons_filelist.txt'
-var compress := true
-var max_images : int = 0
-var max_image_size := Vector2(1920, 1080)
-var stretch := true
+#var animation_name : String = "images"
+## '/media/storage/media/Datasets/nebula/'
+## '/media/storage/media/Datasets/cliff_waves/'
+## '/media/storage/media/Datasets/beach_trees/'
+## '/home/ryankelln/Documents/Projects/Gifts/Laura Soch/Birthday 2021/slideshow/food/rotated'
+## '/media/storage/media/Datasets/Alexandra/plant_stills_hd'
+#var default_image_dir : String = '/media/storage/media/Datasets/Alexandra/plant_stills_hd/'
+#var saved_images_path : String = 'user://test_godot4_framedata_plant_stills_hd_1994.res'
+#var saved_sequence : String = 'plant_stills_2k_sequence_1222.txt'
+#var file_list_path : String = '' #'seasons_filelist.txt'
+#var compress := true
+#var default_max_images : int = 0
+#var max_image_size := Vector2(1920, 1080)
+#var default_stretch := true
 
-var _currently_loading_filepath : String
+#var _currently_loading_filepath : String
 
+# actually used
+var image_files
+var images
+var imagesScene
 
-signal loading_status_change
+var default_image_compression = 0.7
+
 
 # https://godotengine.org/qa/5175/how-to-get-all-the-files-inside-a-folder
 func get_dir_contents(rootPath: String, extensions : Array = ["png", "jpg", "jpeg", "webp"]) -> Array:
@@ -60,7 +65,7 @@ func _add_dir_contents(dir: Directory, files: Array, directories: Array, extensi
 		file_name = dir.get_next()
 
 
-func _load_sequence(filename) -> PackedInt32Array:
+func load_sequence_file(filename) -> PackedInt32Array:
 	var data = PackedInt32Array()
 	
 	for line in _load_text_file(filename):
@@ -91,49 +96,38 @@ func _get_new_size(container_size, object_size) -> Vector2i:
 	return Vector2i( int(ratio * object_size.x), int( ratio * object_size.y) )
 
 
-func load_image(image_path: String) -> Image:
-	var image = Image.new()
-	
-	if image.load(image_path) != OK:
-		printerr("Failed to load:", image_path)
-		image.create(1920, 1080, false, Image.FORMAT_RGB8) # FORMAT_RGB8 or FORMAT_ETC2_RGB8
-	
-	assert(image is Image)
+func load_image(image_path: String, compress : float = default_image_compression) -> Image:
+	var image = Image.load_from_file(image_path)
+	assert(image != null and image is Image)
 	
 	# resize to max HD
 #	if image.x > max_image_size.x or image.y > max_image_size.y:
 #		var image_size = _get_new_size(Vector2(1920,1080), image.get_size())
 #		image.resize(image_size.x, image_size.y, Image.INTERPOLATE_CUBIC)
 	
-	#print("compressed: ", image.is_compressed())
-	#image.lock()
-	if compress:
-		image.compress(Image.COMPRESS_S3TC, Image.COMPRESS_SOURCE_SRGB, 0.7)
-	#print("compressed: ", image.is_compressed())
+	if not image.is_compressed() and compress > 0:
+		image.compress(Image.COMPRESS_S3TC, Image.COMPRESS_SOURCE_SRGB, compress)
+		
 	return image
 
 
-func load_texture(file_path : String) -> Texture:
+func load_texture(file_path : String, rescale : Vector2 = Vector2.ZERO) -> Texture:
 	var texture : Texture
 	if file_path.begins_with('res://'):
 		texture = load(file_path)
 	else: # load from external file
-		var img = load_image(file_path)
-		texture = ImageTexture.new()
-		texture.create_from_image(img)
-		#print(texture.get_format())
+		texture = ImageTexture.create_from_image(load_image(file_path))
+		print(texture.get_format(), texture.get_size())
 		assert(texture is ImageTexture)
 		
-		if stretch:
+		if rescale != Vector2.ZERO:
 			if texture.get_width() < texture.get_height(): # portrait
-				var viewscale = get_viewport().size.y / texture.get_height()
+				var viewscale = rescale.y / texture.get_height()
 				if viewscale != 1.0:
-					# stech height to viewport height
 					texture.set_size_override(Vector2(texture.get_width() * viewscale, texture.get_height() * viewscale))
 			else: # landscape
-				var viewscale = get_viewport().size.x / texture.get_width()
+				var viewscale = rescale.x / texture.get_width()
 				if viewscale != 1.0:
-					# stech height to viewport height
 					texture.set_size_override(Vector2(texture.get_width() * viewscale, texture.get_height() * viewscale))
 	return texture
 
@@ -166,7 +160,8 @@ func _parse_JSON(json_file) -> Array:
 		print("JSON Parse Error: ", json.get_error_message(), " in ", json_string, " at line ", json.get_error_line())
 	
 	return Array()
-
+	
+	
 func _init_node(nodeOrPath, defaultPath) -> Node:
 	if nodeOrPath is Node:
 		return nodeOrPath
@@ -175,73 +170,107 @@ func _init_node(nodeOrPath, defaultPath) -> Node:
 	else:
 		return get_parent().find_child(defaultPath)
 
+
+func load_image_dir(animation_name, image_dir, max_images : int = 0, rescale : Vector2 = Vector2.ZERO ) -> Node:
+	image_files = get_dir_contents(image_dir)[0]
+	print("Found %d images in %s" % [image_files.size(), image_dir])
+	assert(image_files.size() > 0)
+	image_files.sort()
+	if max_images > 0 and image_files.size() > max_images:
+		image_files.resize(max_images) # take start of list only up to max_size
+	
+	var texture_loader = func(image_file):
+		return load_texture(image_file, rescale)
+	
+	images.create_frames(image_files, animation_name, texture_loader)
+	
+	return images
+
+
+func load_images(animation_name, image_files, max_images : int = 0, rescale : Vector2 = Vector2.ZERO ) -> Node:
+	image_files.sort()
+	if max_images > 0 and image_files.size() > max_images:
+		image_files.resize(max_images) # take start of list only up to max_size
+	
+	var texture_loader = func(image_file):
+		return load_texture(image_file, rescale)
+	
+	images.create_frames(image_files, animation_name, texture_loader)
+	
+	return images
+
+
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	# get images
-	var imagesScene := preload("res://images.tscn")
-	var images := imagesScene.instantiate()
+	imagesScene = load("res://images.tscn")
+	images = imagesScene.instantiate()
 	
-	var start := Time.get_ticks_msec()
-	
-	if saved_images_path == "":
-		var image_files = get_dir_contents(image_dir)[0]
-		print("Found %d images in %s" % [image_files.size(), image_dir])
-		assert(image_files.size() > 0)
-		image_files.sort()
-		if max_images > 0 and image_files.size() > max_images:
-			image_files.resize(max_images) # take start of list only up to max_size
-		print("Image file list (sec): ", (Time.get_ticks_msec() - start) / 1000.0)
-	
-		# loadimage data and check files match
-		if file_list_path != "":
-			var file_list := _load_text_file(file_list_path)
-			if max_images > 0 and file_list.size() > max_images:
-				file_list.resize(max_images) # take start of list only up to max_size
-			for i in image_files.size():
-				assert(image_files[i].get_file() == file_list[i])
-
-
-		var last_folder = image_dir.rsplit("/", false, 1)[1]
-		last_folder = last_folder.validate_node_name().to_lower() # remove junk and lower
-		var file_format = "user://test_godot4_framedata_%s_%d.res"
-		_currently_loading_filepath = file_format % [last_folder, image_files.size()]
-	else:
-		_currently_loading_filepath = saved_images_path
-		
-	if ResourceLoader.exists(_currently_loading_filepath):
-		print("Loading previously created data: ", _currently_loading_filepath)
-		start = Time.get_ticks_msec()
-		images.set_sprite_frames(ResourceLoader.load(_currently_loading_filepath))
-		#ResourceLoader.load_threaded_request(_currently_loading_filepath, "SpriteFrames")
-		assert(images.frames is SpriteFrames)
-		print("Loading time (sec): ", (Time.get_ticks_msec() - start) / 1000.0 )
-	else:
-		images.frames = SpriteFrames.new()
-	
-	if not ResourceLoader.exists(_currently_loading_filepath):
-		print("Saving: ", _currently_loading_filepath)
-		start = Time.get_ticks_msec()
-		var result := ResourceSaver.save(_currently_loading_filepath, images.frames, ResourceSaver.FLAG_CHANGE_PATH | ResourceSaver.FLAG_BUNDLE_RESOURCES)
-		assert(result == OK)
-		print("Saving time (sec): ", (Time.get_ticks_msec() - start) / 1000.0 )
+#	var start := Time.get_ticks_msec()
+#
+#	if saved_images_path == "":
+#		var image_files = get_dir_contents(image_dir)[0]
+#		print("Found %d images in %s" % [image_files.size(), image_dir])
+#		assert(image_files.size() > 0)
+#		image_files.sort()
+#		if max_images > 0 and image_files.size() > max_images:
+#			image_files.resize(max_images) # take start of list only up to max_size
+#		print("Image file list (sec): ", (Time.get_ticks_msec() - start) / 1000.0)
+#
+#		# loadimage data and check files match
+#		if file_list_path != "":
+#			var file_list := _load_text_file(file_list_path)
+#			if max_images > 0 and file_list.size() > max_images:
+#				file_list.resize(max_images) # take start of list only up to max_size
+#			for i in image_files.size():
+#				assert(image_files[i].get_file() == file_list[i])
+#
+#
+#		var last_folder = image_dir.rsplit("/", false, 1)[1]
+#		last_folder = last_folder.validate_node_name().to_lower() # remove junk and lower
+#		var file_format = "user://test_godot4_framedata_%s_%d.res"
+#		_currently_loading_filepath = file_format % [last_folder, image_files.size()]
+#	else:
+#		_currently_loading_filepath = saved_images_path
+#
+#	if ResourceLoader.exists(_currently_loading_filepath):
+#		print("Loading previously created data: ", _currently_loading_filepath)
+#		start = Time.get_ticks_msec()
+#		images.set_sprite_frames(ResourceLoader.load(_currently_loading_filepath))
+#		#ResourceLoader.load_threaded_request(_currently_loading_filepath, "SpriteFrames")
+#		assert(images.frames is SpriteFrames)
+#		print("Loading time (sec): ", (Time.get_ticks_msec() - start) / 1000.0 )
+#	else:
+#		images.frames = SpriteFrames.new()
+#
+#	if not ResourceLoader.exists(_currently_loading_filepath):
+#		print("Saving: ", _currently_loading_filepath)
+#		start = Time.get_ticks_msec()
+#		var result := ResourceSaver.save(_currently_loading_filepath, images.frames, ResourceSaver.FLAG_CHANGE_PATH | ResourceSaver.FLAG_BUNDLE_RESOURCES)
+#		assert(result == OK)
+#		print("Saving time (sec): ", (Time.get_ticks_msec() - start) / 1000.0 )
 	
 	#call_deferred("_print_graphics_memory")
 	
-	var main = get_node("/root/Main")
-	main.add_child(images)
+#	var main = get_node("/root/Main")
+#	main.add_child(images)
 	
-	# create custom animation
-	if saved_sequence != "" and saved_sequence.is_valid_filename() and saved_sequence.get_file() != "":
-		var sequence = _load_sequence(saved_sequence)
-		assert(sequence.size() > 0)
-		print("Using sequence from", saved_sequence)
-		# create new animation
-		var custom_animation = "custom_" + saved_sequence.get_basename()
-		images.add_sequence(custom_animation, sequence)
-		images.custom_animation = custom_animation
-		images.play(custom_animation)
-#		create_animation(custom_animation, sequence)
-#		_active_animation = custom_animation
+#	# create custom animation
+#	if saved_sequence != "" and saved_sequence.is_valid_filename() and saved_sequence.get_file() != "":
+#		var file = File.new()
+#		if not file.file_exists(saved_sequence):
+#			print("File not found")
+#			return
+#
+#		var sequence = _load_sequence(saved_sequence)
+#		assert(sequence.size() > 0)
+#		print("Using sequence from", saved_sequence)
+#		# create new animation
+#		var custom_animation = "custom_" + saved_sequence.get_basename()
+#		images.add_sequence(custom_animation, sequence)
+#		images.custom_animation = custom_animation
+#		images.play(custom_animation)
+##		create_animation(custom_animation, sequence)
+##		_active_animation = custom_animation
 #
 	
 #	else:

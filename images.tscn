@@ -1,12 +1,16 @@
-[gd_scene load_steps=2 format=3 uid="uid://btvxvr36m31xm"]
+[gd_scene load_steps=3 format=3 uid="uid://btvxvr36m31xm"]
 
 [ext_resource type="Script" path="res://AnimatedImage.gd" id="1_4ai3v"]
+[ext_resource type="Script" path="res://images.gd" id="1_bypof"]
 
-[node name="Images" type="AnimatedSprite2D"]
+[node name="Images" type="Node2D"]
+script = ExtResource("1_bypof")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 offset = Vector2(960, 540)
 script = ExtResource("1_4ai3v")
 
 [node name="PrevImage" type="Sprite2D" parent="."]
 offset = Vector2(960, 540)
 
-[connection signal="frame_changed" from="." to="." method="_on_images_frame_changed"]
+[connection signal="frame_changed" from="AnimatedSprite2D" to="." method="_on_animated_sprite_2d_frame_changed"]

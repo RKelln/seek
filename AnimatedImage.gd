@@ -1,17 +1,17 @@
 extends AnimatedSprite2D
 
-var base_animation_name : String = "images"
+var base_animation_name : String = "default"
 # '/media/storage/media/Datasets/nebula/'
 # '/media/storage/media/Datasets/cliff_waves/'
 # '/media/storage/media/Datasets/beach_trees/'
 # '/home/ryankelln/Documents/Projects/Gifts/Laura Soch/Birthday 2021/slideshow/food/rotated'
 # '/media/storage/media/Datasets/Alexandra/plant_stills_hd'
-var image_dir : String = '/media/storage/media/Datasets/Alexandra/plant_stills_hd'
-var saved_sequence : String = 'plant_stills_2k_hash_sequence_144179.txt'
-var file_list_path : String = '' #'seasons_filelist.txt'
+#var image_dir : String = '/media/storage/media/Datasets/Alexandra/plant_stills_hd'
+#var saved_sequence : String = 'plant_stills_2k_hash_sequence_144179.txt'
+#var file_list_path : String = '' #'seasons_filelist.txt'
 var compress := true
-var max_images : int = 0
-var max_image_size := Vector2(1920, 1080)
+#var max_images : int = 0
+#var max_image_size := Vector2(1920, 1080)
 
 var speed := 1.0
 var fps := 30
@@ -23,72 +23,50 @@ var seq_frame : int = 0
 var custom_animation : String
 var paused : bool = false
 
-var _frame_count := 0
+var save_path : String
+var frame_counts : Dictionary
+
 var _backwards := false
-var _prevTexture : Texture2D
-var _anim_fps : float  # stores animation fps (only done when animation starts)
-	
-@export_node_path(Label) var _frameNode
-@export_node_path(Label) var _totalFramesNode
-@export_node_path(Label) var _actualFrameNode
-@export_node_path(Label) var _runningTotalFramesNode
+var _anim_fps : float
 
-
-
-func load_image(image_path: String) -> Image:
-	var image = Image.new()
-	
-	if image.load(image_path) != OK:
-		printerr("Failed to load:", image_path)
-		image.create(1920, 1080, false, Image.FORMAT_RGB8) # FORMAT_RGB8 or FORMAT_ETC2_RGB8
-	
-	assert(image is Image)
-	
-	# resize to max HD
-#	if image.x > max_image_size.x or image.y > max_image_size.y:
-#		var image_size = _get_new_size(Vector2(1920,1080), image.get_size())
-#		image.resize(image_size.x, image_size.y, Image.INTERPOLATE_CUBIC)
-	
-	#print("compressed: ", image.is_compressed())
-	#image.lock()
-	if compress:
-		image.compress(Image.COMPRESS_S3TC, Image.COMPRESS_SOURCE_SRGB, 0.7)
-	#print("compressed: ", image.is_compressed())
-	return image
-
-
-func load_texture(file_path : String) -> Texture:
-	var texture : Texture
-	if file_path.begins_with('res://'):
-		texture = load(file_path)
-	else: # load from external file
-		var img = load_image(file_path)
-		texture = ImageTexture.new()
-		texture.create_from_image(img)
-		#print(texture.get_format())
-		assert(texture is ImageTexture)
-		
-		if stretch:
-			if texture.get_width() < texture.get_height(): # portrait
-				var viewscale = get_viewport().size.y / texture.get_height()
-				if viewscale != 1.0:
-					# stech height to viewport height
-					texture.set_size_override(Vector2(texture.get_width() * viewscale, texture.get_height() * viewscale))
-			else: # landscape
-				var viewscale = get_viewport().size.x / texture.get_width()
-				if viewscale != 1.0:
-					# stech height to viewport height
-					texture.set_size_override(Vector2(texture.get_width() * viewscale, texture.get_height() * viewscale))
-	return texture
-
-
-func create_frames(spriteframes: SpriteFrames, image_paths: Array, animationName : String) -> void:
+func create_frames(image_paths: Array, animation_name : String, loaderFn) -> void:
 	var start := Time.get_ticks_msec()
+	if frames == null:
+		frames = SpriteFrames.new()
+	if not frames.get_animation_names().has(animation_name):
+		frames.add_animation(animation_name)
+		
 	for image_path in image_paths:
 		#print("Loading ", image_path)
-		spriteframes.add_frame(animationName, load_texture(image_path))
-		_frame_count += 1
+		frames.add_frame(animation_name, loaderFn.call(image_path))
+		frame_counts[animation_name] += 1
 	print("Loading time (sec): ", (Time.get_ticks_msec() - start) / 1000.0 )
+
+
+func create_frames_timed(image_paths: Array, animation_name : String, loaderFn, max_duration_ms : float) -> void:
+	if frames == null:
+		frames = SpriteFrames.new()
+	if not frames.get_animation_names().has(animation_name):
+		frames.add_animation(animation_name)
+		frame_counts[animation_name] = 0
+	
+	var count = 0
+	var start = Time.get_ticks_msec()
+	var duration = 0.0
+	for image_path in image_paths:
+		count += 1
+		if count <= frame_counts[animation_name]: continue
+		print("Loading ", image_path)
+		frames.add_frame(animation_name, Loader.load_texture(image_path))
+		var f = frames.get_frame(animation_name, frame_counts[animation_name])
+		print(f, f.get_size())
+		frame_counts[animation_name] += 1
+		duration = (Time.get_ticks_msec() - start)
+		if duration >= max_duration_ms:
+			break
+	print("Loading time (msec): ", duration)
+
+
 
 
 #func create_animation( animationName : String, sequenceArray : PackedInt32Array) -> void:
@@ -102,18 +80,12 @@ func create_frames(spriteframes: SpriteFrames, image_paths: Array, animationName
 #			frames.add_frame(animationName, frames.get_frame(base_animation_name, i))
 #
 
-func _init_node(nodeOrPath, defaultPath) -> Node:
-	if nodeOrPath is Node:
-		return nodeOrPath
-	elif nodeOrPath is NodePath:
-		return get_node(nodeOrPath)
-	else:
-		return get_parent().find_child(defaultPath)
 
 
-func add_sequence(animation_name, sequence : PackedInt32Array, fps=30.) -> void:
+
+func add_sequence(animation_name, sequence : PackedInt32Array, default_fps=30.) -> void:
 	frames.add_animation(animation_name)
-	frames.set_animation_speed(animation_name, fps)
+	frames.set_animation_speed(animation_name, default_fps)
 	frames.set_animation_loop(animation_name, true)
 	sequences[animation_name] = Array()
 	
@@ -153,46 +125,98 @@ func change_animation(requested_animation : String) -> void:
 	animation = requested_animation
 	current_sequence = sequences[animation]
 	_anim_fps = frames.get_animation_speed(animation)
-	
-	
+
+
+func save_frames(file_path : String) -> int:
+	save_path = file_path
+	print("Saving: ", file_path)
+	var start := Time.get_ticks_msec()
+	print(frames)
+	var result := ResourceSaver.save(file_path, frames, ResourceSaver.FLAG_CHANGE_PATH | ResourceSaver.FLAG_BUNDLE_RESOURCES)
+	print("Saving time (sec): ", (Time.get_ticks_msec() - start) / 1000.0 )
+	for anim in frames.get_animation_names():
+		for i in range(frames.get_frame_count(anim)):
+			var frame = frames.get_frame(anim, i)
+			print(i, frame, frame.get_size())
+	return result
+
+
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	_frameNode = _init_node(_frameNode, "Frame")
-	_totalFramesNode = _init_node(_totalFramesNode, "TotalFrames")
-	_actualFrameNode = _init_node(_actualFrameNode, "ActualFrame")
-	_runningTotalFramesNode = _init_node(_runningTotalFramesNode, "RunningTotal")
-
+	var animations = frames.get_animation_names()
+	if animations.size() == 0:
+		print("No animations!")
+	
 	# set up base sequence if it doesn't already exist 
 	# assume animation images in order
-	if base_animation_name not in sequences:
-		sequences[base_animation_name] = range(frames.get_frame_count(base_animation_name))
+	for animation_name in animations:
+		if animation_name not in frame_counts or frame_counts[animation_name] <= 0:
+			# something has gone wrong
+			frame_counts[animation_name] = frames.get_frame_count(animation_name)
+		if frame_counts[animation_name] > 0:
+			animation = animation_name
+			if animation_name not in sequences:
+				print("No sequence for animation: ", animation_name)
+				sequences[animation_name] = range(frame_counts[animation_name])
+
+	print("Animations: ", animations)
+	print("Current animation: ", animation)
+	print("Frame count: ", frame_counts[animation])
 
 	change_animation(animation)
 	play(animation)
 	paused = false
 
 
+#func rescale_images():
+#	if stretch:
+#		var viewsize : Vector2 = get_viewport().size
+#		var framesize := frames.get_frame(animation, frame).get_size()
+#		var viewscale : float = min( viewsize.x / framesize.x, viewsize.y / framesize.y)
+#		if viewscale != 1.0:
+#			scale = Vector2(viewscale, viewscale)
+
+
+func next_animation(inc : int) -> StringName:
+	var anim_names = frames.get_animation_names()
+	var i = anim_names.find(animation)
+	for anim in anim_names: # loop maximum of once
+		i = fposmod(i + inc, anim_names.size())
+		if frame_counts[anim_names[i]] > 0: # skip animations with no frames
+			return StringName(anim_names[i])
+	return animation
+
+
+func get_frame_duration() -> float:
+	return (1.0 / _anim_fps) / speed_scale
+
+
+func get_current_frame() -> Texture2D:
+	return frames.get_frame(animation, frame)
+
+
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta):
 	if frames == null: return
 	
-	_frame_count = frames.get_frame_count(animation)
-	if _frame_count == 0:
+	var frame_count = frame_counts[animation]
+	if frame_count == 0:
 		return
 		
-	if stretch:
+	# slows things down but if iamges are all different sizes this can make them appear more similar
+	if stretch: # per frame
 		var viewsize : Vector2 = get_viewport().size
-		var framesize := frames.get_frame(base_animation_name, frame).get_size()
+		var framesize := frames.get_frame(animation, frame).get_size()
 		var viewscale : float = min( viewsize.x / framesize.x, viewsize.y / framesize.y)
 		if viewscale != 1.0:
 			scale = Vector2(viewscale, viewscale)
+			# bug in godot 4 requires offset adjustment?
+			offset = Vector2(viewsize.x * (1.0 / viewscale) / 2.0,  viewsize.y * (1.0 / viewscale) / 2.0)
+			#print(framesize, viewscale, scale, offset)
 	
 	if Input.is_action_just_pressed('next_animation'):
-		if animation == base_animation_name:
-			change_animation(custom_animation)
-		else:
-			change_animation(base_animation_name)
-	
+		change_animation(next_animation(1))
+
 	if Input.is_action_just_pressed("playtoggle"):
 		if playing:
 			stop()
@@ -219,14 +243,14 @@ func _process(_delta):
 	
 	if Input.is_action_just_pressed("skip_forward"):
 		if playing:
-			frame = fposmod(frame + frame_skip, _frame_count)
+			frame = fposmod(frame + frame_skip, frame_count)
 		else:
-			frame = fposmod(frame + 1, _frame_count)
+			frame = fposmod(frame + 1, frame_count)
 	elif Input.is_action_just_pressed("skip_backward"):
 		if playing:
-			frame = fposmod(frame - frame_skip, _frame_count)
+			frame = fposmod(frame - frame_skip, frame_count)
 		else:
-			frame = fposmod(frame - 1, _frame_count)
+			frame = fposmod(frame - 1, frame_count)
 	if Input.is_action_pressed("fast_forward"):
 		speed_scale = 2 * speed
 		play(animation, false)
@@ -241,37 +265,5 @@ func _process(_delta):
 			play(animation, _backwards)
 	
 	if Input.is_action_just_pressed("random"):
-		frame = randi() % _frame_count
+		frame = randi() % frame_count
 
-
-func _on_images_frame_changed():
-	# update GUI
-	_frameNode.text = str(frame)
-	if animation == custom_animation:
-		_actualFrameNode.text = str(current_sequence[frame])
-	else:
-		_actualFrameNode.text = str(frame)
-	_runningTotalFramesNode.text = str( _runningTotalFramesNode.text.to_int() + 1)
-	_totalFramesNode.text = str(_frame_count)
-	
-	# update crossfade
-	# https://stackoverflow.com/questions/68765045/tween-the-texture-on-a-texturebutton-texturerect-fade-out-image1-while-simult
-	#$CrossfadeImage.material.set_shader_param("startTime", Time.get_ticks_msec() / 1000.0)
-	#$CrossfadeImage.material.set_shader_param("duration", speed_scale / fps)
-	#$CrossfadeImage.material.set_shader_param("prevTex", $CrossfadeImage.material.get_shader_param("curTex"))
-	#$CrossfadeImage.material.set_shader_param("curTex", frames.get_frame(animation, frame))
-	
-	
-	if _prevTexture != null:
-		$PrevImage.texture = _prevTexture
-	_prevTexture = frames.get_frame(animation, frame)
-	if $PrevImage.texture != null:
-		var duration = (1.0 / _anim_fps) / speed_scale
-		# HACK: when duration is low then start more transparent
-		var from = clampf(duration * 2.0, 0.5, 1.0) 
-		if duration > 0.042: # 24 fps
-			$PrevImage.visible = true
-			var tween = get_tree().create_tween()
-			tween.tween_property($PrevImage, "modulate:a", 0.0, duration).from(from)
-		else:
-			$PrevImage.visible = false

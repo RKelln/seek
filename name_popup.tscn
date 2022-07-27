@@ -1,0 +1,40 @@
+[gd_scene load_steps=2 format=3 uid="uid://dpk7vxd8br7xd"]
+
+[ext_resource type="Theme" uid="uid://tw57akexx0f2" path="res://GUI_theme.tres" id="1_b224n"]
+
+[node name="NameControl" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="NamePanel" type="Panel" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_b224n")
+
+[node name="NameVBoxContainer" type="VBoxContainer" parent="NamePanel"]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="NameChooseLabel" type="Label" parent="NamePanel/NameVBoxContainer"]
+offset_right = 284.0
+offset_bottom = 26.0
+size_flags_vertical = 0
+text = "Choose a name for this image series:"
+
+[node name="NameTextEdit" type="TextEdit" parent="NamePanel/NameVBoxContainer"]
+custom_minimum_size = Vector2(0, 40)
+offset_top = 30.0
+offset_right = 284.0
+offset_bottom = 70.0
+size_flags_vertical = 3
+hint_tooltip = "Enter the name of the image pack"
+placeholder_text = "Enter name here"
+caret_blink = true
+
+[node name="Button" type="Button" parent="NamePanel/NameVBoxContainer"]
+offset_top = 74.0
+offset_right = 284.0
+offset_bottom = 105.0
+text = "OK"
