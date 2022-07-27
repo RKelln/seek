@@ -43,7 +43,7 @@ func create_frames(image_paths: Array, animation_name : String, loaderFn) -> voi
 	print("Loading time (sec): ", (Time.get_ticks_msec() - start) / 1000.0 )
 
 
-func create_frames_timed(image_paths: Array, animation_name : String, loaderFn, max_duration_ms : float) -> void:
+func create_frames_timed(image_paths: Array, animation_name : String, loaderFn, max_duration_ms : float) -> Texture2D:
 	if frames == null:
 		frames = SpriteFrames.new()
 	if not frames.get_animation_names().has(animation_name):
@@ -53,18 +53,21 @@ func create_frames_timed(image_paths: Array, animation_name : String, loaderFn, 
 	var count = 0
 	var start = Time.get_ticks_msec()
 	var duration = 0.0
+	var tex : Texture2D
 	for image_path in image_paths:
 		count += 1
 		if count <= frame_counts[animation_name]: continue
-		print("Loading ", image_path)
-		frames.add_frame(animation_name, Loader.load_texture(image_path))
+		#print("Loading ", image_path)
+		tex = Loader.load_texture(image_path)
+		frames.add_frame(animation_name, tex)
 		var f = frames.get_frame(animation_name, frame_counts[animation_name])
-		print(f, f.get_size())
+		#print(f, f.get_size())
 		frame_counts[animation_name] += 1
 		duration = (Time.get_ticks_msec() - start)
 		if duration >= max_duration_ms:
 			break
-	print("Loading time (msec): ", duration)
+	#print("Loading time (msec): ", duration)
+	return tex
 
 
 
@@ -79,8 +82,6 @@ func create_frames_timed(image_paths: Array, animation_name : String, loaderFn, 
 #		if i < max_frame:
 #			frames.add_frame(animationName, frames.get_frame(base_animation_name, i))
 #
-
-
 
 
 func add_sequence(animation_name, sequence : PackedInt32Array, default_fps=30.) -> void:
@@ -131,13 +132,8 @@ func save_frames(file_path : String) -> int:
 	save_path = file_path
 	print("Saving: ", file_path)
 	var start := Time.get_ticks_msec()
-	print(frames)
 	var result := ResourceSaver.save(file_path, frames, ResourceSaver.FLAG_CHANGE_PATH | ResourceSaver.FLAG_BUNDLE_RESOURCES)
 	print("Saving time (sec): ", (Time.get_ticks_msec() - start) / 1000.0 )
-	for anim in frames.get_animation_names():
-		for i in range(frames.get_frame_count(anim)):
-			var frame = frames.get_frame(anim, i)
-			print(i, frame, frame.get_size())
 	return result
 
 

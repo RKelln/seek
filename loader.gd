@@ -1,23 +1,5 @@
 extends Node
 
-#var animation_name : String = "images"
-## '/media/storage/media/Datasets/nebula/'
-## '/media/storage/media/Datasets/cliff_waves/'
-## '/media/storage/media/Datasets/beach_trees/'
-## '/home/ryankelln/Documents/Projects/Gifts/Laura Soch/Birthday 2021/slideshow/food/rotated'
-## '/media/storage/media/Datasets/Alexandra/plant_stills_hd'
-#var default_image_dir : String = '/media/storage/media/Datasets/Alexandra/plant_stills_hd/'
-#var saved_images_path : String = 'user://test_godot4_framedata_plant_stills_hd_1994.res'
-#var saved_sequence : String = 'plant_stills_2k_sequence_1222.txt'
-#var file_list_path : String = '' #'seasons_filelist.txt'
-#var compress := true
-#var default_max_images : int = 0
-#var max_image_size := Vector2(1920, 1080)
-#var default_stretch := true
-
-#var _currently_loading_filepath : String
-
-# actually used
 var image_files
 var images
 var imagesScene
@@ -117,7 +99,6 @@ func load_texture(file_path : String, rescale : Vector2 = Vector2.ZERO) -> Textu
 		texture = load(file_path)
 	else: # load from external file
 		texture = ImageTexture.create_from_image(load_image(file_path))
-		print(texture.get_format(), texture.get_size())
 		assert(texture is ImageTexture)
 		
 		if rescale != Vector2.ZERO:
@@ -204,79 +185,6 @@ func load_images(animation_name, image_files, max_images : int = 0, rescale : Ve
 func _ready():
 	imagesScene = load("res://images.tscn")
 	images = imagesScene.instantiate()
-	
-#	var start := Time.get_ticks_msec()
-#
-#	if saved_images_path == "":
-#		var image_files = get_dir_contents(image_dir)[0]
-#		print("Found %d images in %s" % [image_files.size(), image_dir])
-#		assert(image_files.size() > 0)
-#		image_files.sort()
-#		if max_images > 0 and image_files.size() > max_images:
-#			image_files.resize(max_images) # take start of list only up to max_size
-#		print("Image file list (sec): ", (Time.get_ticks_msec() - start) / 1000.0)
-#
-#		# loadimage data and check files match
-#		if file_list_path != "":
-#			var file_list := _load_text_file(file_list_path)
-#			if max_images > 0 and file_list.size() > max_images:
-#				file_list.resize(max_images) # take start of list only up to max_size
-#			for i in image_files.size():
-#				assert(image_files[i].get_file() == file_list[i])
-#
-#
-#		var last_folder = image_dir.rsplit("/", false, 1)[1]
-#		last_folder = last_folder.validate_node_name().to_lower() # remove junk and lower
-#		var file_format = "user://test_godot4_framedata_%s_%d.res"
-#		_currently_loading_filepath = file_format % [last_folder, image_files.size()]
-#	else:
-#		_currently_loading_filepath = saved_images_path
-#
-#	if ResourceLoader.exists(_currently_loading_filepath):
-#		print("Loading previously created data: ", _currently_loading_filepath)
-#		start = Time.get_ticks_msec()
-#		images.set_sprite_frames(ResourceLoader.load(_currently_loading_filepath))
-#		#ResourceLoader.load_threaded_request(_currently_loading_filepath, "SpriteFrames")
-#		assert(images.frames is SpriteFrames)
-#		print("Loading time (sec): ", (Time.get_ticks_msec() - start) / 1000.0 )
-#	else:
-#		images.frames = SpriteFrames.new()
-#
-#	if not ResourceLoader.exists(_currently_loading_filepath):
-#		print("Saving: ", _currently_loading_filepath)
-#		start = Time.get_ticks_msec()
-#		var result := ResourceSaver.save(_currently_loading_filepath, images.frames, ResourceSaver.FLAG_CHANGE_PATH | ResourceSaver.FLAG_BUNDLE_RESOURCES)
-#		assert(result == OK)
-#		print("Saving time (sec): ", (Time.get_ticks_msec() - start) / 1000.0 )
-	
-	#call_deferred("_print_graphics_memory")
-	
-#	var main = get_node("/root/Main")
-#	main.add_child(images)
-	
-#	# create custom animation
-#	if saved_sequence != "" and saved_sequence.is_valid_filename() and saved_sequence.get_file() != "":
-#		var file = File.new()
-#		if not file.file_exists(saved_sequence):
-#			print("File not found")
-#			return
-#
-#		var sequence = _load_sequence(saved_sequence)
-#		assert(sequence.size() > 0)
-#		print("Using sequence from", saved_sequence)
-#		# create new animation
-#		var custom_animation = "custom_" + saved_sequence.get_basename()
-#		images.add_sequence(custom_animation, sequence)
-#		images.custom_animation = custom_animation
-#		images.play(custom_animation)
-##		create_animation(custom_animation, sequence)
-##		_active_animation = custom_animation
-#
-	
-#	else:
-#		_active_animation = animation_name
-
-	
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.

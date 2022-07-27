@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://b5s2uoafrntnx"]
+[gd_scene load_steps=5 format=3 uid="uid://b5s2uoafrntnx"]
 
 [ext_resource type="Theme" uid="uid://tw57akexx0f2" path="res://GUI_theme.tres" id="1_cyymp"]
 [ext_resource type="Script" path="res://GUI.gd" id="2_yrso3"]
 [ext_resource type="Script" path="res://AnimationNamePopup.gd" id="3_byous"]
+[ext_resource type="PackedScene" uid="uid://dxto0v81phx8o" path="res://pack_info_panel.tscn" id="3_v5tgv"]
 
 [node name="GUI" type="Control"]
 anchor_right = 1.0
@@ -12,6 +13,8 @@ script = ExtResource("2_yrso3")
 metadata/loadingContainer = NodePath("MainCenterContainer/LoadingContainer")
 
 [node name="LoadingSprite2D" type="Sprite2D" parent="."]
+visible = false
+offset = Vector2(960, 540)
 
 [node name="MainCenterContainer" type="CenterContainer" parent="."]
 anchor_right = 1.0
@@ -22,17 +25,17 @@ metadata/_edit_layout_mode = 1
 
 [node name="ActiveContainer" type="VBoxContainer" parent="MainCenterContainer"]
 offset_left = 884.0
-offset_top = 438.0
+offset_top = 423.0
 offset_right = 1036.0
-offset_bottom = 642.0
+offset_bottom = 657.0
 theme_override_constants/separation = 50
 
 [node name="ButtonContainer" type="VBoxContainer" parent="MainCenterContainer/ActiveContainer"]
 offset_right = 152.0
-offset_bottom = 154.0
+offset_bottom = 184.0
 size_flags_vertical = 3
 size_flags_stretch_ratio = 2.0
-theme_override_constants/separation = 10
+theme_override_constants/separation = 20
 
 [node name="CreateImagePackButton" type="Button" parent="MainCenterContainer/ActiveContainer/ButtonContainer"]
 offset_right = 152.0
@@ -41,37 +44,32 @@ text = "Create Image Pack
 "
 
 [node name="LoadPackButton" type="Button" parent="MainCenterContainer/ActiveContainer/ButtonContainer"]
-offset_top = 41.0
+offset_top = 51.0
 offset_right = 152.0
-offset_bottom = 72.0
+offset_bottom = 82.0
 text = "Load Image Pack"
 
 [node name="LoadSequenceButton" type="Button" parent="MainCenterContainer/ActiveContainer/ButtonContainer"]
-offset_top = 82.0
+offset_top = 102.0
 offset_right = 152.0
-offset_bottom = 113.0
+offset_bottom = 133.0
 disabled = true
 text = "Load sequence"
 
 [node name="StartButton" type="Button" parent="MainCenterContainer/ActiveContainer/ButtonContainer"]
-offset_top = 123.0
+offset_top = 153.0
 offset_right = 152.0
-offset_bottom = 154.0
+offset_bottom = 184.0
 disabled = true
 text = "Start"
 
 [node name="PresetsHFlowContainer" type="HFlowContainer" parent="MainCenterContainer/ActiveContainer"]
-offset_top = 204.0
+offset_top = 234.0
 offset_right = 152.0
-offset_bottom = 204.0
+offset_bottom = 234.0
 size_flags_vertical = 10
 
-[node name="Panel" type="Panel" parent="MainCenterContainer/ActiveContainer/PresetsHFlowContainer"]
-
-[node name="Label" type="Label" parent="MainCenterContainer/ActiveContainer/PresetsHFlowContainer/Panel"]
-offset_right = 40.0
-offset_bottom = 23.0
-text = "This is just an example"
+[node name="PresetPanel" parent="MainCenterContainer/ActiveContainer/PresetsHFlowContainer" instance=ExtResource("3_v5tgv")]
 
 [node name="LoadingContainer" type="VBoxContainer" parent="MainCenterContainer"]
 visible = false

@@ -72,9 +72,21 @@ func _on_animated_sprite_2d_frame_changed():
 				$PrevImage.visible = false
 
 
-func load_image_pack(file_path):
+func load_images(image_paths: Array, animation_name : String, loaderFn, max_duration_ms : float) -> Texture2D:
+	return $AnimatedSprite2D.create_frames_timed(Loader.image_files, animation_name, loaderFn, max_duration_ms)
+
+
+func load_image_pack(file_path : String):
 	$AnimatedSprite2D.set_sprite_frames(ResourceLoader.load(file_path))
 	$AnimatedSprite2D.save_path = file_path
+
+
+func load_sequence(file_path : String):
+	var sequence = Loader.load_sequence_file(file_path)
+	var sequence_name = file_path.get_file().get_basename()
+	if sequence_name != "":
+		$AnimatedSprite2D.add_sequence(sequence_name, sequence)
+		$AnimatedSprite2D.change_animation(sequence_name) # switch to loaded sequence
 
 
 func get_total_frame_count():
@@ -82,3 +94,19 @@ func get_total_frame_count():
 	for anim in $AnimatedSprite2D.frames.get_animation_names():
 		count += $AnimatedSprite2D.frames.get_frame_count(anim)
 	return count
+
+
+func get_frame_count(anim_name : String) -> int:
+	return $AnimatedSprite2D.frames.get_frame_count(anim_name)
+
+
+func get_frames() -> SpriteFrames:
+	return $AnimatedSprite2D.frames
+	
+
+func get_save_path() -> String:
+	return $AnimatedSprite2D.save_path
+
+
+func save_frames(file_path : String) -> int:
+	return $AnimatedSprite2D.save_frames(file_path)
