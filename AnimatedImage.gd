@@ -60,7 +60,7 @@ func create_frames_timed(image_paths: Array, animation_name : String, loaderFn, 
 		#print("Loading ", image_path)
 		tex = Loader.load_texture(image_path)
 		frames.add_frame(animation_name, tex)
-		var f = frames.get_frame(animation_name, frame_counts[animation_name])
+		#var f = frames.get_frame(animation_name, frame_counts[animation_name])
 		#print(f, f.get_size())
 		frame_counts[animation_name] += 1
 		duration = (Time.get_ticks_msec() - start)
@@ -132,7 +132,7 @@ func save_frames(file_path : String) -> int:
 	save_path = file_path
 	print("Saving: ", file_path)
 	var start := Time.get_ticks_msec()
-	var result := ResourceSaver.save(file_path, frames, ResourceSaver.FLAG_CHANGE_PATH | ResourceSaver.FLAG_BUNDLE_RESOURCES)
+	var result := ResourceSaver.save(frames, file_path, ResourceSaver.FLAG_CHANGE_PATH | ResourceSaver.FLAG_BUNDLE_RESOURCES)
 	print("Saving time (sec): ", (Time.get_ticks_msec() - start) / 1000.0 )
 	return result
 
@@ -198,7 +198,7 @@ func _process(_delta):
 	var frame_count = frame_counts[animation]
 	if frame_count == 0:
 		return
-		
+
 	# slows things down but if iamges are all different sizes this can make them appear more similar
 	if stretch: # per frame
 		var viewsize : Vector2 = get_viewport().size
