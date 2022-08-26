@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://c7k6owyakecfp"]
+[gd_scene load_steps=3 format=3 uid="uid://c7k6owyakecfp"]
 
 [ext_resource type="Script" path="res://main.gd" id="1_e4fci"]
+[ext_resource type="PackedScene" uid="uid://c8s1ep1ha01vx" path="res://help_screen.tscn" id="2_xakrh"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_e4fci")
@@ -61,3 +62,18 @@ text = ")"
 offset_top = 30.0
 offset_right = 89.0
 offset_bottom = 53.0
+
+[node name="HelpPopup" type="Window" parent="CanvasLayer/GUI"]
+unique_name_in_owner = true
+handle_input_locally = false
+gui_disable_input = true
+title = "Help"
+size = Vector2i(1920, 1080)
+visible = false
+always_on_top = true
+transparent = true
+min_size = Vector2i(1000, 500)
+
+[node name="Control" parent="CanvasLayer/GUI/HelpPopup" instance=ExtResource("2_xakrh")]
+grow_horizontal = 2
+grow_vertical = 2

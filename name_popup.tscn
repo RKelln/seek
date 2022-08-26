@@ -25,16 +25,16 @@ text = "Choose a name for this image series:"
 
 [node name="NameTextEdit" type="TextEdit" parent="NamePanel/NameVBoxContainer"]
 custom_minimum_size = Vector2(0, 40)
-offset_top = 30.0
+offset_top = 36.0
 offset_right = 284.0
-offset_bottom = 70.0
+offset_bottom = 76.0
 size_flags_vertical = 3
 hint_tooltip = "Enter the name of the image pack"
 placeholder_text = "Enter name here"
 caret_blink = true
 
 [node name="Button" type="Button" parent="NamePanel/NameVBoxContainer"]
-offset_top = 74.0
+offset_top = 86.0
 offset_right = 284.0
-offset_bottom = 105.0
+offset_bottom = 117.0
 text = "OK"
