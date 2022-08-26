@@ -1,0 +1,99 @@
+[gd_scene load_steps=4 format=3 uid="uid://c5iuftyxetc8s"]
+
+[ext_resource type="Script" path="res://image_grid_control.gd" id="1_pvvtp"]
+[ext_resource type="Script" path="res://image_grid.gd" id="2_eqplq"]
+[ext_resource type="LabelSettings" uid="uid://cn616quamjox1" path="res://GUI_section_title.tres" id="3_ps163"]
+
+[node name="ImageGridControl" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_pvvtp")
+
+[node name="HSplitContainer" type="HSplitContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="ImageGrid" type="Container" parent="HSplitContainer"]
+unique_name_in_owner = true
+offset_right = 1748.0
+offset_bottom = 1080.0
+size_flags_horizontal = 3
+script = ExtResource("2_eqplq")
+rows = 9
+cols = 9
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HSplitContainer"]
+offset_left = 1760.0
+offset_right = 1920.0
+offset_bottom = 1080.0
+
+[node name="Label" type="Label" parent="HSplitContainer/VBoxContainer"]
+offset_right = 160.0
+offset_bottom = 33.0
+text = "Grid size"
+label_settings = ExtResource("3_ps163")
+
+[node name="RowsHBoxContainer" type="HBoxContainer" parent="HSplitContainer/VBoxContainer"]
+offset_top = 37.0
+offset_right = 160.0
+offset_bottom = 68.0
+alignment = 2
+
+[node name="RowsLabel" type="Label" parent="HSplitContainer/VBoxContainer/RowsHBoxContainer"]
+offset_left = 27.0
+offset_top = 2.0
+offset_right = 73.0
+offset_bottom = 28.0
+text = "Rows:"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="RowsSpinBox" type="SpinBox" parent="HSplitContainer/VBoxContainer/RowsHBoxContainer"]
+unique_name_in_owner = true
+offset_left = 76.9375
+offset_right = 160.0
+offset_bottom = 31.0
+size_flags_horizontal = 8
+min_value = 1.0
+value = 2.0
+rounded = true
+
+[node name="ColsHBoxContainer" type="HBoxContainer" parent="HSplitContainer/VBoxContainer"]
+offset_top = 72.0
+offset_right = 160.0
+offset_bottom = 103.0
+alignment = 2
+
+[node name="ColsLabel" type="Label" parent="HSplitContainer/VBoxContainer/ColsHBoxContainer"]
+offset_top = 2.0
+offset_right = 73.0
+offset_bottom = 28.0
+text = "Columns:"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="ColsSpinBox" type="SpinBox" parent="HSplitContainer/VBoxContainer/ColsHBoxContainer"]
+unique_name_in_owner = true
+offset_left = 76.9375
+offset_right = 160.0
+offset_bottom = 31.0
+size_flags_horizontal = 8
+min_value = 2.0
+value = 2.0
+rounded = true
+
+[node name="GridAspectLocked" type="CheckButton" parent="HSplitContainer/VBoxContainer"]
+unique_name_in_owner = true
+offset_left = 16.0
+offset_top = 107.0
+offset_right = 160.0
+offset_bottom = 138.0
+size_flags_horizontal = 8
+button_pressed = true
+text = "Locked ratio"
+
+[connection signal="value_changed" from="HSplitContainer/VBoxContainer/RowsHBoxContainer/RowsSpinBox" to="HSplitContainer/ImageGrid" method="_on_row_spin_box_value_changed"]
+[connection signal="value_changed" from="HSplitContainer/VBoxContainer/ColsHBoxContainer/ColsSpinBox" to="HSplitContainer/ImageGrid" method="_on_cols_spin_box_value_changed"]
+[connection signal="toggled" from="HSplitContainer/VBoxContainer/GridAspectLocked" to="HSplitContainer/ImageGrid" method="_on_grid_aspect_locked_check_button_toggled"]

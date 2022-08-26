@@ -8,6 +8,16 @@
 
 config_version=5
 
+_global_script_classes=[{
+"base": "Container",
+"class": &"ImageGrid",
+"language": &"GDScript",
+"path": "res://image_grid.gd"
+}]
+_global_script_class_icons={
+"ImageGrid": ""
+}
+
 [application]
 
 config/name="Speed Test"
