@@ -1,7 +1,7 @@
-[gd_scene load_steps=5 format=3 uid="uid://b5s2uoafrntnx"]
+[gd_scene load_steps=5 format=3 uid="uid://bt6ym43wuq0yc"]
 
 [ext_resource type="Theme" uid="uid://tw57akexx0f2" path="res://GUI_theme.tres" id="1_cyymp"]
-[ext_resource type="Script" path="res://GUI.gd" id="2_yrso3"]
+[ext_resource type="Script" path="res://loadingGUI.gd" id="2_yrso3"]
 [ext_resource type="Script" path="res://AnimationNamePopup.gd" id="3_byous"]
 [ext_resource type="PackedScene" uid="uid://dxto0v81phx8o" path="res://pack_info_panel.tscn" id="3_v5tgv"]
 
@@ -74,9 +74,9 @@ size_flags_vertical = 10
 [node name="LoadingContainer" type="VBoxContainer" parent="MainCenterContainer"]
 visible = false
 offset_left = 922.0
-offset_top = 511.0
+offset_top = 508.0
 offset_right = 997.0
-offset_bottom = 568.0
+offset_bottom = 571.0
 
 [node name="Loading" type="Label" parent="MainCenterContainer/LoadingContainer"]
 offset_right = 75.0

@@ -191,13 +191,31 @@ func get_current_frame() -> Texture2D:
 	return frames.get_frame(animation, frame)
 
 
+func set_frame_duration(duration_s : float) -> void:
+	var default_speed = 1.0 / _anim_fps
+	speed = default_speed / duration_s
+	speed_scale = speed
+	
+
+func next_frame(increment : int = 1) -> void:
+	frame = fposmod(frame + increment, frame_counts[animation])
+
+
+func pause():
+	if playing:
+		stop()
+		paused = true
+
+
+func resume():
+	if not playing:
+		play(animation, _backwards)
+		paused = false
+
+
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta):
-	if frames == null: return
-	
-	var frame_count = frame_counts[animation]
-	if frame_count == 0:
-		return
+	if frames == null or frame_counts[animation] == 0: return
 
 	# slows things down but if iamges are all different sizes this can make them appear more similar
 	if stretch: # per frame
@@ -210,17 +228,23 @@ func _process(_delta):
 			offset = Vector2(viewsize.x * (1.0 / viewscale) / 2.0,  viewsize.y * (1.0 / viewscale) / 2.0)
 			#print(framesize, viewscale, scale, offset)
 	
-	if Input.is_action_just_pressed('next_animation'):
-		change_animation(next_animation(1))
+	if Input.is_anything_pressed():
+		handle_input()
 
+
+func handle_input():
 	if Input.is_action_just_pressed("playtoggle"):
 		if playing:
-			stop()
-			paused = true
+			pause()
 		else:
-			play(animation, _backwards)
-			paused = false
+			resume()
 	
+	# other input requires squenes to be playing:
+	if paused: return 
+	
+	if Input.is_action_just_pressed('next_animation'):
+		change_animation(next_animation(1))
+		
 	if Input.is_action_just_pressed("reverse"):
 		_backwards = !_backwards
 		play(animation, _backwards)
@@ -239,14 +263,14 @@ func _process(_delta):
 	
 	if Input.is_action_just_pressed("skip_forward"):
 		if playing:
-			frame = fposmod(frame + frame_skip, frame_count)
+			next_frame(frame_skip)
 		else:
-			frame = fposmod(frame + 1, frame_count)
+			next_frame(1)
 	elif Input.is_action_just_pressed("skip_backward"):
 		if playing:
-			frame = fposmod(frame - frame_skip, frame_count)
+			next_frame(-frame_skip)
 		else:
-			frame = fposmod(frame - 1, frame_count)
+			next_frame(-1)
 	if Input.is_action_pressed("fast_forward"):
 		speed_scale = 2 * speed
 		play(animation, false)
@@ -261,5 +285,4 @@ func _process(_delta):
 			play(animation, _backwards)
 	
 	if Input.is_action_just_pressed("random"):
-		frame = randi() % frame_count
-
+		frame = randi() % frame_counts[animation]

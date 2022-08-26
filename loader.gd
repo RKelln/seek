@@ -5,6 +5,7 @@ var images
 var imagesScene
 
 var default_image_compression = 0.7
+var default_image_pack = 'user://framedata_laura_164.res'
 
 
 # https://godotengine.org/qa/5175/how-to-get-all-the-files-inside-a-folder
@@ -168,7 +169,8 @@ func load_image_dir(animation_name, image_dir, max_images : int = 0, rescale : V
 	return images
 
 
-func load_images(animation_name, image_files, max_images : int = 0, rescale : Vector2 = Vector2.ZERO ) -> Node:
+func load_images(animation_name, custom_image_files, max_images : int = 0, rescale : Vector2 = Vector2.ZERO ) -> Node:
+	image_files = custom_image_files
 	image_files.sort()
 	if max_images > 0 and image_files.size() > max_images:
 		image_files.resize(max_images) # take start of list only up to max_size
@@ -178,6 +180,12 @@ func load_images(animation_name, image_files, max_images : int = 0, rescale : Ve
 	
 	images.create_frames(image_files, animation_name, texture_loader)
 	
+	return images
+
+
+func load_defaults() -> Node:
+	if ResourceLoader.exists(default_image_pack):
+		images.load_image_pack(default_image_pack)
 	return images
 
 
