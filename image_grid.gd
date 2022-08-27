@@ -18,7 +18,8 @@ var _start : int # start index of visible image
 var _end : int # end index of visible images
 
 func _init():
-	print("Started.")
+	pass
+
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -36,11 +37,6 @@ func _notification(what):
 		_resize_images()
 
 
-func set_some_setting():
-	# Some setting changed, ask for children re-sort.
-	queue_sort()
-
-
 # grid_size == 0 : leave as current size
 # grid_size > 0: set to grid size
 # grid_size < 0: set grid size based on number of images, such that they all fit on screen
@@ -55,16 +51,11 @@ func set_images(new_images : Array, grid_size : int = 0, center_idx : int = 0) -
 	else:
 		center = center_idx
 		
+	# clean up and remove everything
 	clear_grid()
-	
-#	for i in rows * cols:
-#		if i < new_images.size():
-#			var t = _create_texture(new_images[i])
-#			images.append(t)
-#			print("added image", t)
+	images.clear()
 
 	# create all textures for all images
-	images.clear()
 	for img in new_images:
 		add_image(img)
 	
