@@ -54,7 +54,7 @@ func set_images(new_images : Array, grid_size : int = 0, center_idx : int = 0) -
 	# clean up and remove everything
 	clear_grid()
 	images.clear()
-
+	
 	# create all textures for all images
 	for img in new_images:
 		add_image(img)
@@ -85,7 +85,10 @@ func add_image(imageTex : Texture2D) -> void:
 	t.gui_input.connect(func on_input(event: InputEvent):
 		if event is InputEventMouseButton:
 			if event.pressed:
-				printt("image", image_idx, child_idx)
+				var metainfo = Dictionary()
+				for key in t.texture.get_meta_list():
+					metainfo[key] = t.texture.get_meta(key)
+				printt("image", image_idx, child_idx, metainfo)
 	)
 	
 	images.append(t)

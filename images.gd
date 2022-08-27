@@ -120,8 +120,11 @@ func get_frames(anim_name : String = "") -> Array:
 	var sp = get_spriteframes()
 	var count = get_frame_count()
 	var frames = Array()
-	for i in range(min(count, 100)):
-		frames.append(sp.get_frame(anim_name, i))
+	for i in get_frame_count():
+		# add sequence number to the frames meta data
+		var t2d = sp.get_frame(anim_name, i)
+		t2d.set_meta(anim_name, i)
+		frames.append(t2d)
 	return frames
 
 
