@@ -5,18 +5,27 @@
 [ext_resource type="LabelSettings" uid="uid://cn616quamjox1" path="res://GUI_section_title.tres" id="3_ps163"]
 
 [node name="ImageGridControl" type="Control"]
+layout_mode = 3
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 script = ExtResource("1_pvvtp")
 
 [node name="HSplitContainer" type="HSplitContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="ImageGrid" type="Container" parent="HSplitContainer"]
 unique_name_in_owner = true
+layout_mode = 2
 offset_right = 1748.0
 offset_bottom = 1080.0
 size_flags_horizontal = 3
@@ -25,23 +34,27 @@ rows = 9
 cols = 9
 
 [node name="VBoxContainer" type="VBoxContainer" parent="HSplitContainer"]
+layout_mode = 2
 offset_left = 1760.0
 offset_right = 1920.0
 offset_bottom = 1080.0
 
 [node name="Label" type="Label" parent="HSplitContainer/VBoxContainer"]
+layout_mode = 2
 offset_right = 160.0
 offset_bottom = 33.0
 text = "Grid size"
 label_settings = ExtResource("3_ps163")
 
 [node name="RowsHBoxContainer" type="HBoxContainer" parent="HSplitContainer/VBoxContainer"]
+layout_mode = 2
 offset_top = 37.0
 offset_right = 160.0
 offset_bottom = 68.0
 alignment = 2
 
 [node name="RowsLabel" type="Label" parent="HSplitContainer/VBoxContainer/RowsHBoxContainer"]
+layout_mode = 2
 offset_left = 27.0
 offset_top = 2.0
 offset_right = 73.0
@@ -52,6 +65,7 @@ vertical_alignment = 1
 
 [node name="RowsSpinBox" type="SpinBox" parent="HSplitContainer/VBoxContainer/RowsHBoxContainer"]
 unique_name_in_owner = true
+layout_mode = 2
 offset_left = 76.9375
 offset_right = 160.0
 offset_bottom = 31.0
@@ -61,12 +75,14 @@ value = 2.0
 rounded = true
 
 [node name="ColsHBoxContainer" type="HBoxContainer" parent="HSplitContainer/VBoxContainer"]
+layout_mode = 2
 offset_top = 72.0
 offset_right = 160.0
 offset_bottom = 103.0
 alignment = 2
 
 [node name="ColsLabel" type="Label" parent="HSplitContainer/VBoxContainer/ColsHBoxContainer"]
+layout_mode = 2
 offset_top = 2.0
 offset_right = 73.0
 offset_bottom = 28.0
@@ -76,6 +92,7 @@ vertical_alignment = 1
 
 [node name="ColsSpinBox" type="SpinBox" parent="HSplitContainer/VBoxContainer/ColsHBoxContainer"]
 unique_name_in_owner = true
+layout_mode = 2
 offset_left = 76.9375
 offset_right = 160.0
 offset_bottom = 31.0
@@ -86,6 +103,7 @@ rounded = true
 
 [node name="GridAspectLocked" type="CheckButton" parent="HSplitContainer/VBoxContainer"]
 unique_name_in_owner = true
+layout_mode = 2
 offset_left = 16.0
 offset_top = 107.0
 offset_right = 160.0

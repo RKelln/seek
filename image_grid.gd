@@ -12,10 +12,17 @@ class_name ImageGrid extends Container
 @export var h_separation : int = 0
 @export var v_separation : int = 0
 
-var images : Array  # TextureRects
-var center : int # index of the image to place at the center of the grid
+#var images : Array  # TextureRects
+var GridImage: PackedScene = preload("res://grid_image.tscn")
+@export var center : int : # index of the image to place at the center of the grid
+	get:
+		return center
+	set(value):
+			center = value
+			queue_sort()
 var _start : int # start index of visible image
 var _end : int # end index of visible images
+var _img_size : Vector2 # current size the images in the grid
 
 func _init():
 	pass
@@ -40,20 +47,20 @@ func _notification(what):
 # grid_size == 0 : leave as current size
 # grid_size > 0: set to grid size
 # grid_size < 0: set grid size based on number of images, such that they all fit on screen
-func set_images(new_images : Array, grid_size : int = 0, center_idx : int = 0) -> void:
+func set_images(new_images : Array, grid_size : int = 0, center_idx : int = -1) -> void:
 	if grid_size > 0:
 		set_grid(grid_size)
 	if grid_size < 0:
 		pass # TODO: set grid size based on number of images, such that they all fit on screen
 	
-	if center_idx == 0:
+	if center_idx < 0:
 		center = floor(new_images.size() / 2)
 	else:
 		center = center_idx
 		
 	# clean up and remove everything
 	clear_grid()
-	images.clear()
+	#images.clear()
 	
 	# create all textures for all images
 	for img in new_images:
@@ -62,36 +69,14 @@ func set_images(new_images : Array, grid_size : int = 0, center_idx : int = 0) -
 	queue_sort()
 
 
-func _create_texture(imageTex : Texture2D) -> TextureRect:
-	print("_create_texture", imageTex)
-	var t = TextureRect.new()
-	t.ignore_texture_size = true
-	t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+func _create_texture(imageTex : Texture2D) -> Node:
+	var t = GridImage.instantiate()
 	t.texture = imageTex
-
-	#t.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE)
-	#t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	#t.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	#t.anchor_left = 0.5
 	return t
 
 
 func add_image(imageTex : Texture2D) -> void:
-	print("add_image", imageTex)
 	var t = _create_texture(imageTex)
-	var image_idx = images.size()
-	var child_idx = get_child_count()
-
-	t.gui_input.connect(func on_input(event: InputEvent):
-		if event is InputEventMouseButton:
-			if event.pressed:
-				var metainfo = Dictionary()
-				for key in t.texture.get_meta_list():
-					metainfo[key] = t.texture.get_meta(key)
-				printt("image", image_idx, child_idx, metainfo)
-	)
-	
-	images.append(t)
 	add_child(t)
 
 
@@ -100,6 +85,7 @@ func clear_grid():
 	for n in get_children():
 		remove_child(n)
 		n.queue_free()
+	_img_size = Vector2.ZERO
 
 
 # Ses the rows and columns, default to same number cols and rows
@@ -123,23 +109,18 @@ func updateGridGUI() -> void:
 		%ColsSpinBox.value = cols
 
 
-# adds all images as child nodes, sets visible on images based on grid size and center
-func _add_children() -> void:
-	for node in images:
-		add_child(node)
-
-
 func _update_child_visiblity() -> void:
-	if images.size() < 2: return
+	var child_count = get_child_count()
+	if child_count < 2: return
 	
 	var visible_imgs = rows * cols
-	_start = maxi(center - visible_imgs / 2 - 1, 0)
-	_end = mini(_start + visible_imgs, images.size())
+	_start = maxi(center - visible_imgs / 2, 0)
+	_end = mini(_start + visible_imgs, child_count)
 	assert(_start < _end, "image visibility start is >= end")
 	if visible_imgs != _end - _start:
 		printt("not enough images to display all", visible_imgs, _start, _end, _end - _start)
 		
-	for i in get_child_count():
+	for i in child_count:
 		if i >= _start and i < _end:
 			get_child(i).visible = true
 		else:
@@ -155,21 +136,45 @@ func _resize_images() -> void:
 		v_spaces = (size.y / rows - 1) * v_separation
 	var img_w = floor((size.x - h_spaces) / cols)
 	var img_h = floor((size.y - v_spaces) / rows)
-	var img_size = Vector2(img_w, img_h)
+	_img_size = Vector2(img_w, img_h)
 	#print(size, "img_size: ", img_size)
 	
 	var positions := Array()
 	for r in rows:
 		for c in cols:
-			positions.append( Vector2(c * img_size.x + c * v_separation, r * img_size.y + r * h_separation) )
+			positions.append( Vector2(c * _img_size.x + c * v_separation, r * _img_size.y + r * h_separation) )
 	
 	var i = 0
 	for child_idx in range(_start, _end):
 		#printt("pos", i, child_idx, positions[i])
-		fit_child_in_rect(get_child(child_idx), Rect2(positions[i], img_size))
+		fit_child_in_rect(get_child(child_idx), Rect2(positions[i], _img_size))
 		i += 1
 
 
+func _can_drop_data(at_position : Vector2, data : Variant) -> bool:
+	var can_drop : bool = data is int # data is the child index of the dragged image
+	#printt("can_drop_data", can_drop, position_to_index(at_position), data)
+	return true
+	
+	
+func _drop_data(at_position : Vector2, data : Variant) -> void:
+	var existing = get_child_by_position(at_position)
+	#printt("drop on", at_position, data, existing)
+	move_child(get_child(data), existing.get_index())
+
+
+func get_child_by_position(at_position : Vector2) -> Node:
+	return get_child(_start + position_to_index(at_position))
+
+
+func position_to_index(at_position : Vector2) -> int:
+	# FIXME: take separation into account
+	var col = int(at_position.x) / int(_img_size.x)
+	var row = int(at_position.y) / int(_img_size.y)
+	var i = cols * row + col
+	#printt("pos to index", at_position, col, row, i)
+	return i
+	
 
 func _on_row_spin_box_value_changed(value):
 	if value != rows:
