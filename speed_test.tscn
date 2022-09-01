@@ -1,16 +1,16 @@
-[gd_scene load_steps=3 format=3 uid="uid://c7k6owyakecfp"]
+[gd_scene load_steps=4 format=3 uid="uid://c7k6owyakecfp"]
 
 [ext_resource type="Script" path="res://main.gd" id="1_e4fci"]
+[ext_resource type="PackedScene" uid="uid://c5iuftyxetc8s" path="res://image_grid_control.tscn" id="2_31j18"]
 [ext_resource type="PackedScene" uid="uid://c8s1ep1ha01vx" path="res://help_screen.tscn" id="2_xakrh"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_e4fci")
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
-layer = 100
+[node name="Stage" type="Node2D" parent="."]
 
-[node name="GUI" type="Control" parent="CanvasLayer"]
-modulate = Color(0, 0, 0, 1)
+[node name="GUI" type="Control" parent="."]
+top_level = true
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -18,56 +18,64 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/GUI"]
+[node name="ImageGridControl" parent="GUI" instance=ExtResource("2_31j18")]
+unique_name_in_owner = true
+visible = false
+
+[node name="VBoxContainer" type="VBoxContainer" parent="GUI"]
 offset_right = 40.0
 offset_bottom = 40.0
 
-[node name="FrameCount" type="HBoxContainer" parent="CanvasLayer/GUI/VBoxContainer"]
+[node name="FrameCount" type="HBoxContainer" parent="GUI/VBoxContainer"]
 offset_right = 89.0
 offset_bottom = 26.0
 
-[node name="Frame" type="Label" parent="CanvasLayer/GUI/VBoxContainer/FrameCount"]
+[node name="Frame" type="Label" parent="GUI/VBoxContainer/FrameCount"]
+unique_name_in_owner = true
 offset_right = 10.0
 offset_bottom = 26.0
 text = "0"
 horizontal_alignment = 2
 
-[node name="Slash" type="Label" parent="CanvasLayer/GUI/VBoxContainer/FrameCount"]
+[node name="Slash" type="Label" parent="GUI/VBoxContainer/FrameCount"]
 offset_left = 14.0
 offset_right = 21.0
 offset_bottom = 26.0
 text = "/"
 
-[node name="TotalFrames" type="Label" parent="CanvasLayer/GUI/VBoxContainer/FrameCount"]
+[node name="TotalFrames" type="Label" parent="GUI/VBoxContainer/FrameCount"]
+unique_name_in_owner = true
 offset_left = 25.0
 offset_right = 64.0
 offset_bottom = 26.0
 text = "Total"
 
-[node name="OpenBracket" type="Label" parent="CanvasLayer/GUI/VBoxContainer/FrameCount"]
+[node name="OpenBracket" type="Label" parent="GUI/VBoxContainer/FrameCount"]
 offset_left = 68.0
 offset_right = 74.0
 offset_bottom = 26.0
 text = "("
 
-[node name="ActualFrame" type="Label" parent="CanvasLayer/GUI/VBoxContainer/FrameCount"]
+[node name="ActualFrame" type="Label" parent="GUI/VBoxContainer/FrameCount"]
+unique_name_in_owner = true
 offset_left = 78.0
 offset_top = 1.0
 offset_right = 79.0
 offset_bottom = 24.0
 
-[node name="CloseBracket" type="Label" parent="CanvasLayer/GUI/VBoxContainer/FrameCount"]
+[node name="CloseBracket" type="Label" parent="GUI/VBoxContainer/FrameCount"]
 offset_left = 83.0
 offset_right = 89.0
 offset_bottom = 26.0
 text = ")"
 
-[node name="RunningTotal" type="Label" parent="CanvasLayer/GUI/VBoxContainer"]
+[node name="RunningTotal" type="Label" parent="GUI/VBoxContainer"]
+unique_name_in_owner = true
 offset_top = 30.0
 offset_right = 89.0
 offset_bottom = 53.0
 
-[node name="HelpPopup" type="Window" parent="CanvasLayer/GUI"]
+[node name="HelpPopup" type="Window" parent="GUI"]
 unique_name_in_owner = true
 handle_input_locally = false
 gui_disable_input = true
@@ -78,7 +86,7 @@ always_on_top = true
 transparent = true
 min_size = Vector2i(1000, 500)
 
-[node name="Control" parent="CanvasLayer/GUI/HelpPopup" instance=ExtResource("2_xakrh")]
+[node name="Control" parent="GUI/HelpPopup" instance=ExtResource("2_xakrh")]
 layout_mode = 3
 anchors_preset = 15
 grow_horizontal = 2

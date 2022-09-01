@@ -1,8 +1,12 @@
-[gd_resource type="Theme" format=3 uid="uid://tw57akexx0f2"]
+[gd_resource type="Theme" load_steps=2 format=3 uid="uid://tw57akexx0f2"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6gplp"]
+bg_color = Color(0.129412, 0.129412, 0.129412, 1)
 
 [resource]
 MarginContainer/constants/margin_bottom = 25
 MarginContainer/constants/margin_left = 50
 MarginContainer/constants/margin_right = 50
 MarginContainer/constants/margin_top = 25
+Panel/styles/panel = SubResource("StyleBoxFlat_6gplp")
 VBoxContainer/constants/separation = 10

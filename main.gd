@@ -16,9 +16,10 @@ func _ready() -> void:
 	images = Loader.images
 	if images.get_total_frame_count() <= 0:
 		images = Loader.load_defaults()
-	add_child(images)
+	$Stage.add_child(images)
 	
 	help = %HelpPopup
+	%ImageGridControl.set_images(images.get_frames(), 5, images.get_current_frame_index())
 
 
 func _process(delta) -> void:
@@ -26,17 +27,43 @@ func _process(delta) -> void:
 		# FIXME: popup has no variable that works for determining if it is active!
 		#        This is because the esc key and clicking outside the popup by default close it
 		if paused:
-			images.resume()
+			resume()
 			help.hide()
-			paused = false
 		else:
-			images.pause()
+			pause()
 			help.popup()
-			paused = true
 	
 	if Input.is_action_just_pressed('beat_match'):
 		handle_beat_match(delta)
+		
+	if Input.is_action_just_pressed("image_grid"):
+		if %ImageGridControl.visible:
+			%ImageGridControl.visible = false
+			# update sequence with changes from image grid
+			var seq_name = images.get_sequence_name()
+			var seq = %ImageGridControl.get_sequence(seq_name)
+			var cur_seq = images.get_sequence(seq_name)
+			# if equivalent size
+			if seq.size() == cur_seq.size():
+				if seq != cur_seq: # if not already equal then update
+					images.update_sequence(seq_name, seq)
+			else:
+				printt("Error: image grid sequence and images sequence don't match", seq, images.get_sequence())
+		else:
+			pause()
+			%ImageGridControl.visible = true
+			%ImageGridControl.set_center(images.get_current_frame_index())
 
+
+func pause() -> void:
+	images.pause()
+	paused = true
+	
+	
+func resume() -> void:
+	images.resume()
+	paused = false
+	
 
 func handle_beat_match(delta : float) -> void:
 	# just getting started

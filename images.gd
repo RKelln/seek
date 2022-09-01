@@ -5,7 +5,7 @@ extends Node2D
 @export_node_path(Label) var _actualFrameNode
 @export_node_path(Label) var _runningTotalFramesNode
 
-var gui := true
+var gui := false
 
 # transitions
 var transition := true
@@ -27,10 +27,10 @@ func _init_node(nodeOrPath, defaultPath) -> Node:
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	if gui:
-		_frameNode = _init_node(_frameNode, "Frame")
-		_totalFramesNode = _init_node(_totalFramesNode, "TotalFrames")
-		_actualFrameNode = _init_node(_actualFrameNode, "ActualFrame")
-		_runningTotalFramesNode = _init_node(_runningTotalFramesNode, "RunningTotal")
+		_frameNode = %Frame
+		_totalFramesNode = %TotalFrames
+		_actualFrameNode = %ActualFrame
+		_runningTotalFramesNode = %RunningTotal
 
 	
 func _on_animated_sprite_2d_frame_changed():
@@ -128,6 +128,29 @@ func get_frames(anim_name : String = "") -> Array:
 	return frames
 
 
+func get_current_frame_index() -> int:
+	return $AnimatedSprite2D.frame
+
+
+func get_sequence_name() -> String:
+	return $AnimatedSprite2D.animation
+
+
+func get_sequence(seq_name : String = "") -> PackedInt32Array:
+	if seq_name == "":
+		return $AnimatedSpride2D.current_sequence
+	else:
+		return $AnimatedSprite2D.sequences[seq_name]
+
+
+func update_sequence(seq_name : String, sequence : PackedInt32Array) -> void:
+	$AnimatedSprite2D.pause()
+	$AnimatedSprite2D.animation = "default"
+	$AnimatedSprite2D.update_sequence(seq_name, sequence)
+	$AnimatedSprite2D.animation = seq_name
+	restart()
+
+
 func get_save_path() -> String:
 	return $AnimatedSprite2D.save_path
 
@@ -138,15 +161,23 @@ func save_frames(file_path : String) -> int:
 
 func pause():
 	$AnimatedSprite2D.pause()
-	if  transition_tween.is_valid() and transition_tween.is_running():
+	if transition_tween.is_valid() and transition_tween.is_running():
 		transition_tween.pause()
 	
 	
 func resume():
 	$AnimatedSprite2D.resume()
-	if  transition_tween.is_valid():
+	if transition_tween.is_valid():
 		transition_tween.play()
 
+
+func restart():
+	$AnimatedSprite2D.pause()
+	$PrevImage.visible = false
+	if transition_tween.is_valid() and transition_tween.is_running():
+		transition_tween.stop()
+	$AnimatedSprite2D.frame = 0
+ 
 
 func set_timing(duration_ms : float):
 	var dur_s = duration_ms / 1000.0

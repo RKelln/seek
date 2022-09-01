@@ -29,6 +29,8 @@ var frame_counts : Dictionary
 var _backwards := false
 var _anim_fps : float
 
+
+
 func create_frames(image_paths: Array, animation_name : String, loaderFn) -> void:
 	var start := Time.get_ticks_msec()
 	if frames == null:
@@ -84,20 +86,42 @@ func create_frames_timed(image_paths: Array, animation_name : String, loaderFn, 
 #
 
 
-func add_sequence(animation_name, sequence : PackedInt32Array, default_fps=30.) -> void:
+func add_sequence(animation_name : String, sequence : PackedInt32Array, default_fps=30.) -> void:
+	if animation_name in frames.get_animation_names():
+		prints(animation_name, "already exists")
+		return
+	
 	frames.add_animation(animation_name)
 	frames.set_animation_speed(animation_name, default_fps)
 	frames.set_animation_loop(animation_name, true)
 	sequences[animation_name] = Array()
 	
-	var max_frame := frames.get_frame_count(base_animation_name)
+	_create_sequence(animation_name, sequence)
+
+
+func _create_sequence(animation_name : String, sequence : PackedInt32Array, from_anim : String = base_animation_name) -> void:
+	var max_frame := frames.get_frame_count(from_anim)
+	assert(max_frame > 0, "_create_sequence(): max_frame == 0")
+	if animation_name not in sequences:
+		sequences[animation_name] = Array()
+		
 	for i in sequence:
 		# get texture from default animation
 		if i < max_frame:
-			frames.add_frame(animation_name, frames.get_frame(base_animation_name, i))
+			frames.add_frame(animation_name, frames.get_frame(from_anim, i))
 			sequences[animation_name].append(i)
+
+
+func update_sequence(animation_name : String, sequence : PackedInt32Array) -> void:
+	if animation_name not in frames.get_animation_names():
+		prints(animation_name, "doesn't exist")
+		return
 	
-			
+	frames.clear(animation_name)
+	sequences[animation_name].clear()
+	_create_sequence(animation_name, sequence)
+
+
 func add_image(animation_name, texture):
 	frames.add_frame(animation_name, texture)
 	
@@ -143,6 +167,17 @@ func _ready():
 	if animations.size() == 0:
 		print("No animations!")
 	
+	if base_animation_name not in animations:
+		print("no default animation!")
+	if frames.get_frame_count(base_animation_name) == 0:
+		print("default animation has no frames!")
+		# try to fix:
+		for anim_name in animations:
+			if frames.get_frame_count(anim_name) > 0:
+				print("recreating new base animation from ", anim_name)
+				_create_sequence(base_animation_name, range(frames.get_frame_count(anim_name)), anim_name)
+				break
+		
 	# set up base sequence if it doesn't already exist 
 	# assume animation images in order
 	for animation_name in animations:
@@ -220,13 +255,15 @@ func _process(_delta):
 	# slows things down but if iamges are all different sizes this can make them appear more similar
 	if stretch: # per frame
 		var viewsize : Vector2 = get_viewport().size
-		var framesize := frames.get_frame(animation, frame).get_size()
-		var viewscale : float = min( viewsize.x / framesize.x, viewsize.y / framesize.y)
-		if viewscale != 1.0:
-			scale = Vector2(viewscale, viewscale)
-			# bug in godot 4 requires offset adjustment?
-			offset = Vector2(viewsize.x * (1.0 / viewscale) / 2.0,  viewsize.y * (1.0 / viewscale) / 2.0)
-			#print(framesize, viewscale, scale, offset)
+		var tex = frames.get_frame(animation, frame)
+		if tex:
+			var framesize := tex.get_size()
+			var viewscale : float = min( viewsize.x / framesize.x, viewsize.y / framesize.y)
+			if viewscale != 1.0:
+				scale = Vector2(viewscale, viewscale)
+				# bug in godot 4 requires offset adjustment?
+				offset = Vector2(viewsize.x * (1.0 / viewscale) / 2.0,  viewsize.y * (1.0 / viewscale) / 2.0)
+				#print(framesize, viewscale, scale, offset)
 	
 	if Input.is_anything_pressed():
 		handle_input()
