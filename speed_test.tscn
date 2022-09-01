@@ -11,8 +11,12 @@ layer = 100
 
 [node name="GUI" type="Control" parent="CanvasLayer"]
 modulate = Color(0, 0, 0, 1)
+layout_mode = 3
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/GUI"]
 offset_right = 40.0
@@ -75,5 +79,7 @@ transparent = true
 min_size = Vector2i(1000, 500)
 
 [node name="Control" parent="CanvasLayer/GUI/HelpPopup" instance=ExtResource("2_xakrh")]
+layout_mode = 3
+anchors_preset = 15
 grow_horizontal = 2
 grow_vertical = 2
