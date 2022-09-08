@@ -256,29 +256,55 @@ func _process(_delta):
 	if playing and stretch: # per frame
 		rescale()
 	
+#	if Input.is_anything_pressed():
+#		handle_input()
+
+
 func rescale():
 	var viewsize : Vector2 = get_viewport().get_visible_rect().size # Vector2(1920, 1080) # FIXME: get these from project settings? # get_viewport().size
-		var tex = frames.get_frame(animation, frame)
-		if tex:
-			var framesize := tex.get_size()
-			var viewscale : float = min( viewsize.x / framesize.x, viewsize.y / framesize.y)
-			if viewscale != 1.0:
-				scale = Vector2(viewscale, viewscale)
-				# bug in godot 4 requires offset adjustment?
+	var tex = frames.get_frame(animation, frame)
+	if tex:
+		var framesize := tex.get_size()
+		var viewscale : float = min( viewsize.x / framesize.x, viewsize.y / framesize.y)
+		if viewscale != 1.0:
+			scale = Vector2(viewscale, viewscale)
+			# bug in godot 4 requires offset adjustment?
 			offset = Vector2( (viewsize.x / viewscale) / 2.0,  (viewsize.y / viewscale) / 2.0 )
 			#printt(viewsize, framesize, viewscale, scale, offset)
 
 
 func handle_input():
-	if Input.is_action_just_pressed("playtoggle"):
+	if Input.is_action_just_pressed("play_toggle"):
 		if playing:
 			pause()
 		else:
 			resume()
 	
-	# other input requires squenes to be playing:
+	# other input requires scenes to be playing:
 	if paused: return 
 	
+	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		var w : float = float(get_viewport().get_visible_rect().size.x)
+		var relative_dist = remap(get_viewport().get_mouse_position().x, 0, w, -1.0, 1.0)
+		var rdist2 = remap(relative_dist, -0.3, 0.3, -0.1, 0.1) # less change near the middle
+		speed = 0.5 * (abs(relative_dist) + abs(rdist2)) * 100.0
+
+		if relative_dist < 0:
+			_backwards = true
+			play(animation, _backwards)
+		else:
+			_backwards = false
+			play(animation, _backwards)
+			
+		#printt(w, get_viewport().get_mouse_position().x, relative_dist, dist)
+	
+	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
+		stop()
+		var w : float = float(get_viewport().get_visible_rect().size.x)
+		frame = int(remap(get_viewport().get_mouse_position().x, 0, w, 0, frame_counts[animation]))
+	elif not playing:
+		play(animation, _backwards)
+			
 	if Input.is_action_just_pressed('next_animation'):
 		change_animation(next_animation(1))
 		

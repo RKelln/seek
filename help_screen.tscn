@@ -31,17 +31,17 @@ size_flags_vertical = 3
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/CenterContainer"]
 layout_mode = 2
-offset_left = 710.0
-offset_top = 170.0
-offset_right = 1110.0
-offset_bottom = 860.0
+offset_left = 685.0
+offset_top = 112.0
+offset_right = 1135.0
+offset_bottom = 918.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme = ExtResource("1_3j5ae")
 
 [node name="ControlsTitleLabel" type="Label" parent="MarginContainer/CenterContainer/VBoxContainer"]
 layout_mode = 2
-offset_right = 400.0
+offset_right = 450.0
 offset_bottom = 42.0
 theme = ExtResource("1_3j5ae")
 theme_type_variation = &"HeaderLarge"
@@ -49,11 +49,11 @@ text = "Controls"
 horizontal_alignment = 1
 
 [node name="RichTextLabel" type="RichTextLabel" parent="MarginContainer/CenterContainer/VBoxContainer"]
-custom_minimum_size = Vector2(400, 0)
+custom_minimum_size = Vector2(450, 0)
 layout_mode = 2
 offset_top = 52.0
-offset_right = 400.0
-offset_bottom = 690.0
+offset_right = 450.0
+offset_bottom = 806.0
 size_flags_vertical = 3
 theme = ExtResource("1_3j5ae")
 theme_override_constants/table_h_separation = 6
@@ -78,6 +78,9 @@ text = "[table=2]
 [cell][b]M[/b]:[/cell][cell]Fast backward[/cell]
 [cell][b]V[/b]:[/cell][cell]Reset speed[/cell]
 [cell][b]B[/b]:[/cell][cell]Random jump[/cell]
+[cell][b]Left mouse button[/b]:[/cell][cell]Forwards / backwards speed[/cell]
+[cell][b]Right mouse button[/b]:[/cell][cell]Go to frame based on position[/cell]
+[cell] [/cell][cell] [/cell]
 [cell][b]+[/b] (plus):[/cell][cell]Increase opacity (fade in)[/cell]
 [cell][b]-[/b] (minus):[/cell][cell]Decrease opacity (fade out)[/cell]
 [cell] [/cell][cell] [/cell]

@@ -5,7 +5,7 @@ extends Node2D
 @export_node_path(Label) var _actualFrameNode
 @export_node_path(Label) var _runningTotalFramesNode
 
-var active := true
+@export var active : bool = true
 
 var gui := false
 
@@ -45,6 +45,7 @@ func _process(delta : float) -> void:
 			modulate.a = clampf(modulate.a + delta * opacity_speed, 0.0, 1.0)
 		if Input.is_action_pressed("decrease_opacity") and modulate.a > 0:
 			modulate.a = clampf(modulate.a - delta * opacity_speed, 0.0, 1.0)
+		$AnimatedSprite2D.handle_input()
 
 
 func _on_animated_sprite_2d_frame_changed():
@@ -94,7 +95,7 @@ func _on_animated_sprite_2d_frame_changed():
 
 
 func load_images(image_paths: Array, animation_name : String, loaderFn, max_duration_ms : float) -> Texture2D:
-	return $AnimatedSprite2D.create_frames_timed(Loader.image_files, animation_name, loaderFn, max_duration_ms)
+	return $AnimatedSprite2D.create_frames_timed(image_paths, animation_name, loaderFn, max_duration_ms)
 
 
 func load_image_pack(file_path : String):
