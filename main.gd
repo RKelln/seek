@@ -54,6 +54,14 @@ func _process(delta) -> void:
 			%ImageGridControl.visible = true
 			%ImageGridControl.set_center(images.get_current_frame_index())
 
+	if Input.is_action_just_pressed("duplicate_layer"):
+		var orig = $Stage.get_child(get_active_layer()) # TODO: get active
+		#var n = orig.duplicate(DUPLICATE_GROUPS | DUPLICATE_SCRIPTS | DUPLICATE_SIGNALS)
+		var n = orig.duplicate(DUPLICATE_GROUPS | DUPLICATE_SCRIPTS )
+		orig.active = false
+		add_child(n)
+		n.active = true
+		
 
 func pause() -> void:
 	images.pause()
@@ -64,6 +72,14 @@ func resume() -> void:
 	images.resume()
 	paused = false
 	
+
+func get_active_layer() -> int:
+	for c in $Stage.get_children():
+		if c.active:
+			return c.get_index()
+	print("Failed to find active layer")
+	return 0
+
 
 func handle_beat_match(delta : float) -> void:
 	# just getting started

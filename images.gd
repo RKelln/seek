@@ -5,6 +5,8 @@ extends Node2D
 @export_node_path(Label) var _actualFrameNode
 @export_node_path(Label) var _runningTotalFramesNode
 
+var active := true
+
 var gui := false
 
 # transitions
@@ -14,6 +16,8 @@ var transition_cutoff := 0.042 # 24 fps = 0.042
 var _prevTexture : Texture2D
 var _next_transition_delay : SceneTreeTimer
 
+# alpha
+var opacity_speed := 1.0
 
 
 func _init_node(nodeOrPath, defaultPath) -> Node:
@@ -31,9 +35,21 @@ func _ready():
 		_totalFramesNode = %TotalFrames
 		_actualFrameNode = %ActualFrame
 		_runningTotalFramesNode = %RunningTotal
+	# signals
+	$AnimatedSprite2D.frame_changed.connect(_on_animated_sprite_2d_frame_changed)
 
-	
+
+func _process(delta : float) -> void:
+	if active:
+		if Input.is_action_pressed("increase_opacity") and modulate.a < 1.0:
+			modulate.a = clampf(modulate.a + delta * opacity_speed, 0.0, 1.0)
+		if Input.is_action_pressed("decrease_opacity") and modulate.a > 0:
+			modulate.a = clampf(modulate.a - delta * opacity_speed, 0.0, 1.0)
+
+
 func _on_animated_sprite_2d_frame_changed():
+	#printt("_on_animated_sprite_2d_frame_changed", self, get_current_frame_index(), $AnimatedSprite2D, $PrevImage)
+	
 	# update GUI
 	if gui:
 		_frameNode.text = str($AnimatedSprite2D.frame)
@@ -67,8 +83,11 @@ func _on_animated_sprite_2d_frame_changed():
 				if $AnimatedSprite2D.stretch:
 					$PrevImage.scale = $AnimatedSprite2D.scale
 					$PrevImage.offset = $AnimatedSprite2D.offset
-				transition_tween = get_tree().create_tween()
+				if transition_tween:
+					transition_tween.kill()
+				transition_tween = create_tween()
 				transition_tween.tween_property($PrevImage, "modulate:a", 0.0, duration).from(from)
+				#printt("new transition", self, transition_tween, duration, from)
 				# TODO: if different size then fade in the new image for half the duration?
 			else:
 				$PrevImage.visible = false

@@ -12,5 +12,3 @@ script = ExtResource("1_4ai3v")
 
 [node name="PrevImage" type="Sprite2D" parent="."]
 offset = Vector2(960, 540)
-
-[connection signal="frame_changed" from="AnimatedSprite2D" to="." method="_on_animated_sprite_2d_frame_changed"]

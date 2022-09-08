@@ -7,6 +7,8 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
@@ -30,9 +32,9 @@ size_flags_vertical = 3
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/CenterContainer"]
 layout_mode = 2
 offset_left = 710.0
-offset_top = 213.0
+offset_top = 170.0
 offset_right = 1110.0
-offset_bottom = 816.0
+offset_bottom = 860.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme = ExtResource("1_3j5ae")
@@ -51,7 +53,7 @@ custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
 offset_top = 52.0
 offset_right = 400.0
-offset_bottom = 603.0
+offset_bottom = 690.0
 size_flags_vertical = 3
 theme = ExtResource("1_3j5ae")
 theme_override_constants/table_h_separation = 6
@@ -75,9 +77,13 @@ text = "[table=2]
 [cell][b]M[/b]:[/cell][cell]Fast backward[/cell]
 [cell][b]V[/b]:[/cell][cell]Reset speed[/cell]
 [cell][b]B[/b]:[/cell][cell]Random jump[/cell]
+[cell][b]+[/b] (plus):[/cell][cell]Increase opacity (fade in)[/cell]
+[cell][b]-[/b] (minus):[/cell][cell]Decrease opacity (fade out)[/cell]
 [cell] [/cell][cell] [/cell]
 [cell][b]A[/b]:[/cell][cell]Next sequence[/cell]
 [cell][b]Enter / return[/b]:[/cell][cell]Tap for beat matching[/cell]
+[cell][b]D[/b]:[/cell][cell]Duplicate layer[/cell]
+
 
 [/table]"
 fit_content_height = true
