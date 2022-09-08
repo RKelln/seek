@@ -42,6 +42,7 @@ func _on_create_image_pack_button_pressed():
 func _on_images_file_dialog_dir_selected(dir):
 #	$MainCenterContainer/LoadingContainer.visible = true
 	Loader.image_files = Loader.get_dir_contents(dir)[0]
+	Loader.image_files.sort()
 	var last_folder = dir.rsplit("/", false, 1)[1]
 	last_folder = last_folder.validate_node_name().to_lower() # remove junk and lower
 	$AnimationNamePopup.set_default_name(last_folder)
