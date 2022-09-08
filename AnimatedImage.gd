@@ -253,8 +253,11 @@ func _process(_delta):
 	if frames == null or frame_counts[animation] == 0: return
 
 	# slows things down but if iamges are all different sizes this can make them appear more similar
-	if stretch: # per frame
-		var viewsize : Vector2 = get_viewport().size
+	if playing and stretch: # per frame
+		rescale()
+	
+func rescale():
+	var viewsize : Vector2 = get_viewport().get_visible_rect().size # Vector2(1920, 1080) # FIXME: get these from project settings? # get_viewport().size
 		var tex = frames.get_frame(animation, frame)
 		if tex:
 			var framesize := tex.get_size()
@@ -262,11 +265,8 @@ func _process(_delta):
 			if viewscale != 1.0:
 				scale = Vector2(viewscale, viewscale)
 				# bug in godot 4 requires offset adjustment?
-				offset = Vector2(viewsize.x * (1.0 / viewscale) / 2.0,  viewsize.y * (1.0 / viewscale) / 2.0)
-				#print(framesize, viewscale, scale, offset)
-	
-	if Input.is_anything_pressed():
-		handle_input()
+			offset = Vector2( (viewsize.x / viewscale) / 2.0,  (viewsize.y / viewscale) / 2.0 )
+			#printt(viewsize, framesize, viewscale, scale, offset)
 
 
 func handle_input():

@@ -62,6 +62,13 @@ func _process(delta) -> void:
 		add_child(n)
 		n.active = true
 		
+	if Input.is_action_just_pressed("fullscreen_toggle"):
+		if get_tree().get_root().mode == Window.MODE_FULLSCREEN:
+			get_tree().get_root().mode = Window.MODE_WINDOWED
+		else:
+			get_tree().get_root().mode = Window.MODE_FULLSCREEN
+			
+		
 
 func pause() -> void:
 	images.pause()

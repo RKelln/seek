@@ -62,6 +62,7 @@ bbcode_enabled = true
 text = "[table=2]
 
 [cell][b]esc[/b]:[/cell][cell]Toggle this menu on/off[/cell]
+[cell][b]F[/b]:[/cell][cell]Toggle fullscreens[/cell]
 [cell] [/cell][cell] [/cell]
 [cell][u]Editing controls:[/u][/cell][cell] [/cell]
 [cell][b]I[/b]:[/cell][cell]Image grid[/cell]
