@@ -60,7 +60,7 @@ func create_frames_timed(image_paths: Array, animation_name : String, loaderFn, 
 		count += 1
 		if count <= frame_counts[animation_name]: continue
 		#print("Loading ", image_path)
-		tex = Loader.load_texture(image_path)
+		tex = loaderFn.call(image_path)
 		frames.add_frame(animation_name, tex)
 		#var f = frames.get_frame(animation_name, frame_counts[animation_name])
 		#print(f, f.get_size())
@@ -281,7 +281,15 @@ func handle_input():
 			resume()
 	
 	# other input requires scenes to be playing:
-	if paused: return 
+	if paused: 
+		# allow frame by frame during pause
+		if Input.is_action_just_pressed("skip_forward"):
+			next_frame(1)
+		elif Input.is_action_just_pressed("skip_backward"):
+				next_frame(-1)
+		
+		
+		return 
 	
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		var w : float = float(get_viewport().get_visible_rect().size.x)
@@ -301,7 +309,8 @@ func handle_input():
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
 		stop()
 		var w : float = float(get_viewport().get_visible_rect().size.x)
-		frame = int(remap(get_viewport().get_mouse_position().x, 0, w, 0, frame_counts[animation]))
+		# NOTE: leave a small amount on each side the is always start and end of sequence
+		frame = int(remap(get_viewport().get_mouse_position().x, 0.1 * w, 0.9 * w, 0, frame_counts[animation]))
 	elif not playing:
 		play(animation, _backwards)
 			

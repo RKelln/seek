@@ -94,8 +94,8 @@ func _on_animated_sprite_2d_frame_changed():
 				$PrevImage.visible = false
 
 
-func load_images(image_paths: Array, animation_name : String, loaderFn, max_duration_ms : float) -> Texture2D:
-	return $AnimatedSprite2D.create_frames_timed(image_paths, animation_name, loaderFn, max_duration_ms)
+func load_images(image_paths: Array, animation_name : String, textureLoaderFn : Variant, max_duration_ms : float) -> Texture2D:
+	return $AnimatedSprite2D.create_frames_timed(image_paths, animation_name, textureLoaderFn, max_duration_ms)
 
 
 func load_image_pack(file_path : String):

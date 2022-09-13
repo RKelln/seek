@@ -54,7 +54,8 @@ func _on_name_button_pressed():
 	animation_name = $AnimationNamePopup/NamePanel/NameVBoxContainer/NameTextEdit.text
 	loaded = 0
 	texture_loader = func(image_file):
-		return Loader.load_texture(image_file)
+		# TODO: FIXME: have user set rescale size
+		return Loader.load_texture(image_file, Vector2(1920, 1080))
 	$MainCenterContainer/ActiveContainer.visible = false
 	$MainCenterContainer/LoadingContainer.visible = true
 

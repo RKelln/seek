@@ -103,14 +103,9 @@ func load_texture(file_path : String, rescale : Vector2 = Vector2.ZERO) -> Textu
 		assert(texture is ImageTexture)
 		
 		if rescale != Vector2.ZERO:
-			if texture.get_width() < texture.get_height(): # portrait
-				var viewscale = rescale.y / texture.get_height()
-				if viewscale != 1.0:
-					texture.set_size_override(Vector2(texture.get_width() * viewscale, texture.get_height() * viewscale))
-			else: # landscape
-				var viewscale = rescale.x / texture.get_width()
-				if viewscale != 1.0:
-					texture.set_size_override(Vector2(texture.get_width() * viewscale, texture.get_height() * viewscale))
+			var ratio : float = min( rescale.x / texture.get_width(), rescale.y / texture.get_height())
+			if ratio != 1.0:
+				texture.set_size_override(Vector2(floor(texture.get_width() * ratio), floor(texture.get_height() * ratio)))
 	return texture
 
 

@@ -21,6 +21,7 @@ visible = false
 offset = Vector2(960, 540)
 
 [node name="MainCenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -29,6 +30,7 @@ grow_vertical = 2
 metadata/_edit_layout_mode = 1
 
 [node name="ActiveContainer" type="VBoxContainer" parent="MainCenterContainer"]
+layout_mode = 2
 offset_left = 884.0
 offset_top = 423.0
 offset_right = 1036.0
@@ -36,6 +38,7 @@ offset_bottom = 657.0
 theme_override_constants/separation = 50
 
 [node name="ButtonContainer" type="VBoxContainer" parent="MainCenterContainer/ActiveContainer"]
+layout_mode = 2
 offset_right = 152.0
 offset_bottom = 184.0
 size_flags_vertical = 3
@@ -43,18 +46,21 @@ size_flags_stretch_ratio = 2.0
 theme_override_constants/separation = 20
 
 [node name="CreateImagePackButton" type="Button" parent="MainCenterContainer/ActiveContainer/ButtonContainer"]
+layout_mode = 2
 offset_right = 152.0
 offset_bottom = 31.0
 text = "Create Image Pack
 "
 
 [node name="LoadPackButton" type="Button" parent="MainCenterContainer/ActiveContainer/ButtonContainer"]
+layout_mode = 2
 offset_top = 51.0
 offset_right = 152.0
 offset_bottom = 82.0
 text = "Load Image Pack"
 
 [node name="LoadSequenceButton" type="Button" parent="MainCenterContainer/ActiveContainer/ButtonContainer"]
+layout_mode = 2
 offset_top = 102.0
 offset_right = 152.0
 offset_bottom = 133.0
@@ -62,6 +68,7 @@ disabled = true
 text = "Load sequence"
 
 [node name="StartButton" type="Button" parent="MainCenterContainer/ActiveContainer/ButtonContainer"]
+layout_mode = 2
 offset_top = 153.0
 offset_right = 152.0
 offset_bottom = 184.0
@@ -69,26 +76,31 @@ disabled = true
 text = "Start"
 
 [node name="PresetsHFlowContainer" type="HFlowContainer" parent="MainCenterContainer/ActiveContainer"]
+layout_mode = 2
 offset_top = 234.0
 offset_right = 152.0
 offset_bottom = 234.0
 size_flags_vertical = 10
 
 [node name="PresetPanel" parent="MainCenterContainer/ActiveContainer/PresetsHFlowContainer" instance=ExtResource("3_v5tgv")]
+layout_mode = 2
 
 [node name="LoadingContainer" type="VBoxContainer" parent="MainCenterContainer"]
 visible = false
+layout_mode = 2
 offset_left = 922.0
 offset_top = 508.0
 offset_right = 997.0
 offset_bottom = 571.0
 
 [node name="Loading" type="Label" parent="MainCenterContainer/LoadingContainer"]
+layout_mode = 2
 offset_right = 75.0
 offset_bottom = 26.0
 text = "Loading..."
 
 [node name="ProgressBar" type="ProgressBar" parent="MainCenterContainer/LoadingContainer"]
+layout_mode = 2
 offset_top = 30.0
 offset_right = 75.0
 offset_bottom = 57.0
@@ -96,7 +108,7 @@ rounded = true
 
 [node name="ImagesFileDialog" type="FileDialog" parent="."]
 title = "Open a Directory"
-size = Vector2i(2415, 600)
+size = Vector2i(1920, 1080)
 min_size = Vector2i(600, 400)
 ok_button_text = "Select Current Folder"
 dialog_text = "Choose the folder containing the images to be loaded"
@@ -115,7 +127,7 @@ filters = PackedStringArray("*.txt", "*.seq")
 
 [node name="PackFileDialog" type="FileDialog" parent="."]
 title = "Open a File"
-size = Vector2i(600, 600)
+size = Vector2i(1920, 1080)
 min_size = Vector2i(600, 600)
 ok_button_text = "Open"
 file_mode = 0
@@ -139,10 +151,12 @@ grow_vertical = 2
 theme = ExtResource("1_cyymp")
 
 [node name="NameVBoxContainer" type="VBoxContainer" parent="AnimationNamePopup/NamePanel"]
+layout_mode = 0
 offset_right = 40.0
 offset_bottom = 40.0
 
 [node name="NameChooseLabel" type="Label" parent="AnimationNamePopup/NamePanel/NameVBoxContainer"]
+layout_mode = 2
 offset_right = 284.0
 offset_bottom = 26.0
 size_flags_vertical = 0
@@ -150,6 +164,7 @@ text = "Choose a name for this image series:"
 
 [node name="NameTextEdit" type="TextEdit" parent="AnimationNamePopup/NamePanel/NameVBoxContainer"]
 custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
 offset_top = 30.0
 offset_right = 284.0
 offset_bottom = 70.0
@@ -158,6 +173,7 @@ placeholder_text = "Enter name here"
 caret_blink = true
 
 [node name="Button" type="Button" parent="AnimationNamePopup/NamePanel/NameVBoxContainer"]
+layout_mode = 2
 offset_top = 74.0
 offset_right = 284.0
 offset_bottom = 105.0
