@@ -5,16 +5,14 @@ func _ready():
 	stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 
 
-func _get_drag_data(position : Vector2) -> Variant:
-	var mydata = texture
-	
-	var tr = TextureRect.new()
-	tr.texture = texture
-	tr.ignore_texture_size = true
-	tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	tr.size = size
+func _get_drag_data(_position : Vector2) -> Variant:
+	var trect = TextureRect.new()
+	trect.texture = texture
+	trect.ignore_texture_size = true
+	trect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	trect.size = size
 	#printt("texture size",  size, texture.get_size())
-	set_drag_preview(tr)
+	set_drag_preview(trect)
 	
 	return get_index()
 
