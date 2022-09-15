@@ -6,7 +6,11 @@ extends Node2D
 @export_node_path(Label) var _runningTotalFramesNode
 
 @export var active : bool = true
-@export var pack_name : String = ""
+@export var pack_name : String = "":
+	get:
+		return $AnimatedSprite2D.pack_name
+	set(value):
+		$AnimatedSprite2D.pack_name = value
 
 var gui := false
 
@@ -90,7 +94,7 @@ func _on_animated_sprite_2d_frame_changed():
 				transition_tween = create_tween()
 				transition_tween.tween_property($PrevImage, "modulate:a", 0.0, duration).from(from)
 				#printt("new transition", self, transition_tween, duration, from)
-				# TODO: if different size then fade in the new image for half the duration?
+				# TOD: if different size then fade in the new image for half the duration?
 			else:
 				$PrevImage.visible = false
 
@@ -100,12 +104,22 @@ func load_images(image_paths: Array, animation_name : String, textureLoaderFn : 
 
 
 func load_image_pack(file_path : String):
-	$AnimatedSprite2D.set_sprite_frames(ResourceLoader.load(file_path))
+	$AnimatedSprite2D.frames = _load_image_pack(file_path)
 	$AnimatedSprite2D.save_path = file_path
 	
 	
 func add_image_pack(file_path : String):
-	$AnimatedSprite2D.add_sprite_frames(ResourceLoader.load(file_path))
+	$AnimatedSprite2D.add_sprite_frames(_load_image_pack(file_path))
+
+
+func _load_image_pack(file_path : String):
+	var iframes : ImageFrames = ResourceLoader.load(file_path, "ImageFrames")
+	if not iframes:
+		iframes = ResourceLoader.load(file_path) as ImageFrames
+	if not iframes:
+		iframes = load(file_path) as ImageFrames
+	assert(iframes is ImageFrames)
+	return iframes
 
 
 func load_sequence(file_path : String):
@@ -134,7 +148,7 @@ func get_frame_count(anim_name : String = "") -> int:
 	return $AnimatedSprite2D.frames.get_frame_count(anim_name)
 
 
-func get_spriteframes() -> SpriteFrames:
+func get_spriteframes() -> ImageFrames:
 	return $AnimatedSprite2D.frames
 
 
@@ -143,14 +157,13 @@ func get_frames(anim_name : String = "") -> Array:
 		anim_name = $AnimatedSprite2D.animation
 		
 	var sp = get_spriteframes()
-	var count = get_frame_count()
-	var frames = Array()
+	var f = Array()
 	for i in get_frame_count():
 		# add sequence number to the frames meta data
 		var t2d = sp.get_frame(anim_name, i)
 		t2d.set_meta(anim_name, i)
-		frames.append(t2d)
-	return frames
+		f.append(t2d)
+	return f
 
 
 func get_current_frame_index() -> int:
@@ -169,13 +182,8 @@ func get_sequence(seq_name : String = "") -> PackedInt32Array:
 
 
 func info() -> Dictionary:
-	return {
-		'pack_name' : pack_name,
-		'frames': get_total_frame_count(),
-		'sequences': $AnimatedSprite2D.frames.get_animation_names().duplicate(),
-		'save_path': $AnimatedSprite2D.save_path,
-		'frame_counts': $AnimatedSprite2D.frame_counts.duplicate(),
-	}
+	return $AnimatedSprite2D.info()
+
 
 func update_sequence(seq_name : String, sequence : PackedInt32Array) -> void:
 	$AnimatedSprite2D.pause()

@@ -4,6 +4,8 @@ var animation_name
 var loaded = -1
 var texture_loader
 	
+var file_format = "user://framedata_%s_%d.res"
+
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta):
@@ -21,7 +23,6 @@ func _process(_delta):
 			images_finished_loading()
 			Loader.images.pack_name = animation_name
 			if not ResourceLoader.exists(Loader.images.get_save_path()):
-				var file_format = "user://framedata_%s_%d.res"
 				var save_path = file_format % [animation_name, Loader.image_files.size()]
 				Loader.images.save_frames(save_path)
 			create_info_panel(Loader.images.info())

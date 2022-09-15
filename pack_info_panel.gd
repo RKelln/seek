@@ -8,6 +8,7 @@ extends Panel
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	%NumberLabel.text = str(get_index() + 1)
 	%PackLabel.text = pack_name
 	%FramesLabel.text = str(frames)
 	%AnimLabel.text = str(sequences.size())

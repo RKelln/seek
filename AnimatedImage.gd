@@ -2,7 +2,13 @@ extends AnimatedSprite2D
 
 var base_animation_name : String = "default"
 var compress := true
-var pack_name : String = ""
+@export var pack_name : String = "":
+	get:
+		if not frames: return ""
+		return frames.pack_name
+	set(value):
+		if frames:
+			frames.pack_name = value
 
 var speed := 1.0
 var fps := 30
@@ -24,8 +30,8 @@ var _anim_fps : float
 
 func create_frames(image_paths: Array, animation_name : String, loaderFn) -> void:
 	var start := Time.get_ticks_msec()
-	if frames == null:
-		frames = SpriteFrames.new()
+	if not frames is ImageFrames:
+		frames = ImageFrames.new()
 	if not frames.get_animation_names().has(animation_name):
 		frames.add_animation(animation_name)
 		frame_counts[animation_name] = 0
@@ -38,8 +44,8 @@ func create_frames(image_paths: Array, animation_name : String, loaderFn) -> voi
 
 
 func create_frames_timed(image_paths: Array, animation_name : String, loaderFn, max_duration_ms : float) -> Texture2D:
-	if frames == null:
-		frames = SpriteFrames.new()
+	if not frames is ImageFrames:
+		frames = ImageFrames.new()
 	if not frames.get_animation_names().has(animation_name):
 		frames.add_animation(animation_name)
 		frame_counts[animation_name] = 0
@@ -123,10 +129,11 @@ func add_images(animation_name, images):
 		add_image(animation_name, image)
 
 
-func add_sprite_frames(new_frames : SpriteFrames) -> void:
+func add_sprite_frames(new_frames : ImageFrames) -> void:
 	for aname in new_frames.get_animation_names():
 		if frames.get_animation_names().has(aname):
 			printt("Warning duplicate animation names:", aname)
+			# TODO: prefix with pack name unless name is default?
 			continue
 		else:
 			frames.add_animation(aname)
@@ -166,18 +173,21 @@ func save_frames(file_path : String) -> int:
 	save_path = file_path
 	print("Saving: ", file_path)
 	var start := Time.get_ticks_msec()
-	var result := ResourceSaver.save(frames, file_path, ResourceSaver.FLAG_CHANGE_PATH | ResourceSaver.FLAG_BUNDLE_RESOURCES)
+	#printt(frames, frames.get_class(), ImageFrames.new().get_class())
+	#frames = ImageFrames.new()
+	#printt(frames, frames.get_class())
+	#var result := ResourceSaver.save(frames, file_path, ResourceSaver.FLAG_CHANGE_PATH | ResourceSaver.FLAG_BUNDLE_RESOURCES)
+	var result := ResourceSaver.save(frames, file_path, ResourceSaver.FLAG_CHANGE_PATH)
 	print("Saving time (sec): ", (Time.get_ticks_msec() - start) / 1000.0 )
 	return result
 
 
 func info() -> Dictionary:
-	return {
-		'pack_name' : pack_name,
-		'sequences': frames.get_animation_names().size(),
-		'save_path': save_path,
-		'frame_counts': frame_counts.duplicate(),
-	}
+	var i : Dictionary
+	if frames:
+		i = frames.info()
+	i['save_path'] = save_path
+	return i
 
 # Called when the node enters the scene tree for the first time.
 func _ready():

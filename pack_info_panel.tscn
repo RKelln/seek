@@ -21,6 +21,14 @@ size_flags_vertical = 6
 theme = ExtResource("1_ed0dp")
 script = ExtResource("2_c44pt")
 
+[node name="NumberLabel" type="Label" parent="."]
+unique_name_in_owner = true
+offset_left = 3.0
+offset_right = 17.0
+offset_bottom = 37.0
+theme_override_font_sizes/font_size = 24
+text = "1"
+
 [node name="MarginContainer" type="MarginContainer" parent="."]
 anchors_preset = 15
 anchor_right = 1.0
@@ -47,6 +55,8 @@ offset_bottom = 36.0
 size_flags_vertical = 6
 text = "Image pack name"
 horizontal_alignment = 1
+clip_text = true
+text_overrun_behavior = 3
 
 [node name="GridContainer" type="GridContainer" parent="MarginContainer/VBoxContainer"]
 offset_top = 57.0

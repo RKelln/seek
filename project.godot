@@ -9,12 +9,18 @@
 config_version=5
 
 _global_script_classes=[{
+"base": "SpriteFrames",
+"class": &"ImageFrames",
+"language": &"GDScript",
+"path": "res://ImageFrames.gd"
+}, {
 "base": "Container",
 "class": &"ImageGrid",
 "language": &"GDScript",
 "path": "res://image_grid.gd"
 }]
 _global_script_class_icons={
+"ImageFrames": "",
 "ImageGrid": ""
 }
 

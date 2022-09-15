@@ -90,41 +90,13 @@ size_flags_vertical = 8
 [node name="InfoContainer" type="HFlowContainer" parent="ActiveContainer/BottomContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-offset_left = 810.0
+offset_left = 910.0
 offset_top = 25.0
-offset_right = 1010.0
+offset_right = 910.0
 offset_bottom = 475.0
 size_flags_horizontal = 4
 theme_override_constants/h_separation = 20
 theme_override_constants/v_separation = 20
-
-[node name="PresetPanel" parent="ActiveContainer/BottomContainer/InfoContainer" instance_placeholder="res://pack_info_panel.tscn"]
-layout_mode = 2
-anchors_preset = 0
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 200.0
-offset_bottom = 200.0
-grow_horizontal = 1
-grow_vertical = 1
-
-[node name="PresetPanel2" parent="ActiveContainer/BottomContainer/InfoContainer" instance_placeholder="res://pack_info_panel.tscn"]
-layout_mode = 2
-anchors_preset = 0
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
-offset_left = 0.0
-offset_top = 220.0
-offset_right = 200.0
-offset_bottom = 420.0
-grow_horizontal = 1
-grow_vertical = 1
 
 [node name="LoadingContainer" type="VBoxContainer" parent="."]
 visible = false
@@ -207,18 +179,18 @@ text = "Choose a name for this image series:"
 [node name="NameTextEdit" type="TextEdit" parent="AnimationNamePopup/NamePanel/NameVBoxContainer"]
 custom_minimum_size = Vector2i(0, 40)
 layout_mode = 2
-offset_top = 30.0
+offset_top = 36.0
 offset_right = 284.0
-offset_bottom = 70.0
+offset_bottom = 76.0
 size_flags_vertical = 3
 placeholder_text = "Enter name here"
 caret_blink = true
 
 [node name="Button" type="Button" parent="AnimationNamePopup/NamePanel/NameVBoxContainer"]
 layout_mode = 2
-offset_top = 74.0
+offset_top = 86.0
 offset_right = 284.0
-offset_bottom = 105.0
+offset_bottom = 117.0
 text = "OK"
 
 [connection signal="pressed" from="ActiveContainer/TopContainer/ButtonContainer/CreateImagePackButton" to="." method="_on_create_image_pack_button_pressed"]
