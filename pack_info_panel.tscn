@@ -1,28 +1,107 @@
-[gd_scene load_steps=2 format=3 uid="uid://dxto0v81phx8o"]
+[gd_scene load_steps=3 format=3 uid="uid://dxto0v81phx8o"]
 
 [ext_resource type="Theme" uid="uid://tw57akexx0f2" path="res://GUI_theme.tres" id="1_ed0dp"]
+[ext_resource type="Script" path="res://pack_info_panel.gd" id="2_c44pt"]
 
 [node name="PresetPanel" type="Panel"]
+custom_minimum_size = Vector2i(200, 200)
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = -100.0
+offset_right = 100.0
+offset_bottom = 100.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 6
+size_flags_vertical = 6
 theme = ExtResource("1_ed0dp")
+script = ExtResource("2_c44pt")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
-offset_right = 40.0
-offset_bottom = 40.0
+[node name="MarginContainer" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 15
 
-[node name="PackLabel" type="Label" parent="VBoxContainer"]
-offset_right = 137.0
-offset_bottom = 26.0
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+offset_left = 20.0
+offset_top = 15.0
+offset_right = 180.0
+offset_bottom = 185.0
+grow_horizontal = 2
+
+[node name="PackLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+offset_top = 10.0
+offset_right = 160.0
+offset_bottom = 36.0
+size_flags_vertical = 6
 text = "Image pack name"
+horizontal_alignment = 1
 
-[node name="AnimLabel" type="Label" parent="VBoxContainer"]
-offset_top = 30.0
-offset_right = 137.0
-offset_bottom = 56.0
-text = "Animations"
+[node name="GridContainer" type="GridContainer" parent="MarginContainer/VBoxContainer"]
+offset_top = 57.0
+offset_right = 160.0
+offset_bottom = 143.0
+size_flags_vertical = 3
+columns = 2
 
-[node name="FramesLabel" type="Label" parent="VBoxContainer"]
-offset_top = 60.0
-offset_right = 137.0
-offset_bottom = 86.0
-text = "Frames
+[node name="TotalFramesTitle" type="Label" parent="MarginContainer/VBoxContainer/GridContainer"]
+offset_right = 102.0
+offset_bottom = 26.0
+text = "Total frames:"
+
+[node name="FramesLabel" type="Label" parent="MarginContainer/VBoxContainer/GridContainer"]
+unique_name_in_owner = true
+offset_left = 106.0
+offset_right = 160.0
+offset_bottom = 26.0
+size_flags_horizontal = 3
+text = "0
 "
+
+[node name="AnimationsTitle" type="Label" parent="MarginContainer/VBoxContainer/GridContainer"]
+offset_top = 30.0
+offset_right = 102.0
+offset_bottom = 56.0
+text = "Animations:"
+
+[node name="AnimLabel" type="Label" parent="MarginContainer/VBoxContainer/GridContainer"]
+unique_name_in_owner = true
+offset_left = 106.0
+offset_top = 30.0
+offset_right = 160.0
+offset_bottom = 56.0
+size_flags_horizontal = 3
+text = "0"
+
+[node name="PathTitle" type="Label" parent="MarginContainer/VBoxContainer/GridContainer"]
+offset_top = 60.0
+offset_right = 102.0
+offset_bottom = 86.0
+text = "Path:"
+
+[node name="Spacer" type="Label" parent="MarginContainer/VBoxContainer/GridContainer"]
+offset_left = 106.0
+offset_top = 61.0
+offset_right = 160.0
+offset_bottom = 84.0
+
+[node name="PathLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+offset_top = 153.0
+offset_right = 160.0
+offset_bottom = 170.0
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 10
+text = "path/to/images"
+autowrap_mode = 1

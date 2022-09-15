@@ -6,6 +6,7 @@ extends Node2D
 @export_node_path(Label) var _runningTotalFramesNode
 
 @export var active : bool = true
+@export var pack_name : String = ""
 
 var gui := false
 
@@ -101,6 +102,10 @@ func load_images(image_paths: Array, animation_name : String, textureLoaderFn : 
 func load_image_pack(file_path : String):
 	$AnimatedSprite2D.set_sprite_frames(ResourceLoader.load(file_path))
 	$AnimatedSprite2D.save_path = file_path
+	
+	
+func add_image_pack(file_path : String):
+	$AnimatedSprite2D.add_sprite_frames(ResourceLoader.load(file_path))
 
 
 func load_sequence(file_path : String):
@@ -162,6 +167,15 @@ func get_sequence(seq_name : String = "") -> PackedInt32Array:
 	else:
 		return $AnimatedSprite2D.sequences[seq_name]
 
+
+func info() -> Dictionary:
+	return {
+		'pack_name' : pack_name,
+		'frames': get_total_frame_count(),
+		'sequences': $AnimatedSprite2D.frames.get_animation_names().duplicate(),
+		'save_path': $AnimatedSprite2D.save_path,
+		'frame_counts': $AnimatedSprite2D.frame_counts.duplicate(),
+	}
 
 func update_sequence(seq_name : String, sequence : PackedInt32Array) -> void:
 	$AnimatedSprite2D.pause()

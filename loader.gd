@@ -1,8 +1,7 @@
 extends Node
 
-var image_files
-var images
-var imagesScene
+var image_files : Array
+var images : Node
 
 var default_image_compression = 0.7
 var default_image_pack = 'user://framedata_laura_164.res'
@@ -178,6 +177,12 @@ func load_images(animation_name, custom_image_files, max_images : int = 0, resca
 	return images
 
 
+func new_images() -> Node:
+	images = load("res://images.tscn").instantiate()
+	image_files = []
+	return images
+
+
 func load_defaults() -> Node:
 	if ResourceLoader.exists(default_image_pack):
 		images.load_image_pack(default_image_pack)
@@ -186,11 +191,26 @@ func load_defaults() -> Node:
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	imagesScene = load("res://images.tscn")
-	images = imagesScene.instantiate()
+	new_images()
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta):
 	pass
 	#load_next(current_animation)
+
+
+
+#### Utils
+
+# https://stackoverflow.com/a/18650828
+static func formatBytes(bytes : int, decimals : float = 0.01) -> String:
+	if bytes <= 0: return '0 Bytes'
+
+	var k = 1024
+	var dm = max(0, decimals)
+	var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+
+	var i = floor(log(bytes) / log(k))
+
+	return str( snapped( float(bytes) / pow(k, i), dm) ) + " " + sizes[i]

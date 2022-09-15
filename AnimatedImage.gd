@@ -1,17 +1,8 @@
 extends AnimatedSprite2D
 
 var base_animation_name : String = "default"
-# '/media/storage/media/Datasets/nebula/'
-# '/media/storage/media/Datasets/cliff_waves/'
-# '/media/storage/media/Datasets/beach_trees/'
-# '/home/ryankelln/Documents/Projects/Gifts/Laura Soch/Birthday 2021/slideshow/food/rotated'
-# '/media/storage/media/Datasets/Alexandra/plant_stills_hd'
-#var image_dir : String = '/media/storage/media/Datasets/Alexandra/plant_stills_hd'
-#var saved_sequence : String = 'plant_stills_2k_hash_sequence_144179.txt'
-#var file_list_path : String = '' #'seasons_filelist.txt'
 var compress := true
-#var max_images : int = 0
-#var max_image_size := Vector2(1920, 1080)
+var pack_name : String = ""
 
 var speed := 1.0
 var fps := 30
@@ -37,6 +28,7 @@ func create_frames(image_paths: Array, animation_name : String, loaderFn) -> voi
 		frames = SpriteFrames.new()
 	if not frames.get_animation_names().has(animation_name):
 		frames.add_animation(animation_name)
+		frame_counts[animation_name] = 0
 		
 	for image_path in image_paths:
 		#print("Loading ", image_path)
@@ -131,6 +123,24 @@ func add_images(animation_name, images):
 		add_image(animation_name, image)
 
 
+func add_sprite_frames(new_frames : SpriteFrames) -> void:
+	for aname in new_frames.get_animation_names():
+		if frames.get_animation_names().has(aname):
+			printt("Warning duplicate animation names:", aname)
+			continue
+		else:
+			frames.add_animation(aname)
+			frame_counts[aname] = 0
+		
+		frames.set_animation_loop(aname, new_frames.get_animation_loop(aname))
+		frames.set_animation_speed(aname, new_frames.get_animation_speed(aname))
+		
+		for i in new_frames.get_frame_count(aname):
+			#print("Loading ", image_path)
+			frames.add_frame(aname, new_frames.get_frame(aname, i))
+			frame_counts[aname] += 1
+			
+
 #	# create custom animation
 #	if saved_sequence != "" and saved_sequence.is_valid_filename() and saved_sequence.get_file() != "":
 #		sequence = _load_sequence(saved_sequence)
@@ -160,6 +170,14 @@ func save_frames(file_path : String) -> int:
 	print("Saving time (sec): ", (Time.get_ticks_msec() - start) / 1000.0 )
 	return result
 
+
+func info() -> Dictionary:
+	return {
+		'pack_name' : pack_name,
+		'sequences': frames.get_animation_names().size(),
+		'save_path': save_path,
+		'frame_counts': frame_counts.duplicate(),
+	}
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
