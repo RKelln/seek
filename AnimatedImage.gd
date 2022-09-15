@@ -254,6 +254,14 @@ func get_current_frame() -> Texture2D:
 	return frames.get_frame(animation, frame)
 
 
+func get_rect() -> Rect2:
+	var size = get_current_frame().get_size()
+	var pos = offset
+	if centered:
+		pos -= 0.5 * size
+	return Rect2(pos, size)
+
+
 func set_frame_duration(duration_s : float) -> void:
 	var default_speed = 1.0 / _anim_fps
 	speed = default_speed / duration_s

@@ -20,7 +20,6 @@ visible = false
 offset = Vector2(960, 540)
 
 [node name="ActiveContainer" type="MarginContainer" parent="."]
-layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -29,7 +28,6 @@ grow_vertical = 2
 
 [node name="TopContainer" type="MarginContainer" parent="ActiveContainer"]
 custom_minimum_size = Vector2i(0, 500)
-layout_mode = 2
 offset_left = 50.0
 offset_top = 25.0
 offset_right = 1870.0
@@ -37,7 +35,6 @@ offset_bottom = 525.0
 size_flags_vertical = 0
 
 [node name="ButtonContainer" type="VBoxContainer" parent="ActiveContainer/TopContainer"]
-layout_mode = 2
 offset_left = 834.0
 offset_top = 291.0
 offset_right = 986.0
@@ -48,21 +45,18 @@ size_flags_stretch_ratio = 2.0
 theme_override_constants/separation = 20
 
 [node name="CreateImagePackButton" type="Button" parent="ActiveContainer/TopContainer/ButtonContainer"]
-layout_mode = 2
 offset_right = 152.0
 offset_bottom = 31.0
 text = "Create Image Pack
 "
 
 [node name="LoadPackButton" type="Button" parent="ActiveContainer/TopContainer/ButtonContainer"]
-layout_mode = 2
 offset_top = 51.0
 offset_right = 152.0
 offset_bottom = 82.0
 text = "Load Image Pack"
 
 [node name="LoadSequenceButton" type="Button" parent="ActiveContainer/TopContainer/ButtonContainer"]
-layout_mode = 2
 offset_top = 102.0
 offset_right = 152.0
 offset_bottom = 133.0
@@ -71,7 +65,6 @@ text = "Load sequence"
 
 [node name="StartButton" type="Button" parent="ActiveContainer/TopContainer/ButtonContainer"]
 unique_name_in_owner = true
-layout_mode = 2
 offset_top = 153.0
 offset_right = 152.0
 offset_bottom = 184.0
@@ -80,7 +73,6 @@ text = "Start"
 
 [node name="BottomContainer" type="MarginContainer" parent="ActiveContainer"]
 custom_minimum_size = Vector2i(0, 500)
-layout_mode = 2
 offset_left = 50.0
 offset_top = 555.0
 offset_right = 1870.0
@@ -89,7 +81,6 @@ size_flags_vertical = 8
 
 [node name="InfoContainer" type="HFlowContainer" parent="ActiveContainer/BottomContainer"]
 unique_name_in_owner = true
-layout_mode = 2
 offset_left = 910.0
 offset_top = 25.0
 offset_right = 910.0
@@ -100,20 +91,17 @@ theme_override_constants/v_separation = 20
 
 [node name="LoadingContainer" type="VBoxContainer" parent="."]
 visible = false
-layout_mode = 0
 offset_left = 922.0
 offset_top = 508.0
 offset_right = 997.0
 offset_bottom = 571.0
 
 [node name="Loading" type="Label" parent="LoadingContainer"]
-layout_mode = 2
 offset_right = 75.0
 offset_bottom = 26.0
 text = "Loading..."
 
 [node name="ProgressBar" type="ProgressBar" parent="LoadingContainer"]
-layout_mode = 2
 offset_top = 36.0
 offset_right = 75.0
 offset_bottom = 63.0
@@ -165,12 +153,10 @@ grow_vertical = 2
 theme = ExtResource("1_cyymp")
 
 [node name="NameVBoxContainer" type="VBoxContainer" parent="AnimationNamePopup/NamePanel"]
-layout_mode = 0
 offset_right = 40.0
 offset_bottom = 40.0
 
 [node name="NameChooseLabel" type="Label" parent="AnimationNamePopup/NamePanel/NameVBoxContainer"]
-layout_mode = 2
 offset_right = 284.0
 offset_bottom = 26.0
 size_flags_vertical = 0
@@ -178,7 +164,6 @@ text = "Choose a name for this image series:"
 
 [node name="NameTextEdit" type="TextEdit" parent="AnimationNamePopup/NamePanel/NameVBoxContainer"]
 custom_minimum_size = Vector2i(0, 40)
-layout_mode = 2
 offset_top = 36.0
 offset_right = 284.0
 offset_bottom = 76.0
@@ -187,7 +172,6 @@ placeholder_text = "Enter name here"
 caret_blink = true
 
 [node name="Button" type="Button" parent="AnimationNamePopup/NamePanel/NameVBoxContainer"]
-layout_mode = 2
 offset_top = 86.0
 offset_right = 284.0
 offset_bottom = 117.0

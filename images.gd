@@ -16,8 +16,10 @@ var gui := false
 
 # transitions
 var transition := true
-var transition_tween : Tween
+var transition_out_tween : Tween
+var transition_in_tween : Tween
 var transition_cutoff := 0.042 # 24 fps = 0.042
+var transition_percent := 0.8 # scale transition time such that 0.1 = 10% transition, 90% hold on full image
 var _prevTexture : Texture2D
 var _next_transition_delay : SceneTreeTimer
 
@@ -80,8 +82,7 @@ func _on_animated_sprite_2d_frame_changed():
 		if $PrevImage.texture != null:
 			var duration = $AnimatedSprite2D.get_frame_duration()
 			#printt("frame change", $AnimatedSprite2D.frame, duration)
-			# HACK: when duration is low then start more transparent
-			var from = clampf(duration * 2.0, 0.5, 1.0) 
+			
 			if duration > transition_cutoff:
 				$PrevImage.visible = true
 				# copy scale and offset
@@ -89,12 +90,23 @@ func _on_animated_sprite_2d_frame_changed():
 				if $AnimatedSprite2D.stretch:
 					$PrevImage.scale = $AnimatedSprite2D.scale
 					$PrevImage.offset = $AnimatedSprite2D.offset
-				if transition_tween:
-					transition_tween.kill()
-				transition_tween = create_tween()
-				transition_tween.tween_property($PrevImage, "modulate:a", 0.0, duration).from(from)
-				#printt("new transition", self, transition_tween, duration, from)
+				if transition_out_tween:
+					transition_out_tween.kill()
+				transition_out_tween = create_tween()
+				# HACK: when duration is low then start more transparent
+				var from = clampf(duration * transition_percent * 2.0, 0.5, 1.0) 
+				var delay = (1.0 - transition_percent) * duration
+				$PrevImage.modulate.a = 1.0
+				transition_out_tween.tween_property($PrevImage, "modulate:a", 0.0, duration * transition_percent).from(from).set_delay(delay)
+				#printt("new transition", self, transition_out_tween, duration, from)
 				# TOD: if different size then fade in the new image for half the duration?
+				if $PrevImage.get_rect().size != $AnimatedSprite2D.get_rect().size:
+					printt("not same size", $PrevImage.get_rect(), $AnimatedSprite2D.get_rect())
+					if transition_in_tween:
+						transition_in_tween.kill()
+					transition_in_tween = create_tween()
+					$AnimatedSprite2D.modulate.a = 0
+					transition_in_tween.tween_property($AnimatedSprite2D, "modulate:a", 1.0, duration * transition_percent).from(0.0).set_delay(delay)
 			else:
 				$PrevImage.visible = false
 
@@ -203,29 +215,36 @@ func save_frames(file_path : String) -> int:
 
 func pause():
 	$AnimatedSprite2D.pause()
-	if transition_tween.is_valid() and transition_tween.is_running():
-		transition_tween.pause()
+	if transition_out_tween.is_valid() and transition_out_tween.is_running():
+		transition_out_tween.pause()
+	if transition_in_tween.is_valid() and transition_in_tween.is_running():
+		transition_in_tween.pause()
 	
 	
 func resume():
 	$AnimatedSprite2D.resume()
-	if transition_tween.is_valid():
-		transition_tween.play()
-
+	if transition_out_tween.is_valid():
+		transition_out_tween.play()
+	if transition_in_tween.is_valid():
+		transition_in_tween.play()
 
 func restart():
 	$AnimatedSprite2D.pause()
 	$PrevImage.visible = false
-	if transition_tween.is_valid() and transition_tween.is_running():
-		transition_tween.stop()
+	if transition_out_tween.is_valid() and transition_out_tween.is_running():
+		transition_out_tween.stop()
+	if transition_in_tween.is_valid() and transition_in_tween.is_running():
+		transition_in_tween.stop()
 	$AnimatedSprite2D.frame = 0
  
 
 func set_timing(duration_ms : float):
 	var dur_s = duration_ms / 1000.0
 	$AnimatedSprite2D.set_frame_duration(dur_s)
-	if  transition_tween.is_valid() and transition_tween.is_running():
-		transition_tween.stop()
+	if  transition_out_tween.is_valid() and transition_out_tween.is_running():
+		transition_out_tween.stop()
+	if  transition_in_tween.is_valid() and transition_in_tween.is_running():
+		transition_in_tween.stop()
 	$PrevImage.visible = false
 	#$AnimatedSprite2D.next_frame() # immediately advance to sync to beat
 	
