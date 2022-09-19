@@ -74,6 +74,45 @@ func _process(delta) -> void:
 			get_tree().get_root().mode = Window.MODE_FULLSCREEN
 
 
+func _input(event : InputEvent) -> void:
+	
+	# number key: change active layer
+	if event is InputEventKey and event.pressed and event.echo == false and not event.shift_pressed:
+		var count := $Stage.get_child_count()
+		var selected := 0
+		match event.physical_keycode:
+			KEY_1:
+				selected = 1
+			KEY_2:
+				selected = 2
+			KEY_3:
+				selected = 3
+			KEY_4:
+				selected = 4
+			KEY_5:
+				selected = 5
+			KEY_6:
+				selected = 6
+			KEY_7:
+				selected = 7
+			KEY_8:
+				selected = 8
+			KEY_9:
+				selected = 9
+			KEY_0:
+				selected = 10
+		printt("main input", event.physical_keycode, selected)
+		if selected <= count:
+			change_layer(selected)
+
+
+func change_layer(layer_num : int) -> void:
+	printt("change_layer", layer_num)
+	if layer_num <= $Stage.get_child_count(): 
+		for n in $Stage.get_children():
+			n.active = false
+		$Stage.get_child(layer_num - 1).active = true
+
 
 func pause() -> void:
 	images.pause()

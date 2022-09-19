@@ -14,209 +14,49 @@ var speed := 1.0
 var fps := 30
 var frame_skip = 10
 var stretch := true
-var sequences : Dictionary
-var current_sequence : PackedInt32Array
-var seq_frame : int = 0
-var custom_animation : String
+
 var paused : bool = false
 
-var save_path : String
 var frame_counts : Dictionary
+var current_frame : Dictionary
 
 var _backwards := false
 var _anim_fps : float
+var _requested_animation : bool = false # tracks if animation change has been requested
 
-
-
-func create_frames(image_paths: Array, animation_name : String, loaderFn) -> void:
-	var start := Time.get_ticks_msec()
-	if not frames is ImageFrames:
-		frames = ImageFrames.new()
-	if not frames.get_animation_names().has(animation_name):
-		frames.add_animation(animation_name)
-		frame_counts[animation_name] = 0
-		
-	for image_path in image_paths:
-		#print("Loading ", image_path)
-		frames.add_frame(animation_name, loaderFn.call(image_path))
-		frame_counts[animation_name] += 1
-	print("Loading time (sec): ", (Time.get_ticks_msec() - start) / 1000.0 )
-
-
-func create_frames_timed(image_paths: Array, animation_name : String, loaderFn, max_duration_ms : float) -> Texture2D:
-	if not frames is ImageFrames:
-		frames = ImageFrames.new()
-	if not frames.get_animation_names().has(animation_name):
-		frames.add_animation(animation_name)
-		frame_counts[animation_name] = 0
-	
-	var count = 0
-	var start = Time.get_ticks_msec()
-	var duration = 0.0
-	var tex : Texture2D
-	for image_path in image_paths:
-		count += 1
-		if count <= frame_counts[animation_name]: continue
-		#print("Loading ", image_path)
-		tex = loaderFn.call(image_path)
-		frames.add_frame(animation_name, tex)
-		#var f = frames.get_frame(animation_name, frame_counts[animation_name])
-		#print(f, f.get_size())
-		frame_counts[animation_name] += 1
-		duration = (Time.get_ticks_msec() - start)
-		if duration >= max_duration_ms:
-			break
-	#print("Loading time (msec): ", duration)
-	return tex
-
-
-
-
-#func create_animation( animationName : String, sequenceArray : PackedInt32Array) -> void:
-#	frames.add_animation(animationName)
-#	frames.set_animation_speed(animationName, fps)
-#	frames.set_animation_loop(animationName, true)
-#	var max_frame := frames.get_frame_count(base_animation_name)
-#	for i in sequenceArray:
-#		# get texture from default animation
-#		if i < max_frame:
-#			frames.add_frame(animationName, frames.get_frame(base_animation_name, i))
-#
-
-
-func add_sequence(animation_name : String, sequence : PackedInt32Array, default_fps=30.) -> void:
-	if animation_name in frames.get_animation_names():
-		prints(animation_name, "already exists")
-		return
-	
-	frames.add_animation(animation_name)
-	frames.set_animation_speed(animation_name, default_fps)
-	frames.set_animation_loop(animation_name, true)
-	sequences[animation_name] = Array()
-	
-	_create_sequence(animation_name, sequence)
-
-
-func _create_sequence(animation_name : String, sequence : PackedInt32Array, from_anim : String = base_animation_name) -> void:
-	var max_frame := frames.get_frame_count(from_anim)
-	assert(max_frame > 0, "_create_sequence(): max_frame == 0")
-	if animation_name not in sequences:
-		sequences[animation_name] = Array()
-		
-	for i in sequence:
-		# get texture from default animation
-		if i < max_frame:
-			frames.add_frame(animation_name, frames.get_frame(from_anim, i))
-			sequences[animation_name].append(i)
-
-
-func update_sequence(animation_name : String, sequence : PackedInt32Array) -> void:
-	if animation_name not in frames.get_animation_names():
-		prints(animation_name, "doesn't exist")
-		return
-	
-	frames.clear(animation_name)
-	sequences[animation_name].clear()
-	_create_sequence(animation_name, sequence)
-
-
-func add_image(animation_name, texture):
-	frames.add_frame(animation_name, texture)
-	
-	
-func add_images(animation_name, images):
-	for image in images:
-		add_image(animation_name, image)
-
-
-func add_sprite_frames(new_frames : ImageFrames) -> void:
-	for aname in new_frames.get_animation_names():
-		if frames.get_animation_names().has(aname):
-			printt("Warning duplicate animation names:", aname)
-			# TODO: prefix with pack name unless name is default?
-			continue
-		else:
-			frames.add_animation(aname)
-			frame_counts[aname] = 0
-		
-		frames.set_animation_loop(aname, new_frames.get_animation_loop(aname))
-		frames.set_animation_speed(aname, new_frames.get_animation_speed(aname))
-		
-		for i in new_frames.get_frame_count(aname):
-			#print("Loading ", image_path)
-			frames.add_frame(aname, new_frames.get_frame(aname, i))
-			frame_counts[aname] += 1
-			
-
-#	# create custom animation
-#	if saved_sequence != "" and saved_sequence.is_valid_filename() and saved_sequence.get_file() != "":
-#		sequence = _load_sequence(saved_sequence)
-#		assert(sequence.size() > 0)
-#		print("Using sequence from", saved_sequence)
-#		# create new animation
-#		custom_animation = "custom_" + saved_sequence.get_basename()
-#		create_animation(custom_animation, sequence)
-#		_active_animation = custom_animation
-#
-#	else:
-#		_active_animation = animation_name
-#
-#	play(_active_animation, _backwards)
-	
-func change_animation(requested_animation : String) -> void:
-	animation = requested_animation
-	current_sequence = sequences[animation]
-	_anim_fps = frames.get_animation_speed(animation)
-
-
-func save_frames(file_path : String) -> int:
-	save_path = file_path
-	print("Saving: ", file_path)
-	var start := Time.get_ticks_msec()
-	#printt(frames, frames.get_class(), ImageFrames.new().get_class())
-	#frames = ImageFrames.new()
-	#printt(frames, frames.get_class())
-	#var result := ResourceSaver.save(frames, file_path, ResourceSaver.FLAG_CHANGE_PATH | ResourceSaver.FLAG_BUNDLE_RESOURCES)
-	var result := ResourceSaver.save(frames, file_path, ResourceSaver.FLAG_CHANGE_PATH)
-	print("Saving time (sec): ", (Time.get_ticks_msec() - start) / 1000.0 )
-	return result
-
-
-func info() -> Dictionary:
-	var i : Dictionary
-	if frames:
-		i = frames.info()
-	i['save_path'] = save_path
-	return i
+signal real_frame_changed(frame: int)
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	#if not frames: return
+	
+	self.frame_changed.connect(_on_frame_changed)
+	
 	var animations = frames.get_animation_names()
 	if animations.size() == 0:
 		print("No animations!")
 	
 	if base_animation_name not in animations:
 		print("no default animation!")
-	if frames.get_frame_count(base_animation_name) == 0:
-		print("default animation has no frames!")
+	if not frames.has_animation(base_animation_name) or frames.get_frame_count(base_animation_name) == 0:
+		print("no default or has no frames!")
 		# try to fix:
 		for anim_name in animations:
 			if frames.get_frame_count(anim_name) > 0:
 				print("recreating new base animation from ", anim_name)
-				_create_sequence(base_animation_name, range(frames.get_frame_count(anim_name)), anim_name)
+				frames.copy_frames(anim_name, base_animation_name)
 				break
-		
-	# set up base sequence if it doesn't already exist 
-	# assume animation images in order
+	
+	# set up frame_counts and current_frame
 	for animation_name in animations:
+		if animation_name not in current_frame:
+			current_frame[animation_name] = 0
+		
 		if animation_name not in frame_counts or frame_counts[animation_name] <= 0:
 			# something has gone wrong
 			frame_counts[animation_name] = frames.get_frame_count(animation_name)
 		if frame_counts[animation_name] > 0:
 			animation = animation_name
-			if animation_name not in sequences:
-				print("No sequence for animation: ", animation_name)
-				sequences[animation_name] = range(frame_counts[animation_name])
 
 	print("Animations: ", animations)
 	print("Current animation: ", animation)
@@ -227,15 +67,34 @@ func _ready():
 	paused = false
 
 
-#func rescale_images():
-#	if stretch:
-#		var viewsize : Vector2 = get_viewport().size
-#		var framesize := frames.get_frame(animation, frame).get_size()
-#		var viewscale : float = min( viewsize.x / framesize.x, viewsize.y / framesize.y)
-#		if viewscale != 1.0:
-#			scale = Vector2(viewscale, viewscale)
+func _on_frame_changed():
+	# update current frame
+	if not _requested_animation:
+		current_frame[animation] = frame
+		real_frame_changed.emit(frame)
 
 
+func change_animation(requested_animation : String) -> void:
+	if requested_animation == animation:
+		return
+	# when changing animations it signals frame_changed and sets the frame back to the start, so we save and restore
+	#var c = current_frame[requested_animation]
+	_requested_animation = true # now that this is set, it won't update current_frame or signal real_frame_changed
+	animation = requested_animation
+	_requested_animation = false
+	
+	frame = current_frame[animation] # sets current frame
+	_anim_fps = frames.get_animation_speed(animation)
+	printt("change animation to ", requested_animation, current_frame[animation])
+
+
+func info() -> Dictionary:
+	var i : Dictionary
+	if frames:
+		i = frames.info()
+	return i
+	
+	
 func next_animation(inc : int) -> StringName:
 	var anim_names = frames.get_animation_names()
 	var i = anim_names.find(animation)
@@ -302,11 +161,43 @@ func rescale():
 	if tex:
 		var framesize := tex.get_size()
 		var viewscale : float = min( viewsize.x / framesize.x, viewsize.y / framesize.y)
-		if viewscale != 1.0:
+		if not is_equal_approx(viewscale, scale.x):
 			scale = Vector2(viewscale, viewscale)
 			# bug in godot 4 requires offset adjustment?
-			offset = Vector2( (viewsize.x / viewscale) / 2.0,  (viewsize.y / viewscale) / 2.0 )
-			#printt(viewsize, framesize, viewscale, scale, offset)
+			offset = Vector2( viewsize.x / viewscale, viewsize.y / viewscale ) * 0.5
+			printt(viewsize, framesize, viewscale, scale, offset)
+
+func _input(event : InputEvent) -> void:
+	
+	# shift + number key: change animation
+	if event is InputEventKey and event.pressed and event.echo == false and event.shift_pressed:
+		var anims := frames.get_animation_names()
+		var count := anims.size()
+		var selected_anim := 0
+		match event.physical_keycode:
+			KEY_1:
+				selected_anim = 1
+			KEY_2:
+				selected_anim = 2
+			KEY_3:
+				selected_anim = 3
+			KEY_4:
+				selected_anim = 4
+			KEY_5:
+				selected_anim = 5
+			KEY_6:
+				selected_anim = 6
+			KEY_7:
+				selected_anim = 7
+			KEY_8:
+				selected_anim = 8
+			KEY_9:
+				selected_anim = 9
+			KEY_0:
+				selected_anim = 10
+		printt("AnimatedImage input", event.physical_keycode, selected_anim)
+		if selected_anim <= count:
+			change_animation(anims[selected_anim - 1])
 
 
 func handle_input():
@@ -352,7 +243,7 @@ func handle_input():
 			
 	if Input.is_action_just_pressed('next_animation'):
 		change_animation(next_animation(1))
-		
+			
 	if Input.is_action_just_pressed("reverse"):
 		_backwards = !_backwards
 		play(animation, _backwards)

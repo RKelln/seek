@@ -8,9 +8,13 @@ extends Node2D
 @export var active : bool = true
 @export var pack_name : String = "":
 	get:
-		return $AnimatedSprite2D.pack_name
+		if cur_img:
+			return cur_img.pack_name
+		return pack_name
 	set(value):
-		$AnimatedSprite2D.pack_name = value
+		pack_name = value
+		if cur_img:
+			cur_img.pack_name = value
 
 var gui := false
 
@@ -19,7 +23,7 @@ var transition := true
 var transition_out_tween : Tween
 var transition_in_tween : Tween
 var transition_cutoff := 0.042 # 24 fps = 0.042
-var transition_percent := 0.8 # scale transition time such that 0.1 = 10% transition, 90% hold on full image
+var transition_percent := 1.0 # scale transition time such that 0.1 = 10% transition, 90% hold on full image
 var _prevTexture : Texture2D
 var _next_transition_delay : SceneTreeTimer
 
@@ -51,6 +55,8 @@ func _ready():
 	prev_img = $CanvasGroup/PrevImage
 	
 	# signals
+	cur_img.real_frame_changed.connect(_on_real_frame_changed)
+	
 	# init pack name if not already set
 	if pack_name != "":
 		if cur_img.pack_name != "":
@@ -59,7 +65,7 @@ func _ready():
 				pack_name = cur_img.pack_name
 		else:
 			cur_img.pack_name = pack_name
-
+	
 
 func _process(delta : float) -> void:
 	if active:
@@ -73,6 +79,9 @@ func _process(delta : float) -> void:
 func set_image_frames(iframes : ImageFrames) -> void:
 	$CanvasGroup/AnimatedSprite2D.frames = iframes
  
+
+func _on_real_frame_changed():
+	#printt("_on_animated_sprite_2d_frame_changed", self, get_current_frame_index(), cur_img, prev_img)
 	
 	# update GUI
 	if gui:
