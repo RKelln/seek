@@ -1,7 +1,6 @@
 extends Node
 
-var image_files : Array
-var images : Node
+var images : ImageFrames
 
 var default_image_compression = 0.7
 var default_image_pack = 'user://framedata_laura_164.res'
@@ -147,57 +146,67 @@ func _init_node(nodeOrPath, defaultPath) -> Node:
 		return get_parent().find_child(defaultPath)
 
 
-func load_image_dir(animation_name, image_dir, max_images : int = 0, rescale : Vector2 = Vector2.ZERO ) -> Node:
-	image_files = get_dir_contents(image_dir)[0]
-	print("Found %d images in %s" % [image_files.size(), image_dir])
-	assert(image_files.size() > 0)
-	image_files.sort()
-	if max_images > 0 and image_files.size() > max_images:
-		image_files.resize(max_images) # take start of list only up to max_size
+#func load_image_dir(animation_name, image_dir, max_images : int = 0, rescale : Vector2 = Vector2.ZERO ) -> ImageFrames:
+#	image_files = get_dir_contents(image_dir)[0]
+#	print("Found %d images in %s" % [image_files.size(), image_dir])
+#	assert(image_files.size() > 0)
+#	image_files.sort()
+#	if max_images > 0 and image_files.size() > max_images:
+#		image_files.resize(max_images) # take start of list only up to max_size
+#
+#	var texture_loader = func(image_file):
+#		return load_texture(image_file, rescale)
+#
+#	images.create_frames(image_files, animation_name, texture_loader)
+#
+#	return images
+
+
+#func load_images(animation_name, custom_image_files, max_images : int = 0, rescale : Vector2 = Vector2.ZERO ) -> ImageFrames:
+#	image_files = custom_image_files
+#	image_files.sort()
+#	if max_images > 0 and image_files.size() > max_images:
+#		image_files.resize(max_images) # take start of list only up to max_size
+#
+#	var texture_loader = func(image_file):
+#		return load_texture(image_file, rescale)
+#
+#	images.create_frames(image_files, animation_name, texture_loader)
+#
+#	return images
+
+
 	
-	var texture_loader = func(image_file):
-		return load_texture(image_file, rescale)
-	
-	images.create_frames(image_files, animation_name, texture_loader)
-	
+#func load_images(image_paths: Array, animation_name : String, textureLoaderFn : Variant, max_duration_ms : float) -> Texture2D:
+#	return cur_img.create_frames_timed(image_paths, animation_name, textureLoaderFn, max_duration_ms)
+
+
+func load_image_pack(file_path : String) -> ImageFrames:
+	var imgframes = ImageFrames.load_image_pack(file_path)
+	images = imgframes
+	return imgframes
+
+
+func add_image_pack(file_path : String) -> ImageFrames:
+	var imgframes = ImageFrames.load_image_pack(file_path)
+	images.add_frames(imgframes)
+	return imgframes
+
+
+func new_images() -> ImageFrames:
+	images = load("res://ImageFrames.gd").new()
 	return images
 
 
-func load_images(animation_name, custom_image_files, max_images : int = 0, rescale : Vector2 = Vector2.ZERO ) -> Node:
-	image_files = custom_image_files
-	image_files.sort()
-	if max_images > 0 and image_files.size() > max_images:
-		image_files.resize(max_images) # take start of list only up to max_size
-	
-	var texture_loader = func(image_file):
-		return load_texture(image_file, rescale)
-	
-	images.create_frames(image_files, animation_name, texture_loader)
-	
-	return images
-
-
-func new_images() -> Node:
-	images = load("res://images.tscn").instantiate()
-	image_files = []
-	return images
-
-
-func load_defaults() -> Node:
+func load_defaults() -> ImageFrames:
 	if ResourceLoader.exists(default_image_pack):
-		images.load_image_pack(default_image_pack)
+		images = ImageFrames.load_image_pack(default_image_pack)
 	return images
 
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	new_images()
-
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(_delta):
-	pass
-	#load_next(current_animation)
 
 
 

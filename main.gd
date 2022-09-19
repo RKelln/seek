@@ -1,9 +1,10 @@
 extends Node2D
 
 # 'user://test_godot4_framedata_plant_stills_hd_1994.res'
+const Images = preload("res://images.tscn")
 
 var default_image_pack = 'user://framedata_laura_164.res'
-var images
+var images : Node
 var help : Window
 var paused := false
 var last_beat_ms := 0.0
@@ -13,13 +14,15 @@ var beat_average := 0.0
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	images = Loader.images
-	if images.get_total_frame_count() <= 0:
-		images = Loader.load_defaults()
+	images = preload("res://images.tscn").instantiate()
+	if Loader.images.get_total_frame_count() <= 0:
+		images.set_image_frames(Loader.load_defaults())
+	else:
+		images.set_image_frames(Loader.images)
 	$Stage.add_child(images)
 	
 	help = %HelpPopup
-	%ImageGridControl.set_images(images.get_frames(), 5, images.get_current_frame_index())
+	%ImageGridControl.set_images(images.get_textures(), 5, images.get_current_frame_index())
 
 
 func _process(delta) -> void:
@@ -57,7 +60,9 @@ func _process(delta) -> void:
 	if Input.is_action_just_pressed("duplicate_layer"):
 		var orig = $Stage.get_child(get_active_layer()) # TODO: get active
 		#var n = orig.duplicate(DUPLICATE_GROUPS | DUPLICATE_SCRIPTS | DUPLICATE_SIGNALS)
-		var n = orig.duplicate(DUPLICATE_GROUPS | DUPLICATE_SCRIPTS )
+#		var n = orig.duplicate(DUPLICATE_GROUPS | DUPLICATE_SCRIPTS )
+		var n = Images.instantiate()
+		n.set_image_frames(orig.get_image_frames().duplicate())
 		orig.active = false
 		add_child(n)
 		n.active = true
@@ -67,8 +72,8 @@ func _process(delta) -> void:
 			get_tree().get_root().mode = Window.MODE_WINDOWED
 		else:
 			get_tree().get_root().mode = Window.MODE_FULLSCREEN
-			
-		
+
+
 
 func pause() -> void:
 	images.pause()

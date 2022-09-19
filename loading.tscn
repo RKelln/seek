@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://bt6ym43wuq0yc"]
+[gd_scene load_steps=5 format=3 uid="uid://bt6ym43wuq0yc"]
 
 [ext_resource type="Theme" uid="uid://tw57akexx0f2" path="res://GUI_theme.tres" id="1_cyymp"]
 [ext_resource type="Script" path="res://loadingGUI.gd" id="2_yrso3"]
 [ext_resource type="Script" path="res://AnimationNamePopup.gd" id="3_byous"]
+[ext_resource type="PackedScene" uid="uid://jj6k3b3ct75r" path="res://name_panel.tscn" id="4_28pck"]
 
 [node name="GUI" type="Control"]
 layout_mode = 3
@@ -36,7 +37,7 @@ size_flags_vertical = 0
 
 [node name="ButtonContainer" type="VBoxContainer" parent="ActiveContainer/TopContainer"]
 offset_left = 834.0
-offset_top = 291.0
+offset_top = 240.0
 offset_right = 986.0
 offset_bottom = 475.0
 size_flags_horizontal = 4
@@ -56,18 +57,26 @@ offset_right = 152.0
 offset_bottom = 82.0
 text = "Load Image Pack"
 
-[node name="LoadSequenceButton" type="Button" parent="ActiveContainer/TopContainer/ButtonContainer"]
+[node name="SaveAsButton" type="Button" parent="ActiveContainer/TopContainer/ButtonContainer"]
+unique_name_in_owner = true
 offset_top = 102.0
 offset_right = 152.0
 offset_bottom = 133.0
+disabled = true
+text = "Save All As..."
+
+[node name="LoadSequenceButton" type="Button" parent="ActiveContainer/TopContainer/ButtonContainer"]
+offset_top = 153.0
+offset_right = 152.0
+offset_bottom = 184.0
 disabled = true
 text = "Load sequence"
 
 [node name="StartButton" type="Button" parent="ActiveContainer/TopContainer/ButtonContainer"]
 unique_name_in_owner = true
-offset_top = 153.0
+offset_top = 204.0
 offset_right = 152.0
-offset_bottom = 184.0
+offset_bottom = 235.0
 disabled = true
 text = "Start"
 
@@ -136,53 +145,28 @@ file_mode = 0
 access = 1
 filters = PackedStringArray("*.res")
 
+[node name="SavePackFileDialog" type="FileDialog" parent="."]
+size = Vector2i(1920, 1080)
+min_size = Vector2i(600, 600)
+ok_button_text = "Save"
+access = 2
+filters = PackedStringArray("*.res")
+
 [node name="AnimationNamePopup" type="Popup" parent="."]
 title = "Choose a name for this series of images"
-size = Vector2i(400, 200)
-unresizable = false
-min_size = Vector2i(400, 200)
-max_size = Vector2i(1920, 1080)
+size = Vector2i(400, 150)
+min_size = Vector2i(400, 150)
 script = ExtResource("3_byous")
 
-[node name="NamePanel" type="Panel" parent="AnimationNamePopup"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme = ExtResource("1_cyymp")
-
-[node name="NameVBoxContainer" type="VBoxContainer" parent="AnimationNamePopup/NamePanel"]
-offset_right = 40.0
-offset_bottom = 40.0
-
-[node name="NameChooseLabel" type="Label" parent="AnimationNamePopup/NamePanel/NameVBoxContainer"]
-offset_right = 284.0
-offset_bottom = 26.0
-size_flags_vertical = 0
-text = "Choose a name for this image series:"
-
-[node name="NameTextEdit" type="TextEdit" parent="AnimationNamePopup/NamePanel/NameVBoxContainer"]
-custom_minimum_size = Vector2i(0, 40)
-offset_top = 36.0
-offset_right = 284.0
-offset_bottom = 76.0
-size_flags_vertical = 3
-placeholder_text = "Enter name here"
-caret_blink = true
-
-[node name="Button" type="Button" parent="AnimationNamePopup/NamePanel/NameVBoxContainer"]
-offset_top = 86.0
-offset_right = 284.0
-offset_bottom = 117.0
-text = "OK"
+[node name="NamePanel" parent="AnimationNamePopup" instance=ExtResource("4_28pck")]
+unique_name_in_owner = true
 
 [connection signal="pressed" from="ActiveContainer/TopContainer/ButtonContainer/CreateImagePackButton" to="." method="_on_create_image_pack_button_pressed"]
 [connection signal="pressed" from="ActiveContainer/TopContainer/ButtonContainer/LoadPackButton" to="." method="_on_load_pack_button_pressed"]
+[connection signal="pressed" from="ActiveContainer/TopContainer/ButtonContainer/SaveAsButton" to="." method="_on_save_as_button_pressed"]
 [connection signal="pressed" from="ActiveContainer/TopContainer/ButtonContainer/LoadSequenceButton" to="." method="_on_load_sequence_button_pressed"]
 [connection signal="pressed" from="ActiveContainer/TopContainer/ButtonContainer/StartButton" to="." method="_on_start_button_pressed"]
 [connection signal="dir_selected" from="ImagesFileDialog" to="." method="_on_images_file_dialog_dir_selected"]
 [connection signal="file_selected" from="SequenceFileDialog" to="." method="_on_sequence_file_dialog_file_selected"]
 [connection signal="file_selected" from="PackFileDialog" to="." method="_on_pack_file_dialog_file_selected"]
-[connection signal="text_changed" from="AnimationNamePopup/NamePanel/NameVBoxContainer/NameTextEdit" to="AnimationNamePopup" method="_on_name_text_edit_text_changed"]
-[connection signal="pressed" from="AnimationNamePopup/NamePanel/NameVBoxContainer/Button" to="." method="_on_name_button_pressed"]
+[connection signal="file_selected" from="SavePackFileDialog" to="." method="_on_save_pack_file_dialog_file_selected"]

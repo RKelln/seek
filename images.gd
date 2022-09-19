@@ -26,6 +26,9 @@ var _next_transition_delay : SceneTreeTimer
 # alpha
 var opacity_speed := 1.0
 
+const AnimatedImage = preload("res://AnimatedImage.gd")
+var cur_img : AnimatedImage
+var prev_img : Sprite2D
 
 func _init_node(nodeOrPath, defaultPath) -> Node:
 	if nodeOrPath is Node:
@@ -35,6 +38,7 @@ func _init_node(nodeOrPath, defaultPath) -> Node:
 	else:
 		return get_parent().find_child(defaultPath)
 
+
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	if gui:
@@ -42,8 +46,19 @@ func _ready():
 		_totalFramesNode = %TotalFrames
 		_actualFrameNode = %ActualFrame
 		_runningTotalFramesNode = %RunningTotal
+	
+	cur_img = $CanvasGroup/AnimatedSprite2D
+	prev_img = $CanvasGroup/PrevImage
+	
 	# signals
-	$AnimatedSprite2D.frame_changed.connect(_on_animated_sprite_2d_frame_changed)
+	# init pack name if not already set
+	if pack_name != "":
+		if cur_img.pack_name != "":
+			if pack_name != cur_img.pack_name:
+				printt("images.gd and AnimatedSrpite2D pack_names differ", pack_name, cur_img.pack_name)
+				pack_name = cur_img.pack_name
+		else:
+			cur_img.pack_name = pack_name
 
 
 func _process(delta : float) -> void:
@@ -52,21 +67,22 @@ func _process(delta : float) -> void:
 			modulate.a = clampf(modulate.a + delta * opacity_speed, 0.0, 1.0)
 		if Input.is_action_pressed("decrease_opacity") and modulate.a > 0:
 			modulate.a = clampf(modulate.a - delta * opacity_speed, 0.0, 1.0)
-		$AnimatedSprite2D.handle_input()
+		cur_img.handle_input()
 
 
-func _on_animated_sprite_2d_frame_changed():
-	#printt("_on_animated_sprite_2d_frame_changed", self, get_current_frame_index(), $AnimatedSprite2D, $PrevImage)
+func set_image_frames(iframes : ImageFrames) -> void:
+	$CanvasGroup/AnimatedSprite2D.frames = iframes
+ 
 	
 	# update GUI
 	if gui:
-		_frameNode.text = str($AnimatedSprite2D.frame)
-		if $AnimatedSprite2D.animation == $AnimatedSprite2D.custom_animation:
-			_actualFrameNode.text = str($AnimatedSprite2D.current_sequence[$AnimatedSprite2D.frame])
+		_frameNode.text = str(cur_img.frame)
+		if cur_img.animation == cur_img.custom_animation:
+			_actualFrameNode.text = str(cur_img.current_sequence[cur_img.frame])
 		else:
-			_actualFrameNode.text = str($AnimatedSprite2D.frame)
+			_actualFrameNode.text = str(cur_img.frame)
 		_runningTotalFramesNode.text = str( _runningTotalFramesNode.text.to_int() + 1)
-		_totalFramesNode.text = str($AnimatedSprite2D.frame_counts[$AnimatedSprite2D.animation])
+		_totalFramesNode.text = str(cur_img.frame_counts[cur_img.animation])
 	
 	# update crossfade
 	# https://stackoverflow.com/questions/68765045/tween-the-texture-on-a-texturebutton-texturerect-fade-out-image1-while-simult
@@ -77,98 +93,80 @@ func _on_animated_sprite_2d_frame_changed():
 	
 	if transition:
 		if _prevTexture != null:
-			$PrevImage.texture = _prevTexture
-		_prevTexture = $AnimatedSprite2D.get_current_frame()
-		if $PrevImage.texture != null:
-			var duration = $AnimatedSprite2D.get_frame_duration()
-			#printt("frame change", $AnimatedSprite2D.frame, duration)
+			prev_img.texture = _prevTexture
+		_prevTexture = cur_img.get_current_frame()
+		if prev_img.texture != null:
+			var duration = cur_img.get_frame_duration()
+			#printt("frame change", cur_img.frame, duration)
 			
 			if duration > transition_cutoff:
-				$PrevImage.visible = true
+				prev_img.visible = true
 				# copy scale and offset
 				# (luckily this works because this signal seems to be processed before the AnimatedSPite is updated, phew)
-				if $AnimatedSprite2D.stretch:
-					$PrevImage.scale = $AnimatedSprite2D.scale
-					$PrevImage.offset = $AnimatedSprite2D.offset
+				if cur_img.stretch:
+					prev_img.scale = cur_img.scale
+					prev_img.offset = cur_img.offset
 				if transition_out_tween:
 					transition_out_tween.kill()
 				transition_out_tween = create_tween()
 				# HACK: when duration is low then start more transparent
 				var from = clampf(duration * transition_percent * 2.0, 0.5, 1.0) 
 				var delay = (1.0 - transition_percent) * duration
-				$PrevImage.modulate.a = 1.0
-				transition_out_tween.tween_property($PrevImage, "modulate:a", 0.0, duration * transition_percent).from(from).set_delay(delay)
+				if delay > 0:
+					prev_img.modulate.a = 1.0
+					transition_out_tween.tween_property(prev_img, "modulate:a", 0.0, duration * transition_percent).from(from).set_delay(delay)
+				else:
+					transition_out_tween.tween_property(prev_img, "modulate:a", 0.0, duration * transition_percent).from(from)
 				#printt("new transition", self, transition_out_tween, duration, from)
 				# TOD: if different size then fade in the new image for half the duration?
-				if $PrevImage.get_rect().size != $AnimatedSprite2D.get_rect().size:
-					printt("not same size", $PrevImage.get_rect(), $AnimatedSprite2D.get_rect())
+				if prev_img.get_rect().size != cur_img.get_rect().size:
+					#printt("not same size", prev_img.get_rect(), cur_img.get_rect())
 					if transition_in_tween:
 						transition_in_tween.kill()
 					transition_in_tween = create_tween()
-					$AnimatedSprite2D.modulate.a = 0
-					transition_in_tween.tween_property($AnimatedSprite2D, "modulate:a", 1.0, duration * transition_percent).from(0.0).set_delay(delay)
+					cur_img.modulate.a = 0
+					transition_in_tween.tween_property(cur_img, "modulate:a", 1.0, duration * transition_percent).from(0.0).set_delay(delay)
+				elif cur_img.modulate.a != 1:
+					cur_img.modulate.a = 1
 			else:
-				$PrevImage.visible = false
-
-
-func load_images(image_paths: Array, animation_name : String, textureLoaderFn : Variant, max_duration_ms : float) -> Texture2D:
-	return $AnimatedSprite2D.create_frames_timed(image_paths, animation_name, textureLoaderFn, max_duration_ms)
-
-
-func load_image_pack(file_path : String):
-	$AnimatedSprite2D.frames = _load_image_pack(file_path)
-	$AnimatedSprite2D.save_path = file_path
-	
-	
-func add_image_pack(file_path : String):
-	$AnimatedSprite2D.add_sprite_frames(_load_image_pack(file_path))
-
-
-func _load_image_pack(file_path : String):
-	var iframes : ImageFrames = ResourceLoader.load(file_path, "ImageFrames")
-	if not iframes:
-		iframes = ResourceLoader.load(file_path) as ImageFrames
-	if not iframes:
-		iframes = load(file_path) as ImageFrames
-	assert(iframes is ImageFrames)
-	return iframes
+				prev_img.visible = false
 
 
 func load_sequence(file_path : String):
 	var sequence = Loader.load_sequence_file(file_path)
 	var sequence_name = file_path.get_file().get_basename()
 	if sequence_name != "":
-		$AnimatedSprite2D.add_sequence(sequence_name, sequence)
-		$AnimatedSprite2D.change_animation(sequence_name) # switch to loaded sequence
+		cur_img.add_sequence(sequence_name, sequence)
+		cur_img.change_animation(sequence_name) # switch to loaded sequence
 
 
 func get_total_frame_count() -> int:
-	if $AnimatedSprite2D.frames == null: return 0
+	if cur_img == null or cur_img.frames == null: return 0
 	
 	var count := 0
-	for anim in $AnimatedSprite2D.frames.get_animation_names():
-		count += $AnimatedSprite2D.frames.get_frame_count(anim)
+	for anim in cur_img.frames.get_animation_names():
+		count += cur_img.frames.get_frame_count(anim)
 	return count
 
 
 func get_frame_count(anim_name : String = "") -> int:
-	if $AnimatedSprite2D.frames == null: return 0
+	if cur_img == null or cur_img.frames == null: return 0
 	
 	if anim_name == "":
-		anim_name = $AnimatedSprite2D.animation
+		anim_name = cur_img.animation
 		
-	return $AnimatedSprite2D.frames.get_frame_count(anim_name)
+	return cur_img.frames.get_frame_count(anim_name)
 
 
-func get_spriteframes() -> ImageFrames:
-	return $AnimatedSprite2D.frames
+func get_image_frames() -> ImageFrames:
+	return cur_img.frames
 
 
-func get_frames(anim_name : String = "") -> Array:
+func get_textures(anim_name : String = "") -> Array[Texture2D]:
 	if anim_name == "":
-		anim_name = $AnimatedSprite2D.animation
+		anim_name = cur_img.animation
 		
-	var sp = get_spriteframes()
+	var sp = get_image_frames()
 	var f = Array()
 	for i in get_frame_count():
 		# add sequence number to the frames meta data
@@ -179,74 +177,63 @@ func get_frames(anim_name : String = "") -> Array:
 
 
 func get_current_frame_index() -> int:
-	return $AnimatedSprite2D.frame
+	return cur_img.frame
 
 
-func get_sequence_name() -> String:
-	return $AnimatedSprite2D.animation
+func get_sequence_name() -> StringName:
+	return cur_img.animation
 
 
 func get_sequence(seq_name : String = "") -> PackedInt32Array:
-	if seq_name == "":
-		return $AnimatedSpride2D.current_sequence
-	else:
-		return $AnimatedSprite2D.sequences[seq_name]
-
-
-func info() -> Dictionary:
-	return $AnimatedSprite2D.info()
+	return cur_img.frames.get_sequence(seq_name)
 
 
 func update_sequence(seq_name : String, sequence : PackedInt32Array) -> void:
-	$AnimatedSprite2D.pause()
-	$AnimatedSprite2D.animation = "default"
-	$AnimatedSprite2D.update_sequence(seq_name, sequence)
-	$AnimatedSprite2D.animation = seq_name
+	cur_img.pause()
+	cur_img.animation = cur_img.frames.base_animation_name
+	cur_img.frames.update_frames(seq_name, sequence)
+	cur_img.animation = seq_name
 	restart()
 
 
-func get_save_path() -> String:
-	return $AnimatedSprite2D.save_path
-
-
-func save_frames(file_path : String) -> int:
-	return $AnimatedSprite2D.save_frames(file_path)
+func info() -> Dictionary:
+	return cur_img.info()
 
 
 func pause():
-	$AnimatedSprite2D.pause()
-	if transition_out_tween.is_valid() and transition_out_tween.is_running():
+	cur_img.pause()
+	if transition_out_tween and transition_out_tween.is_valid() and transition_out_tween.is_running():
 		transition_out_tween.pause()
-	if transition_in_tween.is_valid() and transition_in_tween.is_running():
+	if transition_in_tween and transition_in_tween.is_valid() and transition_in_tween.is_running():
 		transition_in_tween.pause()
 	
 	
 func resume():
-	$AnimatedSprite2D.resume()
-	if transition_out_tween.is_valid():
+	cur_img.resume()
+	if transition_out_tween and transition_out_tween.is_valid():
 		transition_out_tween.play()
-	if transition_in_tween.is_valid():
+	if transition_in_tween and transition_in_tween.is_valid():
 		transition_in_tween.play()
 
 func restart():
-	$AnimatedSprite2D.pause()
-	$PrevImage.visible = false
-	if transition_out_tween.is_valid() and transition_out_tween.is_running():
+	cur_img.pause()
+	prev_img.visible = false
+	if transition_out_tween and transition_out_tween.is_valid() and transition_out_tween.is_running():
 		transition_out_tween.stop()
-	if transition_in_tween.is_valid() and transition_in_tween.is_running():
+	if transition_in_tween and transition_in_tween.is_valid() and transition_in_tween.is_running():
 		transition_in_tween.stop()
-	$AnimatedSprite2D.frame = 0
+	cur_img.frame = 0
  
 
 func set_timing(duration_ms : float):
 	var dur_s = duration_ms / 1000.0
-	$AnimatedSprite2D.set_frame_duration(dur_s)
-	if  transition_out_tween.is_valid() and transition_out_tween.is_running():
+	cur_img.set_frame_duration(dur_s)
+	if transition_out_tween and transition_out_tween.is_valid() and transition_out_tween.is_running():
 		transition_out_tween.stop()
-	if  transition_in_tween.is_valid() and transition_in_tween.is_running():
+	if transition_in_tween and transition_in_tween.is_valid() and transition_in_tween.is_running():
 		transition_in_tween.stop()
-	$PrevImage.visible = false
-	#$AnimatedSprite2D.next_frame() # immediately advance to sync to beat
+	prev_img.visible = false
+	#cur_img.next_frame() # immediately advance to sync to beat
 	
 	# try to adjust for transition
 	if dur_s > transition_cutoff:
@@ -258,6 +245,6 @@ func set_timing(duration_ms : float):
 			printt("start delay", dur_s / 2.0)
 			await _next_transition_delay.timeout
 			printt("offset transition")
-			$AnimatedSprite2D.next_frame()
+			cur_img.next_frame()
 	else:
-		$AnimatedSprite2D.next_frame() # immediately advance to sync to beat
+		cur_img.next_frame() # immediately advance to sync to beat

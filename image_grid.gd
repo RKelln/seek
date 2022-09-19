@@ -47,7 +47,7 @@ func _notification(what):
 # grid_size == 0 : leave as current size
 # grid_size > 0: set to grid size
 # grid_size < 0: set grid size based on number of images, such that they all fit on screen
-func set_images(new_images : Array, grid_size : int = 0, center_idx : int = -1) -> void:
+func set_images(new_images : Array[Texture2D], grid_size : int = 0, center_idx : int = -1) -> void:
 	if grid_size > 0:
 		set_grid(grid_size)
 	if grid_size < 0:
