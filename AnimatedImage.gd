@@ -21,8 +21,9 @@ var frame_counts : Dictionary
 var current_frame : Dictionary
 
 var _backwards := false
-var _anim_fps : float
+var _anim_fps : float = 0
 var _requested_animation : bool = false # tracks if animation change has been requested
+var _current_texture : Texture2D # reference to current texture
 
 signal real_frame_changed(frame: int)
 
@@ -55,14 +56,14 @@ func _ready():
 		if animation_name not in frame_counts or frame_counts[animation_name] <= 0:
 			# something has gone wrong
 			frame_counts[animation_name] = frames.get_frame_count(animation_name)
-		if frame_counts[animation_name] > 0:
-			animation = animation_name
+	
+	# start with last animation
+	change_animation(animations[-1])
 
 	print("Animations: ", animations)
 	print("Current animation: ", animation)
 	print("Frame count: ", frame_counts[animation])
 
-	change_animation(animation)
 	play(animation)
 	paused = false
 
@@ -71,20 +72,24 @@ func _on_frame_changed():
 	# update current frame
 	if not _requested_animation:
 		current_frame[animation] = frame
+		_current_texture = frames.get_frame(animation, frame)
 		real_frame_changed.emit(frame)
 
 
 func change_animation(requested_animation : String) -> void:
 	if requested_animation == animation:
 		return
-	# when changing animations it signals frame_changed and sets the frame back to the start, so we save and restore
-	#var c = current_frame[requested_animation]
+	if frame_counts[requested_animation] <= 0:
+		return
+
+	# NOTE: when changing animations it signals frame_changed and sets the frame back to the start
 	_requested_animation = true # now that this is set, it won't update current_frame or signal real_frame_changed
 	animation = requested_animation
 	_requested_animation = false
 	
 	frame = current_frame[animation] # sets current frame
 	_anim_fps = frames.get_animation_speed(animation)
+	assert(_anim_fps > 0)
 	printt("change animation to ", requested_animation, current_frame[animation])
 
 
@@ -106,11 +111,13 @@ func next_animation(inc : int) -> StringName:
 
 
 func get_frame_duration() -> float:
+	assert(_anim_fps > 0)
 	return (1.0 / _anim_fps) / speed_scale
 
 
 func get_current_frame() -> Texture2D:
-	return frames.get_frame(animation, frame)
+	#return frames.get_frame(animation, frame)
+	return _current_texture
 
 
 func get_rect() -> Rect2:
@@ -122,6 +129,7 @@ func get_rect() -> Rect2:
 
 
 func set_frame_duration(duration_s : float) -> void:
+	assert(_anim_fps > 0)
 	var default_speed = 1.0 / _anim_fps
 	speed = default_speed / duration_s
 	speed_scale = speed
@@ -157,15 +165,15 @@ func _process(_delta):
 
 func rescale():
 	var viewsize : Vector2 = get_viewport().get_visible_rect().size # Vector2(1920, 1080) # FIXME: get these from project settings? # get_viewport().size
-	var tex = frames.get_frame(animation, frame)
-	if tex:
-		var framesize := tex.get_size()
+	if _current_texture:
+		var framesize := _current_texture.get_size()
 		var viewscale : float = min( viewsize.x / framesize.x, viewsize.y / framesize.y)
 		if not is_equal_approx(viewscale, scale.x):
 			scale = Vector2(viewscale, viewscale)
 			# bug in godot 4 requires offset adjustment?
 			offset = Vector2( viewsize.x / viewscale, viewsize.y / viewscale ) * 0.5
-			printt(viewsize, framesize, viewscale, scale, offset)
+			#printt(viewsize, framesize, viewscale, scale, offset)
+
 
 func _input(event : InputEvent) -> void:
 	

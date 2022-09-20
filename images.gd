@@ -23,7 +23,7 @@ var transition := true
 var transition_out_tween : Tween
 var transition_in_tween : Tween
 var transition_cutoff := 0.042 # 24 fps = 0.042
-var transition_percent := 1.0 # scale transition time such that 0.1 = 10% transition, 90% hold on full image
+var transition_percent := 0.7 # scale transition time such that 0.1 = 10% transition, 90% hold on full image
 var _prevTexture : Texture2D
 var _next_transition_delay : SceneTreeTimer
 
@@ -53,6 +53,8 @@ func _ready():
 	
 	cur_img = $CanvasGroup/AnimatedSprite2D
 	prev_img = $CanvasGroup/PrevImage
+	assert(cur_img != null)
+	assert(prev_img != null)
 	
 	# signals
 	cur_img.real_frame_changed.connect(_on_real_frame_changed)
@@ -80,8 +82,8 @@ func set_image_frames(iframes : ImageFrames) -> void:
 	$CanvasGroup/AnimatedSprite2D.frames = iframes
  
 
-func _on_real_frame_changed():
-	#printt("_on_animated_sprite_2d_frame_changed", self, get_current_frame_index(), cur_img, prev_img)
+func _on_real_frame_changed( frame : int) -> void:
+	#printt("_on_real_frame_changed", frame, get_current_frame_index(), cur_img, prev_img)
 	
 	# update GUI
 	if gui:
@@ -99,8 +101,11 @@ func _on_real_frame_changed():
 	#$CrossfadeImage.material.set_shader_param("duration", speed_scale / fps)
 	#$CrossfadeImage.material.set_shader_param("prevTex", $CrossfadeImage.material.get_shader_param("curTex"))
 	#$CrossfadeImage.material.set_shader_param("curTex", frames.get_frame(animation, frame))
-	
+
 	if transition:
+		assert(cur_img != null)
+		assert(prev_img != null)
+	
 		if _prevTexture != null:
 			prev_img.texture = _prevTexture
 		_prevTexture = cur_img.get_current_frame()
@@ -111,32 +116,34 @@ func _on_real_frame_changed():
 			if duration > transition_cutoff:
 				prev_img.visible = true
 				# copy scale and offset
-				# (luckily this works because this signal seems to be processed before the AnimatedSPite is updated, phew)
+				# (luckily this works because this signal seems to be processed before the AnimatedSprite is updated, phew)
 				if cur_img.stretch:
 					prev_img.scale = cur_img.scale
 					prev_img.offset = cur_img.offset
 				if transition_out_tween:
 					transition_out_tween.kill()
-				transition_out_tween = create_tween()
+				transition_out_tween = prev_img.create_tween()
 				# HACK: when duration is low then start more transparent
 				var from = clampf(duration * transition_percent * 2.0, 0.5, 1.0) 
 				var delay = (1.0 - transition_percent) * duration
+				var t = transition_out_tween.tween_property(prev_img, "modulate:a", 0.0, duration * transition_percent).from(from)
 				if delay > 0:
 					prev_img.modulate.a = 1.0
-					transition_out_tween.tween_property(prev_img, "modulate:a", 0.0, duration * transition_percent).from(from).set_delay(delay)
-				else:
-					transition_out_tween.tween_property(prev_img, "modulate:a", 0.0, duration * transition_percent).from(from)
+					t.set_delay(delay)
+
 				#printt("new transition", self, transition_out_tween, duration, from)
-				# TOD: if different size then fade in the new image for half the duration?
+				# if different size then fade in the new image
 				if prev_img.get_rect().size != cur_img.get_rect().size:
 					#printt("not same size", prev_img.get_rect(), cur_img.get_rect())
 					if transition_in_tween:
 						transition_in_tween.kill()
-					transition_in_tween = create_tween()
-					cur_img.modulate.a = 0
-					transition_in_tween.tween_property(cur_img, "modulate:a", 1.0, duration * transition_percent).from(0.0).set_delay(delay)
+					transition_in_tween = cur_img.create_tween()
+					t = transition_in_tween.tween_property(cur_img, "modulate:a", 1.0, duration * transition_percent).from(0.0)
+					if delay > 0:
+						cur_img.modulate.a = 0
+						t.set_delay(delay)
 				elif cur_img.modulate.a != 1:
-					cur_img.modulate.a = 1
+					cur_img.modulate.a = 1.0
 			else:
 				prev_img.visible = false
 
@@ -199,9 +206,9 @@ func get_sequence(seq_name : String = "") -> PackedInt32Array:
 
 func update_sequence(seq_name : String, sequence : PackedInt32Array) -> void:
 	cur_img.pause()
-	cur_img.animation = cur_img.frames.base_animation_name
+	cur_img.animation = cur_img.frames.base_animation_name # switch away temporarily
 	cur_img.frames.update_frames(seq_name, sequence)
-	cur_img.animation = seq_name
+	cur_img.change_animation(seq_name)
 	restart()
 
 
