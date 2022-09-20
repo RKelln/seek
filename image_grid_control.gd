@@ -30,13 +30,13 @@ func set_center(index : int) -> void:
 	%ImageGrid.center = index
 
 
-func get_sequence(name : StringName) -> PackedInt32Array:
+func get_sequence(seq_name : StringName) -> PackedInt32Array:
 	var seq := PackedInt32Array()
 	for img in %ImageGrid.get_children():
-		var meta = img.texture.get_meta(name)
+		var meta = img.texture.get_meta(seq_name)
 		if typeof(meta) == TYPE_INT:
 			seq.append(meta)
 		else:
-			print("get_sequence(): Invalid meta data for sequence: ", name)
+			print("get_sequence(): Invalid meta data for sequence: ", seq_name)
 			return PackedInt32Array()
 	return seq
