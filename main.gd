@@ -132,7 +132,7 @@ func get_active_layer() -> int:
 	return 0
 
 
-func handle_beat_match(delta : float) -> void:
+func handle_beat_match(_delta : float) -> void:
 	# just getting started
 	if last_beat_ms == 0.0:
 		beats_ms.clear()
