@@ -26,20 +26,25 @@ func get_frame_counts() -> Dictionary:
 
 
 func add_frames(new_frames : ImageFrames) -> void:
+	assert(new_frames.has_animation(base_animation_name))
+	
 	for aname in new_frames.get_animation_names():
-		if get_animation_names().has(aname):
-			printt("Warning duplicate animation names:", aname)
-			# TODO: prefix with pack name unless name is default?
-			continue
-		else:
-			add_animation(aname)
-
-		set_animation_loop(aname, new_frames.get_animation_loop(aname))
-		set_animation_speed(aname, new_frames.get_animation_speed(aname))
-
-		var offset = get_frame_count(base_animation_name)
+		var offset = 0
+		if aname != base_animation_name:
+			if get_animation_names().has(aname):
+				printt("Warning duplicate animation names:", aname)
+				# TODO: prefix with pack name unless name is default?
+				continue
+			else:
+				add_animation(aname)
+			
+			set_animation_loop(aname, new_frames.get_animation_loop(aname))
+			set_animation_speed(aname, new_frames.get_animation_speed(aname))
+		else: # base animation requires adding offset
+			offset = get_frame_count(base_animation_name)
+			
 		for i in new_frames.get_frame_count(aname):
-			_add_frame(aname, offset + i, new_frames.get_frame(aname, i))
+			_add_frame(aname, i+offset, new_frames.get_frame(aname, i))
 
 
 func update_frames(animation_name : String, new_sequence : PackedInt32Array) -> void:

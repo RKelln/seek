@@ -2,9 +2,9 @@ extends Node
 
 var images : ImageFrames
 
-var default_image_compression = 0.7
-var default_image_pack = 'user://framedata_laura_164.res'
-
+var default_image_compression := 0.7
+var default_image_pack := 'user://framedata_laura_164.res'
+var max_image_size := Vector2(1920,1080)
 
 # https://godotengine.org/qa/5175/how-to-get-all-the-files-inside-a-folder
 func get_dir_contents(rootPath: String, extensions : Array = ["png", "jpg", "jpeg", "webp"]) -> Array:
@@ -81,10 +81,11 @@ func load_image(image_path: String, compress : float = default_image_compression
 	var image = Image.load_from_file(image_path)
 	assert(image != null and image is Image)
 	
-	# resize to max HD
-#	if image.x > max_image_size.x or image.y > max_image_size.y:
-#		var image_size = _get_new_size(Vector2(1920,1080), image.get_size())
-#		image.resize(image_size.x, image_size.y, Image.INTERPOLATE_CUBIC)
+#	# resize to max HD
+	if image.get_width() > max_image_size.x or image.get_height() > max_image_size.y:
+		var ratio : float = min( max_image_size.x / image.get_width(), max_image_size.y /  image.get_height())
+		var image_size = image.get_size() * ratio
+		image.resize(floor(image_size.x), floor(image_size.y), Image.INTERPOLATE_CUBIC)
 	
 	if not image.is_compressed() and compress > 0:
 		image.compress(Image.COMPRESS_S3TC, Image.COMPRESS_SOURCE_SRGB, compress)
@@ -101,6 +102,7 @@ func load_texture(file_path : String, rescale : Vector2 = Vector2.ZERO) -> Textu
 		assert(texture is ImageTexture)
 		
 		if rescale != Vector2.ZERO:
+			# NOTE: this is extraneous now because of the imge resizing in load_image(). That actually effects resource save size, this does not
 			var ratio : float = min( rescale.x / texture.get_width(), rescale.y / texture.get_height())
 			if ratio != 1.0:
 				texture.set_size_override(Vector2(floor(texture.get_width() * ratio), floor(texture.get_height() * ratio)))
