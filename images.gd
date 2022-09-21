@@ -148,12 +148,12 @@ func _on_real_frame_changed( frame : int) -> void:
 				prev_img.visible = false
 
 
-func load_sequence(file_path : String):
-	var sequence = Loader.load_sequence_file(file_path)
-	var sequence_name = file_path.get_file().get_basename()
-	if sequence_name != "":
-		cur_img.add_sequence(sequence_name, sequence)
-		cur_img.change_animation(sequence_name) # switch to loaded sequence
+#func load_sequence(file_path : String):
+#	var sequence = Loader.load_sequence_file(file_path)
+#	var sequence_name = file_path.get_file().get_basename()
+#	if sequence_name != "":
+#		cur_img.add_sequence(sequence_name, sequence)
+#		cur_img.change_animation(sequence_name) # switch to loaded sequence
 
 
 func get_total_frame_count() -> int:

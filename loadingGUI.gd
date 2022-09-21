@@ -28,7 +28,7 @@ func _process(_delta):
 			loaded = -1
 			_image_files.clear()
 			images_finished_loading()
-			var save_path = file_format % [create_pack_name, active_image_pack.get_total_frame_count()]
+			var save_path = file_format % [create_pack_name, active_image_pack.get_base_frame_count()]
 			$SavePackFileDialog.current_file = save_path
 			$SavePackFileDialog.popup()
 
@@ -39,7 +39,7 @@ func images_finished_loading() -> void:
 	$LoadingContainer.visible = false
 	#$MainCenterContainer/ActiveContainer/ButtonContainer/CreateImagePackButton.disabled = true
 	#$MainCenterContainer/ActiveContainer/ButtonContainer/LoadPackButton.disabled = true
-	#$MainCenterContainer/ActiveContainer/ButtonContainer/LoadSequenceButton.disabled = false
+	%LoadSequenceButton.disabled = false
 	%StartButton.disabled = false
 	%SaveAsButton.disabled = false
 	prints("Video texture mem:", Loader.formatBytes(Performance.get_monitor(Performance.RENDER_TEXTURE_MEM_USED)))
@@ -133,12 +133,20 @@ func _on_pack_file_dialog_file_selected(path):
 func _on_sequence_file_dialog_file_selected(path : String):
 	# FIXME: active image pack
 	if active_image_pack:
-		active_image_pack.load_sequence(path)
+		var seq = Loader.load_sequence_file(path)
+		if seq and seq.size() > 0:
+			var seq_name = path.get_file().get_basename()
+			active_image_pack.add_sequence(seq_name, seq)
+			printt(seq_name, seq, active_image_pack.get_animation_names())
+			# TODO: hook up info panel
 	
 
 func _on_start_button_pressed() -> void:
 	# combine packs
-	Loader.images = combine_image_packs(loaded_image_packs)
+	if loaded_image_packs.size() > 1:
+		Loader.images = combine_image_packs(loaded_image_packs)
+	else:
+		Loader.images = active_image_pack
 	get_tree().change_scene_to_file("res://speed_test.tscn")
 
 

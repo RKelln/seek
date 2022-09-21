@@ -33,7 +33,7 @@ func set_center(index : int) -> void:
 func get_sequence(seq_name : StringName) -> PackedInt32Array:
 	var seq := PackedInt32Array()
 	for img in %ImageGrid.get_children():
-		var meta = img.texture.get_meta(seq_name)
+		var meta = img.texture.get_meta(ImageFrames.animation_meta_key)
 		if typeof(meta) == TYPE_INT:
 			seq.append(meta)
 		else:

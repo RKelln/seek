@@ -26,7 +26,12 @@ func _ready() -> void:
 
 
 func _process(delta) -> void:
-	if Input.is_action_just_pressed('help'):
+	if Input.is_action_just_pressed('beat_match'):
+		handle_beat_match(delta)
+
+
+func _input(event : InputEvent) -> void:
+	if event.is_action_released('help'):
 		# FIXME: popup has no variable that works for determining if it is active!
 		#        This is because the esc key and clicking outside the popup by default close it
 		if paused:
@@ -35,11 +40,8 @@ func _process(delta) -> void:
 		else:
 			pause()
 			help.popup()
-	
-	if Input.is_action_just_pressed('beat_match'):
-		handle_beat_match(delta)
 		
-	if Input.is_action_just_pressed("image_grid"):
+	if event.is_action_released("image_grid"):
 		if %ImageGridControl.visible:
 			%ImageGridControl.visible = false
 			# update sequence with changes from image grid
@@ -57,7 +59,7 @@ func _process(delta) -> void:
 			%ImageGridControl.visible = true
 			%ImageGridControl.set_center(images.get_current_frame_index())
 
-	if Input.is_action_just_pressed("duplicate_layer"):
+	if event.is_action_released("duplicate_layer"):
 		var orig = $Stage.get_child(get_active_layer()) # TODO: get active
 		#var n = orig.duplicate(DUPLICATE_GROUPS | DUPLICATE_SCRIPTS | DUPLICATE_SIGNALS)
 #		var n = orig.duplicate(DUPLICATE_GROUPS | DUPLICATE_SCRIPTS )
@@ -67,15 +69,17 @@ func _process(delta) -> void:
 		add_child(n)
 		n.active = true
 		
-	if Input.is_action_just_pressed("fullscreen_toggle"):
+	if event.is_action_released("fullscreen_toggle"):
 		if get_tree().get_root().mode == Window.MODE_FULLSCREEN:
 			get_tree().get_root().mode = Window.MODE_WINDOWED
 		else:
 			get_tree().get_root().mode = Window.MODE_FULLSCREEN
 
 
-func _input(event : InputEvent) -> void:
-	
+	if event.is_action_released("save"):
+		%SavePackFileDialog.popup()
+
+
 	# number key: change active layer
 	if event is InputEventKey and event.pressed and event.echo == false and not event.shift_pressed:
 		var count := $Stage.get_child_count()
@@ -101,8 +105,8 @@ func _input(event : InputEvent) -> void:
 				selected = 9
 			KEY_0:
 				selected = 10
-		printt("main input", event.physical_keycode, selected)
-		if selected <= count:
+		
+		if selected > 0 and selected <= count:
 			change_layer(selected)
 
 
@@ -177,3 +181,7 @@ func handle_beat_match(_delta : float) -> void:
 		#printt("beats no worst", beat_average)
 		
 		images.set_timing(beat_average)
+
+
+func _on_save_pack_file_dialog_file_selected(path):
+	Loader.images.save(path)

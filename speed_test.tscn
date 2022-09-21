@@ -87,3 +87,13 @@ transparent = true
 min_size = Vector2i(1000, 500)
 
 [node name="Control" parent="GUI/HelpPopup" instance=ExtResource("2_xakrh")]
+
+[node name="SavePackFileDialog" type="FileDialog" parent="GUI"]
+unique_name_in_owner = true
+size = Vector2i(1920, 1080)
+min_size = Vector2i(600, 600)
+ok_button_text = "Save"
+access = 2
+filters = PackedStringArray("*.res")
+
+[connection signal="file_selected" from="GUI/SavePackFileDialog" to="." method="_on_save_pack_file_dialog_file_selected"]

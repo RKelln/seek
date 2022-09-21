@@ -66,6 +66,7 @@ disabled = true
 text = "Save All As..."
 
 [node name="LoadSequenceButton" type="Button" parent="ActiveContainer/TopContainer/ButtonContainer"]
+unique_name_in_owner = true
 offset_top = 153.0
 offset_right = 152.0
 offset_bottom = 184.0

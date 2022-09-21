@@ -25,6 +25,10 @@ func get_frame_counts() -> Dictionary:
 	return counts
 
 
+func get_base_frame_count() -> int:
+	return get_frame_count(base_animation_name)
+
+
 func add_frames(new_frames : ImageFrames) -> void:
 	assert(new_frames.has_animation(base_animation_name))
 	
@@ -57,9 +61,9 @@ func update_frames(animation_name : String, new_sequence : PackedInt32Array) -> 
 		return
 		
 	clear(animation_name)
-	for i in new_sequence:
+	for i in new_sequence.size():
 		var index = new_sequence[i]
-		_add_frame(animation_name, i, get_frame(base_animation_name, index))
+		_add_frame(animation_name, index, get_frame(base_animation_name, index))
 	
 	
 func copy_frames(from_animation : String, to_animation : String) -> void:
@@ -80,12 +84,16 @@ func copy_frames(from_animation : String, to_animation : String) -> void:
 	
 	
 func info() -> Dictionary:
-	return {
+	var info := {
 		'pack_name' : pack_name,
-		'frames': get_total_frame_count(),
+		'frames': get_base_frame_count(),
 		'sequences': get_animation_names(),
 		'frame_counts': get_frame_counts(),
 	}
+	print(info)
+	for i in get_base_frame_count():
+		printt(i, get_frame(base_animation_name, i).get_meta(animation_meta_key))
+	return info
 
 
 func create_frames(image_paths: Array, animation_name : String, loaderFn) -> void:
@@ -103,6 +111,7 @@ func create_frames(image_paths: Array, animation_name : String, loaderFn) -> voi
 func create_frames_timed(image_paths: Array, animation_name : String, loaderFn, max_duration_ms : float) -> Texture2D:
 	if not get_animation_names().has(animation_name):
 		add_animation(animation_name)
+		set_animation_speed(animation_name, 1.0) # FIXME: what should this be set at?
 	
 	var start = Time.get_ticks_msec()
 	var duration = 0.0
@@ -115,10 +124,14 @@ func create_frames_timed(image_paths: Array, animation_name : String, loaderFn, 
 			break
 	return tex
 
-
+# NOTE: i is the index of the base animation
 func _add_frame(animation_name : String, i : int, tex : Texture2D ) -> void:
 	# add index to meta if animation is base
 	if animation_name == base_animation_name:
+		tex.set_meta(animation_meta_key, i)
+	elif i >= get_frame_count(base_animation_name):
+		# ensure that it is added the base animation
+		add_frame(base_animation_name, tex)
 		tex.set_meta(animation_meta_key, i)
 	add_frame(animation_name, tex) # add to end of animation
 
@@ -140,17 +153,29 @@ func get_sequence(seq_name : String = base_animation_name) -> PackedInt32Array:
 		seq_name = base_animation_name
 
 	var seq = PackedInt32Array()
-	print("get sequencee ", get_frame(seq_name, 0).get_meta_list())
+	#prints("get sequencee ", seq_name, get_frame(seq_name, 0).get_meta_list(), info())
 	for i in get_frame_count(seq_name):
 		# even though the meta index info is only added the the base animation, the texture should be reused
 		# TODO: check if that is true for .res loaded ImageFrames
 		var tex : Texture2D = get_frame(seq_name, i)
-		printt(seq_name, i, tex, tex.get_meta_list())
+		#printt(seq_name, i, tex, tex.get_meta_list())
 		var index = tex.get_meta(animation_meta_key)
 		assert(index != null)
 		seq.append(index)
 		
 	return seq
+
+
+func add_sequence(seq_name : String, sequence : PackedInt32Array) -> void:
+	# adds an new animation given frame indexs of the default an imation
+	if seq_name in get_animation_names():
+		printt("ImageFrames already has animation:", seq_name)
+		return
+	assert(base_animation_name in get_animation_names())
+	assert(Array(sequence).max() < get_base_frame_count())
+	#printt("add_sequence", seq_name, sequence)
+	for i in sequence:
+		_add_frame(seq_name, i, get_frame(base_animation_name, i))
 
 
 static func load_image_pack(file_path : String) -> ImageFrames:
