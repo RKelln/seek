@@ -11,7 +11,6 @@ var compress := true
 			frames.pack_name = value
 
 var speed := 1.0
-var fps := 30
 var frame_skip = 10
 var stretch := true
 
@@ -60,6 +59,8 @@ func _ready():
 	# start with last animation
 	change_animation(animations[-1])
 
+	_anim_fps = frames.get_animation_speed(animation)
+	
 	print("Animations: ", animations)
 	print("Current animation: ", animation)
 	print("Frame count: ", frame_counts[animation])
@@ -90,6 +91,7 @@ func change_animation(requested_animation : String) -> void:
 	frame = current_frame[animation] # sets current frame
 	_anim_fps = frames.get_animation_speed(animation)
 	assert(_anim_fps > 0)
+	frame_skip = maxi(1, floor(frames.get_frame_count(animation) * 0.1))
 	printt("change animation to ", requested_animation, current_frame[animation])
 
 
@@ -105,7 +107,9 @@ func next_animation(inc : int) -> StringName:
 	var i = anim_names.find(animation)
 	for anim in anim_names: # loop maximum of once
 		i = fposmod(i + inc, anim_names.size())
-		if frame_counts[anim_names[i]] > 0: # skip animations with no frames
+		# never switch to base animation and
+		# skip animations with no frames
+		if anim_names[i] != base_animation_name and frame_counts[anim_names[i]] > 0: 
 			return StringName(anim_names[i])
 	return animation
 
@@ -178,34 +182,49 @@ func rescale():
 func _input(event : InputEvent) -> void:
 	
 	# shift + number key: change animation
-	if event is InputEventKey and event.pressed and event.echo == false and event.shift_pressed:
-		var anims := frames.get_animation_names()
-		var count := anims.size()
-		var selected_anim := 0
-		match event.physical_keycode:
-			KEY_1:
-				selected_anim = 1
-			KEY_2:
-				selected_anim = 2
-			KEY_3:
-				selected_anim = 3
-			KEY_4:
-				selected_anim = 4
-			KEY_5:
-				selected_anim = 5
-			KEY_6:
-				selected_anim = 6
-			KEY_7:
-				selected_anim = 7
-			KEY_8:
-				selected_anim = 8
-			KEY_9:
-				selected_anim = 9
-			KEY_0:
-				selected_anim = 10
-		printt("AnimatedImage input", event.physical_keycode, selected_anim)
-		if selected_anim <= count:
-			change_animation(anims[selected_anim - 1])
+	if event is InputEventKey:
+		if event.pressed:
+			if event.echo == false and event.shift_pressed:
+				var anims := frames.get_animation_names()
+				var count := anims.size()
+				var selected_anim := 0
+				match event.physical_keycode:
+					KEY_1:
+						selected_anim = 1
+					KEY_2:
+						selected_anim = 2
+					KEY_3:
+						selected_anim = 3
+					KEY_4:
+						selected_anim = 4
+					KEY_5:
+						selected_anim = 5
+					KEY_6:
+						selected_anim = 6
+					KEY_7:
+						selected_anim = 7
+					KEY_8:
+						selected_anim = 8
+					KEY_9:
+						selected_anim = 9
+					KEY_0:
+						selected_anim = 10
+				if selected_anim > 0 and selected_anim <= count:
+					printt("AnimatedImage input", event.physical_keycode, selected_anim)
+					change_animation(anims[selected_anim - 1])
+	
+			if event.is_action_pressed("skip_forward"):
+				print("sf", frame_skip)
+				if playing:
+					next_frame(frame_skip)
+				else:
+					next_frame(1)
+			elif event.is_action_pressed("skip_backward"):
+				print("sb", frame_skip)
+				if playing:
+					next_frame(-frame_skip)
+				else:
+					next_frame(-1)
 
 
 func handle_input():
@@ -268,24 +287,25 @@ func handle_input():
 		
 	speed_scale = speed
 	
-	if Input.is_action_just_pressed("skip_forward"):
-		if playing:
-			next_frame(frame_skip)
-		else:
-			next_frame(1)
-	elif Input.is_action_just_pressed("skip_backward"):
-		if playing:
-			next_frame(-frame_skip)
-		else:
-			next_frame(-1)
+#	if Input.is_action_just_pressed("skip_forward"):
+#		if playing:
+#			next_frame(frame_skip)
+#		else:
+#			next_frame(1)
+#	elif Input.is_action_just_pressed("skip_backward"):
+#		if playing:
+#			next_frame(-frame_skip)
+#		else:
+#			next_frame(-1)
 	if Input.is_action_pressed("fast_forward"):
-		speed_scale = 2 * speed
+		speed_scale = frame_skip * speed
 		play(animation, false)
 	elif Input.is_action_pressed("fast_backward"):
-		speed_scale = 2 * speed
+		speed_scale = frame_skip * speed
 		play(animation, true)
 	elif Input.is_action_just_released("fast_forward") or Input.is_action_just_released("fast_backward"):
 		# resume normal play
+		speed_scale = speed
 		if paused:
 			stop()
 		else:
