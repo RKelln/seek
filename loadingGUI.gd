@@ -13,6 +13,25 @@ var _image_files : Array[String]
 var active_image_pack : ImageFrames # currently loading/selected image pack
 var loaded_image_packs : Array[ImageFrames]
 
+var InfoPanel := preload("res://pack_info_panel.tscn")
+
+func _ready() -> void:
+	# signals:
+	%CreateImagePackButton.pressed.connect(func (): $ImagesFileDialog.popup() )
+	$ImagesFileDialog.dir_selected.connect(_on_images_file_dialog_dir_selected)
+	
+	%LoadPackButton.pressed.connect(func (): $PackFileDialog.popup_centered() )
+	$PackFileDialog.file_selected.connect(_on_pack_file_dialog_file_selected)
+
+	%SaveAsButton.pressed.connect(_on_save_as_button_pressed)
+	$SavePackFileDialog.file_selected.connect(_on_save_pack_file_dialog_file_selected)
+
+	%LoadSequenceButton.pressed.connect(func (): $SequenceFileDialog.popup_centered() )
+	$SequenceFileDialog.file_selected.connect(_on_sequence_file_dialog_file_selected)
+
+	%StartButton.pressed.connect(_on_start_button_pressed)
+	
+	
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta):
 	if active_image_pack and loaded >= 0:
@@ -46,30 +65,28 @@ func images_finished_loading() -> void:
 
 
 func create_info_panel(save_path : String, info : Dictionary) -> void:
-	var panel = preload("res://pack_info_panel.tscn").instantiate()
+	var panel = InfoPanel.instantiate()
 	info['save_path'] = save_path
 	panel.set_values(info)
 	%InfoContainer.add_child(panel)
 
 
 func combine_image_packs(packs : Array) -> ImageFrames:
-	var combined := ImageFrames.new()
-	for p in packs:
-		combined.add_frames(p)
+	var combined :=  ImageFrames.combine_image_packs(packs)
+		
 	# clear out loaded packs and info
 	for n in %InfoContainer.get_children():
 		%InfoContainer.remove_child(n)
 		n.queue_free()
-	loaded_image_packs.clear()
+	packs.clear()
 	
 	return combined
-
 
 func _on_create_image_pack_button_pressed():
 	$ImagesFileDialog.popup()
 
 
-func _on_images_file_dialog_dir_selected(dir):
+func _on_images_file_dialog_dir_selected(dir : String):
 #	$MainCenterContainer/LoadingContainer.visible = true
 	_image_files = Loader.get_dir_contents(dir)[0]
 	_image_files.sort()
@@ -78,7 +95,10 @@ func _on_images_file_dialog_dir_selected(dir):
 	$AnimationNamePopup.set_default_name(last_folder)
 	$AnimationNamePopup.popup_centered()
 	
-	create_pack_name = await %NamePanel.response_submitted
+	#create_pack_name = await %NamePanel.response_submitted
+	var values = await %NamePanel.response_submitted
+	create_pack_name = values[0]
+	var fps = values[1]
 	$AnimationNamePopup.visible = false
 	if create_pack_name != "":
 		$ActiveContainer.visible = false
@@ -87,6 +107,7 @@ func _on_images_file_dialog_dir_selected(dir):
 		# setup for loading code in _process():
 		active_image_pack = ImageFrames.new()
 		active_image_pack.pack_name = create_pack_name
+		active_image_pack.fps = fps
 		loaded = 0
 		texture_loader = func(image_file):
 			# TODO: FIXME: have user set rescale size
@@ -153,9 +174,12 @@ func _on_start_button_pressed() -> void:
 func _on_save_as_button_pressed():
 	$AnimationNamePopup.set_default_name(save_pack_name)
 	$AnimationNamePopup.popup_centered()
-	save_pack_name = await %NamePanel.response_submitted
+	var values = await %NamePanel.response_submitted
+	save_pack_name = values[0]
+	var fps = values[1]
 	active_image_pack = combine_image_packs(loaded_image_packs)
 	active_image_pack.pack_name = save_pack_name
+	active_image_pack.fps = fps
 	$SavePackFileDialog.current_file = save_pack_name
 	$SavePackFileDialog.popup()
 
@@ -168,3 +192,7 @@ func _on_save_pack_file_dialog_file_selected(path):
 		loaded_image_packs.append(active_image_pack)
 	
 
+
+
+func _on_images_file_dialog_file_selected(path):
+	pass # Replace with function body.

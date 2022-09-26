@@ -31,14 +31,14 @@ grow_vertical = 2
 custom_minimum_size = Vector2i(0, 500)
 offset_left = 50.0
 offset_top = 25.0
-offset_right = 1870.0
+offset_right = 1950.0
 offset_bottom = 525.0
 size_flags_vertical = 0
 
 [node name="ButtonContainer" type="VBoxContainer" parent="ActiveContainer/TopContainer"]
-offset_left = 834.0
+offset_left = 874.0
 offset_top = 240.0
-offset_right = 986.0
+offset_right = 1026.0
 offset_bottom = 475.0
 size_flags_horizontal = 4
 size_flags_vertical = 8
@@ -46,12 +46,14 @@ size_flags_stretch_ratio = 2.0
 theme_override_constants/separation = 20
 
 [node name="CreateImagePackButton" type="Button" parent="ActiveContainer/TopContainer/ButtonContainer"]
+unique_name_in_owner = true
 offset_right = 152.0
 offset_bottom = 31.0
 text = "Create Image Pack
 "
 
 [node name="LoadPackButton" type="Button" parent="ActiveContainer/TopContainer/ButtonContainer"]
+unique_name_in_owner = true
 offset_top = 51.0
 offset_right = 152.0
 offset_bottom = 82.0
@@ -85,17 +87,19 @@ text = "Start"
 custom_minimum_size = Vector2i(0, 500)
 offset_left = 50.0
 offset_top = 555.0
-offset_right = 1870.0
+offset_right = 1950.0
 offset_bottom = 1055.0
 size_flags_vertical = 8
 
 [node name="InfoContainer" type="HFlowContainer" parent="ActiveContainer/BottomContainer"]
 unique_name_in_owner = true
-offset_left = 910.0
+custom_minimum_size = Vector2i(1800, 0)
+offset_left = 50.0
 offset_top = 25.0
-offset_right = 910.0
-offset_bottom = 475.0
+offset_right = 1850.0
+offset_bottom = 25.0
 size_flags_horizontal = 4
+size_flags_vertical = 0
 theme_override_constants/h_separation = 20
 theme_override_constants/v_separation = 20
 
@@ -161,13 +165,3 @@ script = ExtResource("3_byous")
 
 [node name="NamePanel" parent="AnimationNamePopup" instance=ExtResource("4_28pck")]
 unique_name_in_owner = true
-
-[connection signal="pressed" from="ActiveContainer/TopContainer/ButtonContainer/CreateImagePackButton" to="." method="_on_create_image_pack_button_pressed"]
-[connection signal="pressed" from="ActiveContainer/TopContainer/ButtonContainer/LoadPackButton" to="." method="_on_load_pack_button_pressed"]
-[connection signal="pressed" from="ActiveContainer/TopContainer/ButtonContainer/SaveAsButton" to="." method="_on_save_as_button_pressed"]
-[connection signal="pressed" from="ActiveContainer/TopContainer/ButtonContainer/LoadSequenceButton" to="." method="_on_load_sequence_button_pressed"]
-[connection signal="pressed" from="ActiveContainer/TopContainer/ButtonContainer/StartButton" to="." method="_on_start_button_pressed"]
-[connection signal="dir_selected" from="ImagesFileDialog" to="." method="_on_images_file_dialog_dir_selected"]
-[connection signal="file_selected" from="SequenceFileDialog" to="." method="_on_sequence_file_dialog_file_selected"]
-[connection signal="file_selected" from="PackFileDialog" to="." method="_on_pack_file_dialog_file_selected"]
-[connection signal="file_selected" from="SavePackFileDialog" to="." method="_on_save_pack_file_dialog_file_selected"]

@@ -9,8 +9,24 @@ var compress := true
 	set(value):
 		if frames:
 			frames.pack_name = value
+@export var active : bool = false:
+	get:
+		return active
+	set(on):
+		if active and on: return
+		if not active and not on: return
+		active = on
+		set_controller(active)
 
-var speed := 1.0
+
+var speed : float = 1.0 :
+	get:
+		return speed
+	set(value):
+		speed = value
+		_speeds[animation] = value
+
+const percent_frames_for_skip = 0.02
 var frame_skip = 10
 var stretch := true
 
@@ -19,10 +35,15 @@ var paused : bool = false
 var frame_counts : Dictionary
 var current_frame : Dictionary
 
+#var controller : Controller = Controller.new()
+
 var _backwards := false
 var _anim_fps : float = 0
 var _requested_animation : bool = false # tracks if animation change has been requested
 var _current_texture : Texture2D # reference to current texture
+var _index : int
+var _speeds : Dictionary # stores current speeds for each animation
+
 
 signal real_frame_changed(frame: int)
 
@@ -48,18 +69,23 @@ func _ready():
 				break
 	
 	# set up frame_counts and current_frame
+	var start_anim : String
 	for animation_name in animations:
 		if animation_name not in current_frame:
 			current_frame[animation_name] = 0
+			
+		if animation_name not in _speeds:
+			_speeds[animation_name] = 1.0
 		
 		if animation_name not in frame_counts or frame_counts[animation_name] <= 0:
 			# something has gone wrong
 			frame_counts[animation_name] = frames.get_frame_count(animation_name)
 	
+		if animation_name != base_animation_name:
+			start_anim = animation_name
+	
 	# start with last animation
-	change_animation(animations[-1])
-
-	_anim_fps = frames.get_animation_speed(animation)
+	change_animation(start_anim)
 	
 	print("Animations: ", animations)
 	print("Current animation: ", animation)
@@ -77,22 +103,53 @@ func _on_frame_changed():
 		real_frame_changed.emit(frame)
 
 
+func set_controller(on : bool) -> void:
+	var connected := Controller.is_connected("skip_frame", skip_frame)
+	if on and not connected:
+		printt(_index, "animatedimages", "turn controller")
+		Controller.skip_frame.connect(skip_frame)
+		Controller.change_speed.connect(change_relative_speed)
+		#Controller.pause.connect(pause)
+		Controller.reverse.connect(reverse)
+		Controller.change_animation.connect(change_animation_relative)
+	elif not on and connected:
+		Controller.skip_frame.disconnect(skip_frame)
+		Controller.change_speed.disconnect(change_relative_speed)
+		#Controller.pause.disconnect(pause)
+		Controller.reverse.disconnect(reverse)
+		Controller.change_animation.disconnect(change_animation_relative)
+
+
+func change_animation_relative(direction : int) -> void:
+	if not active: return
+	change_animation(next_animation(direction))
+
+
 func change_animation(requested_animation : String) -> void:
-	if requested_animation == animation:
-		return
+	printt(_index, "animated.change_animation", requested_animation)
 	if frame_counts[requested_animation] <= 0:
 		return
 
+	# alsways set these:
+	_anim_fps = frames.get_animation_speed(requested_animation)
+	assert(_anim_fps > 0)
+	frame_skip = maxi(1, floor(frames.get_frame_count(requested_animation) * percent_frames_for_skip)) # % of frames
+	speed = _speeds[requested_animation]
+	speed_scale = speed
+	
+	printt(_index, "change animation to ", requested_animation, "_anim_fps:", _anim_fps, "frame_skip:", frame_skip, "speed:", speed)
+	
+	if requested_animation == animation:
+		return
+	
 	# NOTE: when changing animations it signals frame_changed and sets the frame back to the start
 	_requested_animation = true # now that this is set, it won't update current_frame or signal real_frame_changed
 	animation = requested_animation
 	_requested_animation = false
 	
 	frame = current_frame[animation] # sets current frame
-	_anim_fps = frames.get_animation_speed(animation)
-	assert(_anim_fps > 0)
-	frame_skip = maxi(1, floor(frames.get_frame_count(animation) * 0.1))
-	printt("change animation to ", requested_animation, current_frame[animation])
+	
+	if stretch: rescale()
 
 
 func info() -> Dictionary:
@@ -140,6 +197,11 @@ func set_frame_duration(duration_s : float) -> void:
 	
 
 func next_frame(increment : int = 1) -> void:
+	printt(_index, "next_frame", increment)
+	if increment > 0 and increment < 1:
+		increment = 1
+	elif increment < 0 and increment > -1:
+		increment = -1
 	frame = fposmod(frame + increment, frame_counts[animation])
 
 
@@ -163,8 +225,8 @@ func _process(_delta):
 	if playing and stretch: # per frame
 		rescale()
 	
-#	if Input.is_anything_pressed():
-#		handle_input()
+	if Input.is_anything_pressed():
+		handle_input()
 
 
 func rescale():
@@ -180,15 +242,18 @@ func rescale():
 
 
 func _input(event : InputEvent) -> void:
+	if not active: return
 	
 	# shift + number key: change animation
 	if event is InputEventKey:
-		if event.pressed:
-			if event.echo == false and event.shift_pressed:
+		#controller.handle_input(event)
+		
+		if not event.pressed: # releaased
+			if event.echo == false:
 				var anims := frames.get_animation_names()
 				var count := anims.size()
 				var selected_anim := 0
-				match event.physical_keycode:
+				match event.keycode:
 					KEY_1:
 						selected_anim = 1
 					KEY_2:
@@ -209,25 +274,89 @@ func _input(event : InputEvent) -> void:
 						selected_anim = 9
 					KEY_0:
 						selected_anim = 10
-				if selected_anim > 0 and selected_anim <= count:
+				if event.shift_pressed:
+					match event.keycode:
+						KEY_1:
+							selected_anim = 11
+						KEY_2:
+							selected_anim = 12
+						KEY_3:
+							selected_anim = 13
+						KEY_4:
+							selected_anim = 14
+						KEY_5:
+							selected_anim = 15
+						KEY_6:
+							selected_anim = 16
+						KEY_7:
+							selected_anim = 17
+						KEY_8:
+							selected_anim = 18
+						KEY_9:
+							selected_anim = 19
+						KEY_0:
+							selected_anim = 20
+				if selected_anim > 0 and selected_anim < count:
 					printt("AnimatedImage input", event.physical_keycode, selected_anim)
-					change_animation(anims[selected_anim - 1])
+					change_animation(anims[selected_anim]) #NOTE: default is animation 0
 	
-			if event.is_action_pressed("skip_forward"):
-				print("sf", frame_skip)
-				if playing:
-					next_frame(frame_skip)
-				else:
-					next_frame(1)
-			elif event.is_action_pressed("skip_backward"):
-				print("sb", frame_skip)
-				if playing:
-					next_frame(-frame_skip)
-				else:
-					next_frame(-1)
+#
+#			if event.is_action_pressed("skip_forward"):
+#				skip_frame(1)
+#			elif event.is_action_pressed("skip_backward"):
+#				skip_frame(-1)
+
+
+func skip_frame(direction : float = 0.0) -> void:
+	if not active: return
+	
+	printt(_index, "skip_frame", frame_skip, direction)
+	# default to skip 0.3sec or 1 of frames whatever is less, but allow for direction to modulate
+	if playing:
+		next_frame(direction * clampi(0.3 * _anim_fps * speed, 1, frame_skip))
+	else:
+		next_frame(sign(direction))
+
+
+func change_relative_speed(relative_speed : float = 0.0) -> void:
+	if not active: return
+	
+	relative_speed = clampf(relative_speed, -1.0, 1.0)
+	
+	#var rdist2 = remap(relative_speed, -0.5, 0.5, -0.2, 0.2) # less change near the middle
+	#speed = 0.5 * (abs(relative_speed) + abs(rdist2)) * _anim_fps * 20.0 # FIXME: add fps here?
+	
+	var eased := ease(abs(relative_speed), 2)
+	if _anim_fps < 1:
+		speed = remap(eased, 0, 1.0, 0, 10.0 + 90.0 * (1.0 - _anim_fps))
+	elif _anim_fps < 10:
+		speed = remap(eased, 0, 1.0, 0, 5.0 + 9.0 * (10.0 - _anim_fps))
+	else:
+		speed = remap(eased, 0, 1.0, 0, 5.0)
+	printt(_index, "change_relative_speed", relative_speed, eased, speed, _anim_fps)
+	
+	speed = clampf(speed, 0.0, 100.0)
+	
+	speed_scale = speed 
+	
+	if relative_speed < 0:
+		_backwards = true
+		play(animation, _backwards)
+	else:
+		_backwards = false
+		play(animation, _backwards)
+
+
+func reverse() -> void:
+	if not active: return
+	
+	_backwards = !_backwards
+	play(animation, _backwards)
 
 
 func handle_input():
+	if not active: return
+	
 	if Input.is_action_just_pressed("play_toggle"):
 		if playing:
 			pause()
@@ -235,28 +364,19 @@ func handle_input():
 			resume()
 	
 	# other input requires scenes to be playing:
-	if paused: 
+	if not playing: 
 		# allow frame by frame during pause
 		if Input.is_action_just_pressed("skip_forward"):
 			next_frame(1)
 		elif Input.is_action_just_pressed("skip_backward"):
-				next_frame(-1)
-		
-		
+			next_frame(-1)
 		return 
 	
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		var w : float = float(get_viewport().get_visible_rect().size.x)
 		var relative_dist = remap(get_viewport().get_mouse_position().x, 0, w, -1.0, 1.0)
-		var rdist2 = remap(relative_dist, -0.3, 0.3, -0.1, 0.1) # less change near the middle
-		speed = 0.5 * (abs(relative_dist) + abs(rdist2)) * 100.0
-
-		if relative_dist < 0:
-			_backwards = true
-			play(animation, _backwards)
-		else:
-			_backwards = false
-			play(animation, _backwards)
+		
+		change_relative_speed(relative_dist)
 			
 		#printt(w, get_viewport().get_mouse_position().x, relative_dist, dist)
 	
@@ -272,31 +392,31 @@ func handle_input():
 		change_animation(next_animation(1))
 			
 	if Input.is_action_just_pressed("reverse"):
-		_backwards = !_backwards
-		play(animation, _backwards)
+		reverse()
 	
 	if Input.is_action_just_pressed("faster"):
 		speed *= 1.25
 		print("speed:", speed)
+		speed_scale = speed
 	elif Input.is_action_just_pressed("slower"):
 		speed /= 1.25
 		print("speed:", speed)
+		speed_scale = speed
 	elif Input.is_action_just_pressed("speed_reset"):
 		speed = 1.0
 		print("speed:", speed)
-		
-	speed_scale = speed
+		speed_scale = speed
 	
-#	if Input.is_action_just_pressed("skip_forward"):
-#		if playing:
-#			next_frame(frame_skip)
-#		else:
-#			next_frame(1)
-#	elif Input.is_action_just_pressed("skip_backward"):
-#		if playing:
-#			next_frame(-frame_skip)
-#		else:
-#			next_frame(-1)
+	if Input.is_action_just_pressed("skip_forward"):
+		if playing:
+			next_frame(frame_skip)
+		else:
+			next_frame(1)
+	elif Input.is_action_just_pressed("skip_backward"):
+		if playing:
+			next_frame(-frame_skip)
+		else:
+			next_frame(-1)
 	if Input.is_action_pressed("fast_forward"):
 		speed_scale = frame_skip * speed
 		play(animation, false)

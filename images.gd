@@ -5,7 +5,18 @@ extends Node2D
 @export_node_path(Label) var _actualFrameNode
 @export_node_path(Label) var _runningTotalFramesNode
 
-@export var active : bool = true
+@export var active : bool = false:
+	get:
+		return active
+	set(on):
+		if active and on: return
+		if not active and not on: return
+		prints(_index, "activate images:", on)
+		active = on
+		if cur_img:
+			cur_img.active = on
+		set_controller(active)
+
 @export var pack_name : String = "":
 	get:
 		if cur_img:
@@ -23,16 +34,23 @@ var transition := true
 var transition_out_tween : Tween
 var transition_in_tween : Tween
 var transition_cutoff := 0.042 # 24 fps = 0.042
-var transition_percent := 0.7 # scale transition time such that 0.1 = 10% transition, 90% hold on full image
+var transition_percent := 0.1 # scale transition time such that 0.1 = 10% transition, 90% hold on full image
 var _prevTexture : Texture2D
 var _next_transition_delay : SceneTreeTimer
 
 # alpha
 var opacity_speed := 1.0
 
+# beat match
+var last_beat_ms := 0.0
+var beats_ms : PackedFloat32Array
+var beat_average := 0.0
+
 const AnimatedImage = preload("res://AnimatedImage.gd")
 var cur_img : AnimatedImage
 var prev_img : Sprite2D
+
+var _index : int
 
 func _init_node(nodeOrPath, defaultPath) -> Node:
 	if nodeOrPath is Node:
@@ -68,14 +86,58 @@ func _ready():
 		else:
 			cur_img.pack_name = pack_name
 	
+	_index = get_index()
+	cur_img._index = _index
+	
+#func _process(delta : float) -> void:
+#	if active:
+#		if Input.is_action_pressed("increase_opacity") and modulate.a < 1.0:
+#			change_opacity(delta * opacity_speed)
+#		if Input.is_action_pressed("decrease_opacity") and modulate.a > 0:
+#			change_opacity(-delta * opacity_speed)
+#		cur_img.handle_input()
 
-func _process(delta : float) -> void:
-	if active:
-		if Input.is_action_pressed("increase_opacity") and modulate.a < 1.0:
-			modulate.a = clampf(modulate.a + delta * opacity_speed, 0.0, 1.0)
-		if Input.is_action_pressed("decrease_opacity") and modulate.a > 0:
-			modulate.a = clampf(modulate.a - delta * opacity_speed, 0.0, 1.0)
-		cur_img.handle_input()
+func _input(event : InputEvent) -> void:
+	if event is InputEventKey:
+		if event.is_action_pressed("beat_match"):
+			beat_match()
+		
+		if event.is_action_released('next_animation'):
+			change_animation()
+
+
+func set_controller(on : bool) -> void:
+	var connected := Controller.is_connected("fade", change_opacity)
+	if on and not connected:
+		Controller.fade.connect(change_opacity)
+		Controller.beat.connect(beat_match)
+		Controller.change_animation.connect(change_animation)
+		Controller.pause.connect(pause)
+	elif not on and connected:
+		Controller.fade.disconnect(change_opacity)
+		Controller.beat.disconnect(beat_match)
+		Controller.change_animation.disconnect(change_animation)
+		Controller.pause.disconnect(pause)
+
+
+func change_animation(_dir : int = 0) -> void:
+	printt(_index, "images.change_animation_relative", _dir)
+	if transition:
+		prev_img.visible = false
+		_prevTexture = null
+		if transition_out_tween:
+			transition_out_tween.kill()
+		if transition_in_tween:
+			transition_in_tween.kill()
+			cur_img.modulate.a = 1.0
+
+
+func change_opacity(amount : float) -> void:
+	if not active: return
+	
+	printt(_index, "change_opacity", amount)
+	var n = self # $CanvasGroup doesn't help
+	n.modulate.a = clampf(n.modulate.a + amount, 0.0, 1.0)
 
 
 func set_image_frames(iframes : ImageFrames) -> void:
@@ -102,12 +164,15 @@ func _on_real_frame_changed( frame : int) -> void:
 	#$CrossfadeImage.material.set_shader_param("prevTex", $CrossfadeImage.material.get_shader_param("curTex"))
 	#$CrossfadeImage.material.set_shader_param("curTex", frames.get_frame(animation, frame))
 
-	if transition:
+	# FIXME: bug with modulate and tweens causing flashing!?
+	if transition and modulate.a == 1.0:
 		assert(cur_img != null)
 		assert(prev_img != null)
 	
 		if _prevTexture != null:
 			prev_img.texture = _prevTexture
+		else:
+			prev_img.texture = cur_img.get_current_frame()
 		_prevTexture = cur_img.get_current_frame()
 		if prev_img.texture != null:
 			var duration = cur_img.get_frame_duration()
@@ -254,13 +319,67 @@ func set_timing(duration_ms : float):
 	# try to adjust for transition
 	if dur_s > transition_cutoff:
 		if _next_transition_delay and _next_transition_delay.time_left > 0:
-			printt("delay transition", dur_s / 2.0)
+			printt(_index, "delay transition", dur_s / 2.0)
 			_next_transition_delay.time_left = dur_s / 2.0
 		else:
 			_next_transition_delay = get_tree().create_timer(dur_s / 2.0)
-			printt("start delay", dur_s / 2.0)
+			printt(_index, "start delay", dur_s / 2.0)
 			await _next_transition_delay.timeout
-			printt("offset transition")
+			printt(_index, "offset transition")
 			cur_img.next_frame()
 	else:
 		cur_img.next_frame() # immediately advance to sync to beat
+
+
+func beat_match() -> void:
+	
+	# just getting started
+	if last_beat_ms == 0.0:
+		beats_ms.clear()
+		beat_average = 0.0
+		last_beat_ms = Time.get_ticks_msec()
+		return
+	
+	var now = Time.get_ticks_msec()
+	var diff = now - last_beat_ms
+	
+	if diff < 100:
+		return # disregard, something probably went wrong
+	
+	# after 10 seconds reset beat match
+	if diff > 10000 or (beat_average > 0 and (diff > beat_average * 3.0 or diff < beat_average / 4.0)):
+		print("clear the beat")
+		beats_ms.clear()
+		beat_average = 0.0
+		
+	last_beat_ms = now
+	# add a new beat
+	beats_ms.append(now)
+	
+	# remove old beats
+	if beats_ms.size() > 6:
+		beats_ms.remove_at(0)
+	
+	printt(_index, "beat_match", diff, beats_ms)
+	
+	# find average delay between beats, toss 1 outlier
+	if beats_ms.size() >= 3:
+		var timings = PackedFloat32Array()
+		var sum := 0.0 
+		for i in beats_ms.size() - 1:
+			var dt = beats_ms[i+1] - beats_ms[i]
+			timings.append(dt)
+			sum += dt
+		beat_average = sum / timings.size()
+		#printt("beats", beat_average, timings)
+		
+		# throw out worst
+		timings.sort()
+		if abs(timings[0] - beat_average) > abs(timings[-1] - beat_average):
+			sum -= timings[0]
+		else:
+			sum -= timings[-1]
+		beat_average = sum / (timings.size() - 1)
+		#printt("beats no worst", beat_average)
+		
+		set_timing(beat_average)

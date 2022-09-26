@@ -8,6 +8,7 @@ const animation_meta_key : StringName = "animation_index"
 @export var compress := true
 @export var pack_name : String = ""
 @export var stretch := true
+@export var fps : float  = 1.0  # default fps 
 
 var version := "1.0"
 
@@ -29,11 +30,34 @@ func get_base_frame_count() -> int:
 	return get_frame_count(base_animation_name)
 
 
-func add_frames(new_frames : ImageFrames) -> void:
+func get_all_fps() -> Dictionary:
+	var fps = {}
+	for anim in get_animation_names():
+		fps[anim] = get_animation_speed(anim)
+	return fps
+
+
+func get_fps(animation_name : String) -> float:
+	return get_all_fps()[animation_name]
+
+
+func get_valid_animation_names() -> PackedStringArray:
+	var names := get_animation_names()
+	var i = names.find(base_animation_name)
+	names.remove_at(i)
+	return names
+
+# FIXME: this only works for new animations in the same ImageFrames
+func add_frames(new_frames : ImageFrames, animation_name : String = '', offset : int = 0) -> void:
 	assert(new_frames.has_animation(base_animation_name))
 	
-	for aname in new_frames.get_animation_names():
-		var offset = 0
+	var animation_names : Array
+	if animation_name == "":
+		animation_names = new_frames.get_animation_names()
+	else:
+		animation_names = [animation_name]
+	
+	for aname in animation_names:
 		if aname != base_animation_name:
 			if get_animation_names().has(aname):
 				printt("Warning duplicate animation names:", aname)
@@ -44,8 +68,6 @@ func add_frames(new_frames : ImageFrames) -> void:
 			
 			set_animation_loop(aname, new_frames.get_animation_loop(aname))
 			set_animation_speed(aname, new_frames.get_animation_speed(aname))
-		else: # base animation requires adding offset
-			offset = get_frame_count(base_animation_name)
 			
 		for i in new_frames.get_frame_count(aname):
 			_add_frame(aname, i+offset, new_frames.get_frame(aname, i))
@@ -89,18 +111,19 @@ func info() -> Dictionary:
 		'frames': get_base_frame_count(),
 		'sequences': get_animation_names(),
 		'frame_counts': get_frame_counts(),
+		'fps': get_all_fps()
 	}
 	print(info)
 	for i in get_base_frame_count():
-		printt(i, get_frame(base_animation_name, i).get_meta(animation_meta_key))
+		if i != get_frame(base_animation_name, i).get_meta(animation_meta_key):
+			printt("index mismatch:", i, get_frame(base_animation_name, i).get_meta(animation_meta_key))
 	return info
 
 
 func create_frames(image_paths: Array, animation_name : String, loaderFn) -> void:
 	var start := Time.get_ticks_msec()
 
-	if not get_animation_names().has(animation_name):
-		add_animation(animation_name)
+	_create_animation(animation_name)
 		
 	for i in image_paths.size():
 		#print("Loading ", image_path)
@@ -109,9 +132,7 @@ func create_frames(image_paths: Array, animation_name : String, loaderFn) -> voi
 
 
 func create_frames_timed(image_paths: Array, animation_name : String, loaderFn, max_duration_ms : float) -> Texture2D:
-	if not get_animation_names().has(animation_name):
-		add_animation(animation_name)
-		set_animation_speed(animation_name, 1.0) # FIXME: what should this be set at?
+	_create_animation(animation_name)
 	
 	var start = Time.get_ticks_msec()
 	var duration = 0.0
@@ -124,8 +145,15 @@ func create_frames_timed(image_paths: Array, animation_name : String, loaderFn, 
 			break
 	return tex
 
+func _create_animation(animation_name : String, anim_fps : float = fps):
+	if not get_animation_names().has(animation_name):
+		add_animation(animation_name)
+		set_animation_speed(animation_name, anim_fps)
+
+
 # NOTE: i is the index of the base animation
 func _add_frame(animation_name : String, i : int, tex : Texture2D ) -> void:
+	assert(tex != null)
 	# add index to meta if animation is base
 	if animation_name == base_animation_name:
 		tex.set_meta(animation_meta_key, i)
@@ -173,9 +201,32 @@ func add_sequence(seq_name : String, sequence : PackedInt32Array) -> void:
 		return
 	assert(base_animation_name in get_animation_names())
 	assert(Array(sequence).max() < get_base_frame_count())
+	
+	if sequence.size() != get_base_frame_count():
+		printt("Warning sequence size", sequence.size(), "doesn't match number of base animation frames", get_base_frame_count())
+	
+	_create_animation(seq_name)
+	
 	#printt("add_sequence", seq_name, sequence)
 	for i in sequence:
 		_add_frame(seq_name, i, get_frame(base_animation_name, i))
+
+
+static func combine_image_packs(packs : Array[ImageFrames]) -> ImageFrames:
+	var combined := ImageFrames.new()
+	# FIXME: lots of bugs here, hack workaround, add default animations
+	# then just add the last animation
+	var offsets : Array[int] = []
+	var offset : int = 0
+	for p in packs:
+		offsets.append(offset)
+		combined.add_frames(p, base_animation_name, offset)
+		offset += p.get_base_frame_count()
+	for i in packs.size():
+		var anims : Array = packs[i].get_valid_animation_names()
+		combined.add_frames(packs[i], anims[-1], offsets[i])
+	
+	return combined
 
 
 static func load_image_pack(file_path : String) -> ImageFrames:

@@ -7,10 +7,8 @@ var default_image_pack = 'user://framedata_laura_164.res'
 var images : Node
 var help : Window
 var paused := false
-var last_beat_ms := 0.0
-var beats_ms : PackedFloat32Array
-var beat_average := 0.0
 
+var active_layers : Array = Array()
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -20,25 +18,29 @@ func _ready() -> void:
 	else:
 		images.set_image_frames(Loader.images)
 	$Stage.add_child(images)
+	images.active = true
 	
 	help = %HelpPopup
+	help.close_requested.connect(resume)
+	
+	%SavePackFileDialog.file_selected.connect(func(path : String): Loader.images.save(path))
+	
 	%ImageGridControl.set_images(images.get_textures(), 5, images.get_current_frame_index())
 
-
-func _process(delta) -> void:
-	if Input.is_action_just_pressed('beat_match'):
-		handle_beat_match(delta)
+	Controller.mode = Controller.Mode.SKIP
 
 
 func _input(event : InputEvent) -> void:
 	if event.is_action_released('help'):
 		# FIXME: popup has no variable that works for determining if it is active!
 		#        This is because the esc key and clicking outside the popup by default close it
+		# FIXME: help is a regular window, not popup but is marked as a popup, and needs its own script
+		#        there must be a better way this is insanity. Tis resume never gets called, see the helpwindow script instead
 		if paused:
 			resume()
 			help.hide()
 		else:
-			pause()
+			pause() 
 			help.popup()
 		
 	if event.is_action_released("image_grid"):
@@ -60,13 +62,15 @@ func _input(event : InputEvent) -> void:
 			%ImageGridControl.set_center(images.get_current_frame_index())
 
 	if event.is_action_released("duplicate_layer"):
+		if $Stage.get_child_count() >= 3: return
+		printt("duplicating layer")
 		var orig = $Stage.get_child(get_active_layer()) # TODO: get active
 		#var n = orig.duplicate(DUPLICATE_GROUPS | DUPLICATE_SCRIPTS | DUPLICATE_SIGNALS)
 #		var n = orig.duplicate(DUPLICATE_GROUPS | DUPLICATE_SCRIPTS )
 		var n = Images.instantiate()
 		n.set_image_frames(orig.get_image_frames().duplicate())
 		orig.active = false
-		add_child(n)
+		$Stage.add_child(n)
 		n.active = true
 		
 	if event.is_action_released("fullscreen_toggle"):
@@ -81,33 +85,31 @@ func _input(event : InputEvent) -> void:
 
 
 	# number key: change active layer
-	if event is InputEventKey and event.pressed and event.echo == false and not event.shift_pressed:
-		var count := $Stage.get_child_count()
-		var selected := 0
-		match event.physical_keycode:
-			KEY_1:
-				selected = 1
-			KEY_2:
-				selected = 2
-			KEY_3:
-				selected = 3
-			KEY_4:
-				selected = 4
-			KEY_5:
-				selected = 5
-			KEY_6:
-				selected = 6
-			KEY_7:
-				selected = 7
-			KEY_8:
-				selected = 8
-			KEY_9:
-				selected = 9
-			KEY_0:
-				selected = 10
-		
-		if selected > 0 and selected <= count:
-			change_layer(selected)
+	# set active layers by checking all keys that are pressed
+	if event is InputEventKey:
+		if event.keycode >= KEY_KP_1 and event.keycode <= KEY_KP_3:
+			var layer = event.keycode - KEY_KP_1
+			# on press add to active
+			if event.pressed and event.echo == false:
+				printt("numpad", layer, $Stage.get_child_count(), event)
+				if layer <= $Stage.get_child_count():
+					var n = $Stage.get_child(layer)
+					if n:
+						prints("activate", layer)
+						n.active = true
+						active_layers.append(layer)
+	
+			# release: anything not in active_layers gets turned off
+			# once all layer eys are release
+			if not event.pressed: 
+				if Input.is_key_pressed(KEY_KP_1) or Input.is_key_pressed(KEY_KP_2) or Input.is_key_pressed(KEY_KP_3):
+					return
+				print("release active layers")
+				for i in $Stage.get_child_count():
+					if not active_layers.has(i):
+						prints("turn off", i)
+						$Stage.get_child(i).active = false
+				active_layers.clear()
 
 
 func change_layer(layer_num : int) -> void:
@@ -134,53 +136,6 @@ func get_active_layer() -> int:
 			return c.get_index()
 	print("Failed to find active layer")
 	return 0
-
-
-func handle_beat_match(_delta : float) -> void:
-	# just getting started
-	if last_beat_ms == 0.0:
-		beats_ms.clear()
-		beat_average = 0.0
-		last_beat_ms = Time.get_ticks_msec()
-		return
-		
-	# after 10 seconds reset beat match
-	var now = Time.get_ticks_msec()
-	var diff = now - last_beat_ms
-	if diff > 10000 or (beat_average > 0 and (diff > beat_average * 3.0 or diff < beat_average / 4.0)):
-		print("clear the beat")
-		beats_ms.clear()
-		beat_average = 0.0
-		
-	last_beat_ms = now
-	# add a new beat
-	beats_ms.append(now)
-	
-	# remove old beats
-	if beats_ms.size() > 6:
-		beats_ms.remove_at(0)
-	
-	# find average delay between beats, toss 1 outlier
-	if beats_ms.size() >= 3:
-		var timings = PackedFloat32Array()
-		var sum := 0.0 
-		for i in beats_ms.size() - 1:
-			var dt = beats_ms[i+1] - beats_ms[i]
-			timings.append(dt)
-			sum += dt
-		beat_average = sum / timings.size()
-		#printt("beats", beat_average, timings)
-		
-		# throw out worst
-		timings.sort()
-		if abs(timings[0] - beat_average) > abs(timings[-1] - beat_average):
-			sum -= timings[0]
-		else:
-			sum -= timings[-1]
-		beat_average = sum / (timings.size() - 1)
-		#printt("beats no worst", beat_average)
-		
-		images.set_timing(beat_average)
 
 
 func _on_save_pack_file_dialog_file_selected(path):

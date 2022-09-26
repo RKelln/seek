@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://c7k6owyakecfp"]
+[gd_scene load_steps=5 format=3 uid="uid://c7k6owyakecfp"]
 
 [ext_resource type="Script" path="res://main.gd" id="1_e4fci"]
 [ext_resource type="PackedScene" uid="uid://c5iuftyxetc8s" path="res://image_grid_control.tscn" id="2_31j18"]
 [ext_resource type="PackedScene" uid="uid://c8s1ep1ha01vx" path="res://help_screen.tscn" id="2_xakrh"]
+[ext_resource type="Script" path="res://HelpPopup.gd" id="3_8pftb"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_e4fci")
@@ -23,6 +24,7 @@ unique_name_in_owner = true
 visible = false
 
 [node name="VBoxContainer" type="VBoxContainer" parent="GUI"]
+visible = false
 offset_right = 40.0
 offset_bottom = 40.0
 
@@ -77,16 +79,16 @@ offset_bottom = 53.0
 
 [node name="HelpPopup" type="Window" parent="GUI"]
 unique_name_in_owner = true
-handle_input_locally = false
-gui_disable_input = true
 title = "Help"
 size = Vector2i(1920, 1080)
 visible = false
-always_on_top = true
-transparent = true
+transient = true
+borderless = true
+popup_window = true
 min_size = Vector2i(1000, 500)
+script = ExtResource("3_8pftb")
 
-[node name="Control" parent="GUI/HelpPopup" instance=ExtResource("2_xakrh")]
+[node name="HelpControl" parent="GUI/HelpPopup" instance=ExtResource("2_xakrh")]
 
 [node name="SavePackFileDialog" type="FileDialog" parent="GUI"]
 unique_name_in_owner = true
@@ -95,5 +97,3 @@ min_size = Vector2i(600, 600)
 ok_button_text = "Save"
 access = 2
 filters = PackedStringArray("*.res")
-
-[connection signal="file_selected" from="GUI/SavePackFileDialog" to="." method="_on_save_pack_file_dialog_file_selected"]

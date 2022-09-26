@@ -5,6 +5,7 @@ extends Panel
 @export var frames : int
 @export var save_path : String
 @export var frame_counts : Dictionary
+@export var fps : Dictionary
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -22,4 +23,13 @@ func set_values(details : Dictionary) -> void:
 	frames = details.frames
 	save_path = details.save_path
 	frame_counts = details.frame_counts
+	if fps in details:
+		fps = details.fps
 
+
+func create_entry(key : String, value : Variant, index : int = -1) -> void: 
+	var key_node = Label.new()
+	key_node.text = key
+	var value_node = Label.new()
+	key_node.text = str(value)
+	$MarginContainer/VBoxContainer/GridContainer
