@@ -10,9 +10,9 @@ var max_image_size := Vector2(1920,1080)
 func get_dir_contents(rootPath: String, extensions : Array = ["png", "jpg", "jpeg", "webp"]) -> Array:
 	var files = Array()
 	var directories = Array()
-	var dir = Directory.new()
+	var dir = DirAccess.open(rootPath)
 
-	if dir.open(rootPath) == OK:
+	if dir:
 		dir.list_dir_begin()
 		_add_dir_contents(dir, files, directories, extensions)
 		dir.list_dir_end()
@@ -22,7 +22,22 @@ func get_dir_contents(rootPath: String, extensions : Array = ["png", "jpg", "jpe
 	return [files, directories]
 
 
-func _add_dir_contents(dir: Directory, files: Array, directories: Array, extensions: Array) -> void:
+#func dir_contents(path):
+#    var dir = DirAccess.open(path)
+#    if dir:
+#        dir.list_dir_begin()
+#        var file_name = dir.get_next()
+#        while file_name != "":
+#            if dir.current_is_dir():
+#                print("Found directory: " + file_name)
+#            else:
+#                print("Found file: " + file_name)
+#            file_name = dir.get_next()
+#    else:
+#        print("An error occurred when trying to access the path.")
+
+
+func _add_dir_contents(dir: DirAccess, files: Array, directories: Array, extensions: Array) -> void:
 	var file_name = dir.get_next()
 
 	# TODO: ensure lowercase extensions
@@ -32,8 +47,7 @@ func _add_dir_contents(dir: Directory, files: Array, directories: Array, extensi
 
 		if dir.current_is_dir():
 #            print("Found directory: %s" % path)
-			var subDir = Directory.new()
-			subDir.open(path)
+			var subDir = DirAccess.open(path)
 			subDir.list_dir_begin()
 			directories.append(path)
 			_add_dir_contents(subDir, files, directories, extensions)
@@ -55,15 +69,12 @@ func load_sequence_file(filename) -> PackedInt32Array:
 	
 	
 func _load_text_file(filename) -> PackedStringArray:
-	var file = File.new()
-	
-	if file.file_exists(filename):
-		file.open(filename, File.READ)
+	var file = FileAccess.open(filename, FileAccess.READ)
+	if file:
 		var text := file.get_as_text()
-		file.close()
 		return text.split("\n", false)
-	
 	return PackedStringArray()
+
 
 # return a float ratio to fit the object in the container
 func _get_fit_ratio(container_size, object_size) -> float:
@@ -114,17 +125,16 @@ func _print_graphics_memory():
 
 
 func _parse_JSON(json_file) -> Array:
-	var file = File.new()
 	var json = JSON.new()
 	var json_string : String
 	
-	if not file.file_exists(json_file):
+	if not FileAccess.file_exists(json_file):
 		print("No file", json_file, "found")
 		return Array()
 		
-	file.open(json_file, File.READ)
-	json_string = file.get_as_text()
-	file.close()
+	var file := FileAccess.open(json_file, FileAccess.READ)
+	if file:
+		json_string = file.get_as_text()
 
 	var error = json.parse(json_string)
 	if error == OK:
