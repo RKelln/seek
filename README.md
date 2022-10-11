@@ -44,5 +44,65 @@ A simple example would be to display each image from darkest to lightest. A more
 
 1. Download Godot 4.0 (beta 2): https://downloads.tuxfamily.org/godotengine/4.0/beta2/
 2. Clone the repo
-3. Open project in Godot
+3. Import project file in Godot
 
+
+## Usage
+
+Seek is designed to load folders of images (jpg, png, or webp) into an image pack. These image packs are compressed with video card texture compression and are designed to be stored entirely on your video card for very fast non-sequential access. (Note: in testing Godot will place them in your machine RAM and move them onto the card as needed, but you need enough RAM to store all your image packs.)
+
+So first you'll need to crate an image pack, given Seek a folder of images. Then you can start playing them. By default they play back in sorted (by name) order.
+
+Once you've made some image packs you can load them, instead of re-creating them.
+
+You can also make new sequences from the images to play them back in different orders. These sequences can be created by a text file that has a number on each line that denotes the image in default sorted order, starting from 0. I.E. images selected by number and new sequence is line by line:
+
+```
+1
+2
+3
+0
+```
+Would create a sequence, starting with the second image, then third, fourth and finally the first (of images in the folder sorted by name).
+
+Sequences can be viewed and modified very basically using the `i` or `e` key, but this functionality is mostly placeholder at the moment.
+
+### Controls
+
+* `esc`: Toggle help menu
+* `F`:Toggle fullscreen
+
+#### Editing / sequencing controls
+
+* `I`: Image grid
+
+#### VJ Controls
+
+* `Space`: Pause / resume
+* `Z`: Reverse direction
+* `X`, `down arrow`: Slower
+* `C`, `up arrow`: Faster
+* `>`, `left arrow`: Skip forward / next
+* `<`, `right arrow`: Skip backwards / previous
+* `/`: Fast forward
+* `M`: Fast backward
+* `V`: Reset speed
+* `B`: Random jump
+* `Left mouse button`: Forwards / backwards speed
+* `Right mouse button`: Go to frame based on position
+* `Enter / return`: Tap for beat matching
+
+* `+` (plus): Increase opacity (fade in)
+* `-` (minus): Decrease opacity (fade out)
+* `mouse wheel`: Increase/decrease transition length
+
+* `A`: Next sequence
+* `1 - 9, 0`: Select sequence
+
+* `D`: Duplicate layer
+* `Numpad 1 - 3`: Set active layer
+
+
+## Known Issues
+
+* TODO
