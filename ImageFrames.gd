@@ -6,7 +6,12 @@ const base_animation_name : StringName = "default"
 const animation_meta_key : StringName = "animation_index"
 
 @export var compress := true
-@export var pack_name : String = ""
+@export var pack_name : String = "":
+	get:
+		return pack_name
+	set(value):
+		pack_name = normalize_name(value)
+
 @export var stretch := true
 @export var fps : float  = 1.0  # default fps 
 
@@ -145,6 +150,7 @@ func create_frames_timed(image_paths: Array, animation_name : String, loaderFn, 
 			break
 	return tex
 
+
 func _create_animation(animation_name : String, anim_fps : float = fps):
 	if not get_animation_names().has(animation_name):
 		add_animation(animation_name)
@@ -212,6 +218,10 @@ func add_sequence(seq_name : String, sequence : PackedInt32Array) -> void:
 		_add_frame(seq_name, i, get_frame(base_animation_name, i))
 
 
+static func normalize_name(str : String) -> StringName:
+	return StringName(str.strip_edges().to_snake_case().validate_node_name())
+
+
 static func combine_image_packs(packs : Array[ImageFrames]) -> ImageFrames:
 	var combined := ImageFrames.new()
 	# FIXME: lots of bugs here, hack workaround, add default animations
@@ -238,6 +248,11 @@ static func load_image_pack(file_path : String) -> ImageFrames:
 		iframes = load(file_path) as ImageFrames
 	assert(iframes is ImageFrames)
 	assert(iframes.get_animation_names().size() >= 1)
+	
+	# ensure normalized names
+	for old_name in iframes.get_animation_names():
+		iframes.rename_animation(old_name, normalize_name(old_name))
+		
 	# ensure default
 	if not iframes.has_animation(base_animation_name):
 		# use first animation:

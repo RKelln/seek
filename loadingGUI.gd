@@ -91,13 +91,13 @@ func _on_images_file_dialog_dir_selected(dir : String):
 	_image_files = Loader.get_dir_contents(dir)[0]
 	_image_files.sort()
 	var last_folder = dir.rsplit("/", false, 1)[1]
-	last_folder = last_folder.validate_node_name().to_lower() # remove junk and lower
+	last_folder = ImageFrames.normalize_name(last_folder)
 	$AnimationNamePopup.set_default_name(last_folder)
 	$AnimationNamePopup.popup_centered()
 	
 	#create_pack_name = await %NamePanel.response_submitted
 	var values = await %NamePanel.response_submitted
-	create_pack_name = values[0]
+	create_pack_name = ImageFrames.normalize_name(values[0])
 	var fps = values[1]
 	$AnimationNamePopup.visible = false
 	if create_pack_name != "":
@@ -156,7 +156,7 @@ func _on_sequence_file_dialog_file_selected(path : String):
 	if active_image_pack:
 		var seq = Loader.load_sequence_file(path)
 		if seq and seq.size() > 0:
-			var seq_name = path.get_file().get_basename()
+			var seq_name = ImageFrames.normalize_name(path.get_file().get_basename())
 			active_image_pack.add_sequence(seq_name, seq)
 			printt(seq_name, seq, active_image_pack.get_animation_names())
 			# TODO: hook up info panel
@@ -172,13 +172,13 @@ func _on_start_button_pressed() -> void:
 
 
 func _on_save_as_button_pressed():
-	$AnimationNamePopup.set_default_name(save_pack_name)
+	$AnimationNamePopup.set_default_name(ImageFrames.normalize_name(save_pack_name))
 	$AnimationNamePopup.popup_centered()
 	var values = await %NamePanel.response_submitted
 	save_pack_name = values[0]
 	var fps = values[1]
 	active_image_pack = combine_image_packs(loaded_image_packs)
-	active_image_pack.pack_name = save_pack_name
+	active_image_pack.pack_name = ImageFrames.normalize_name(save_pack_name)
 	active_image_pack.fps = fps
 	$SavePackFileDialog.current_file = save_pack_name
 	$SavePackFileDialog.popup()
