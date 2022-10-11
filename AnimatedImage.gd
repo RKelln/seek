@@ -87,6 +87,7 @@ func _ready():
 	
 	# start with last animation
 	_init_animation(start_anim)
+	_change_animation(start_anim)
 	
 	print("Animations: ", animations)
 	print("Current animation: ", animation)
@@ -134,6 +135,20 @@ func _init_animation(animation_name : String) -> void:
 	if animation_name not in frame_counts:
 		frame_counts[animation_name] - frames.get_frame_count(animation_name)
 
+# always changes animation, regardless of current and state
+func _change_animation(requested_animation : String) -> void:
+	printt(_index, "change animation to ", requested_animation, "_anim_fps:", _anim_fps, "frame_skip:", frame_skip, "speed:", speed)
+
+	# NOTE: when changing animations it signals frame_changed and sets the frame back to the start
+	_requested_animation = true # now that this is set, it won't update current_frame or signal real_frame_changed
+	animation = requested_animation
+	_requested_animation = false
+	
+	frame = current_frame[animation] # sets current frame
+	_current_texture = frames.get_frame(animation, frame)
+	
+	if stretch: rescale()
+
 
 func change_animation(requested_animation : String) -> void:
 	if not active: return
@@ -144,20 +159,10 @@ func change_animation(requested_animation : String) -> void:
 	# alsways set these:
 	_init_animation(requested_animation)
 	
-	printt(_index, "change animation to ", requested_animation, "_anim_fps:", _anim_fps, "frame_skip:", frame_skip, "speed:", speed)
-	
 	if requested_animation == animation:
 		return
 	
-	# NOTE: when changing animations it signals frame_changed and sets the frame back to the start
-	_requested_animation = true # now that this is set, it won't update current_frame or signal real_frame_changed
-	animation = requested_animation
-	_requested_animation = false
-	
-	frame = current_frame[animation] # sets current frame
-	_current_texture = frames.get_frame(animation, frame)
-	
-	if stretch: rescale()
+	_change_animation(requested_animation)
 
 
 func info() -> Dictionary:
