@@ -103,7 +103,29 @@ func _input(event : InputEvent) -> void:
 			beat_match()
 		
 		if event.is_action_released('next_animation'):
-			change_animation()
+			change_animation(1)
+
+		if not event.pressed: # releaased
+			if event.keycode >= KEY_0 and event.keycode <= KEY_9:
+				var anims : PackedStringArray = get_valid_animation_names()
+				var count := anims.size()
+				var selected_anim : int = event.keycode - KEY_1
+				# KEY_0 ihas lowest keycode but is rightmost on keyboard
+				if event.keycode == KEY_0:
+					selected_anim = 10
+				elif event.shift_pressed:
+					selected_anim += 10
+				if selected_anim >= 0 and selected_anim < count:
+					#printt(_index, "input", event.keycode, selected_anim)
+					if get_sequence_name() != anims[selected_anim]:
+						change_animation()
+						cur_img.change_animation(anims[selected_anim])
+
+	if event is InputEventMouseButton:
+		if event.is_action_pressed("fade_less"):
+			change_transition_duration(-0.05)
+		elif event.is_action_pressed("fade_more"):
+			change_transition_duration(0.05)
 
 
 func set_controller(on : bool) -> void:
@@ -121,7 +143,8 @@ func set_controller(on : bool) -> void:
 
 
 func change_animation(_dir : int = 0) -> void:
-	printt(_index, "images.change_animation_relative", _dir)
+	if not active: return
+	#printt(_index, "images.change_animation_relative", _dir)
 	if transition:
 		prev_img.visible = false
 		_prevTexture = null
@@ -138,6 +161,13 @@ func change_opacity(amount : float) -> void:
 	printt(_index, "change_opacity", amount)
 	var n = self # $CanvasGroup doesn't help
 	n.modulate.a = clampf(n.modulate.a + amount, 0.0, 1.0)
+
+
+func change_transition_duration(percent_change : float) -> void:
+	if not active: return
+	#transition_percent = smoothstep(0, 1.0, transition_percent + percent_change)
+	transition_percent = clampf(transition_percent + percent_change, 0.0, 1.0)
+	printt(_index, "change_transition_duration", percent_change, transition_percent)
 
 
 func set_image_frames(iframes : ImageFrames) -> void:
@@ -277,6 +307,10 @@ func update_sequence(seq_name : String, sequence : PackedInt32Array) -> void:
 	restart()
 
 
+func get_valid_animation_names() -> PackedStringArray:
+	return cur_img.frames.get_valid_animation_names()
+
+
 func info() -> Dictionary:
 	return cur_img.info()
 
@@ -319,13 +353,13 @@ func set_timing(duration_ms : float):
 	# try to adjust for transition
 	if dur_s > transition_cutoff:
 		if _next_transition_delay and _next_transition_delay.time_left > 0:
-			printt(_index, "delay transition", dur_s / 2.0)
+			#printt(_index, "delay transition", dur_s / 2.0)
 			_next_transition_delay.time_left = dur_s / 2.0
 		else:
 			_next_transition_delay = get_tree().create_timer(dur_s / 2.0)
-			printt(_index, "start delay", dur_s / 2.0)
+			#printt(_index, "start delay", dur_s / 2.0)
 			await _next_transition_delay.timeout
-			printt(_index, "offset transition")
+			#printt(_index, "offset transition")
 			cur_img.next_frame()
 	else:
 		cur_img.next_frame() # immediately advance to sync to beat

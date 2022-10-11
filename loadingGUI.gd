@@ -191,8 +191,3 @@ func _on_save_pack_file_dialog_file_selected(path):
 		create_info_panel(path, active_image_pack.info())
 		loaded_image_packs.append(active_image_pack)
 	
-
-
-
-func _on_images_file_dialog_file_selected(path):
-	pass # Replace with function body.
