@@ -22,7 +22,7 @@ jobs:
       matrix:
         include:
           - preset: macOS # must match the name of the preset in export_presets.cfg
-            runner: macos-latest
+            runner: macos-12
             export_file: seek.app
     runs-on: ${{ matrix.runner }}
     steps:
