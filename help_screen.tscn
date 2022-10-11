@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://c8s1ep1ha01vx"]
+[gd_scene load_steps=3 format=3 uid="uid://c8s1ep1ha01vx"]
 
 [ext_resource type="Theme" uid="uid://tw57akexx0f2" path="res://GUI_theme.tres" id="1_3j5ae"]
+[ext_resource type="Texture2D" uid="uid://b16ittj24i3ao" path="res://Seek_instructions.png" id="2_s6npw"]
 
 [node name="HelpControl" type="Control"]
 layout_mode = 3
@@ -14,6 +15,7 @@ size_flags_vertical = 3
 mouse_filter = 1
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -22,6 +24,7 @@ grow_vertical = 2
 theme = ExtResource("1_3j5ae")
 
 [node name="CenterContainer" type="CenterContainer" parent="MarginContainer"]
+layout_mode = 2
 offset_left = 50.0
 offset_top = 25.0
 offset_right = 1870.0
@@ -29,6 +32,8 @@ offset_bottom = 1055.0
 size_flags_vertical = 3
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/CenterContainer"]
+visible = false
+layout_mode = 2
 offset_left = 685.0
 offset_top = 112.0
 offset_right = 1135.0
@@ -38,6 +43,7 @@ size_flags_vertical = 3
 theme = ExtResource("1_3j5ae")
 
 [node name="ControlsTitleLabel" type="Label" parent="MarginContainer/CenterContainer/VBoxContainer"]
+layout_mode = 2
 offset_right = 450.0
 offset_bottom = 42.0
 theme = ExtResource("1_3j5ae")
@@ -47,6 +53,7 @@ horizontal_alignment = 1
 
 [node name="RichTextLabel" type="RichTextLabel" parent="MarginContainer/CenterContainer/VBoxContainer"]
 custom_minimum_size = Vector2i(450, 0)
+layout_mode = 2
 offset_top = 52.0
 offset_right = 450.0
 offset_bottom = 806.0
@@ -91,3 +98,7 @@ scroll_active = false
 shortcut_keys_enabled = false
 meta_underlined = false
 hint_underlined = false
+
+[node name="Sprite2d" type="Sprite2D" parent="MarginContainer/CenterContainer"]
+texture = ExtResource("2_s6npw")
+centered = false
