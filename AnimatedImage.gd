@@ -106,6 +106,7 @@ func _on_frame_changed():
 
 
 func set_controller(on : bool) -> void:
+	if Controller.mode == Controller.Mode.OFF: return
 	var connected := Controller.is_connected("skip_frame", skip_frame)
 	if on and not connected:
 		Controller.skip_frame.connect(skip_frame)
@@ -161,7 +162,7 @@ func change_animation(requested_animation : String) -> void:
 	
 	if requested_animation == animation:
 		return
-	
+		
 	_change_animation(requested_animation)
 
 
@@ -330,13 +331,14 @@ func handle_input():
 		else:
 			resume()
 	
+	# allow the following while paused:
+	if Input.is_action_just_pressed("skip_forward"):
+		next_frame(1)
+	elif Input.is_action_just_pressed("skip_backward"):
+		next_frame(-1)
+	
 	# other input requires scenes to be playing:
 	if not playing: 
-		# allow frame by frame during pause
-		if Input.is_action_just_pressed("skip_forward"):
-			next_frame(1)
-		elif Input.is_action_just_pressed("skip_backward"):
-			next_frame(-1)
 		return 
 	
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):

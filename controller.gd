@@ -1,6 +1,6 @@
 extends Node
 
-enum Mode {SKIP, SPEED, TEST}
+enum Mode {OFF, TEST, SKIP, SPEED}
 
 const knob_clockwise := KEY_HOME
 const knob_cclockwise := KEY_END
@@ -22,7 +22,7 @@ const btn_bl := KEY_KP_1
 const btn_b := KEY_KP_2
 const btn_br := KEY_KP_3
 
-@export var mode : Mode = Mode.TEST
+@export var mode : Mode = Mode.OFF
 @export var sensitivity : float = 1.0
 
 signal skip_frame(value : float)
@@ -40,6 +40,7 @@ var fade_amount : float = 0.05
 
 
 func _input(event: InputEvent) -> void:
+	if mode == Mode.OFF: return
 	if not event is InputEventKey: return
  
 	var info := {}

@@ -27,7 +27,7 @@ func _ready() -> void:
 	
 	%ImageGridControl.set_images(images.get_textures(), 5, images.get_current_frame_index())
 
-	Controller.mode = Controller.Mode.SKIP
+	#Controller.mode = Controller.Mode.SKIP  # uncomment to turn on controller
 
 
 func _input(event : InputEvent) -> void:
@@ -91,7 +91,7 @@ func _input(event : InputEvent) -> void:
 			var layer = event.keycode - KEY_KP_1
 			# on press add to active
 			if event.pressed and event.echo == false:
-				printt("numpad", layer, $Stage.get_child_count(), event)
+				#printt("numpad", layer, $Stage.get_child_count(), event)
 				if layer <= $Stage.get_child_count():
 					var n = $Stage.get_child(layer)
 					if n:
@@ -104,10 +104,10 @@ func _input(event : InputEvent) -> void:
 			if not event.pressed: 
 				if Input.is_key_pressed(KEY_KP_1) or Input.is_key_pressed(KEY_KP_2) or Input.is_key_pressed(KEY_KP_3):
 					return
-				print("release active layers")
+				# release active layers
 				for i in $Stage.get_child_count():
 					if not active_layers.has(i):
-						prints("turn off", i)
+						prints("turn off layer", i)
 						$Stage.get_child(i).active = false
 				active_layers.clear()
 

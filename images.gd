@@ -39,7 +39,7 @@ var _prevTexture : Texture2D
 var _next_transition_delay : SceneTreeTimer
 
 # alpha
-var opacity_speed := 1.0
+var opacity_speed := 0.6
 
 # beat match
 var last_beat_ms := 0.0
@@ -88,14 +88,15 @@ func _ready():
 	
 	_index = get_index()
 	cur_img._index = _index
-	
-#func _process(delta : float) -> void:
-#	if active:
-#		if Input.is_action_pressed("increase_opacity") and modulate.a < 1.0:
-#			change_opacity(delta * opacity_speed)
-#		if Input.is_action_pressed("decrease_opacity") and modulate.a > 0:
-#			change_opacity(-delta * opacity_speed)
-#		cur_img.handle_input()
+
+
+func _process(delta : float) -> void:
+	if active:
+		if Input.is_action_pressed("increase_opacity") and modulate.a < 1.0:
+			change_opacity(delta * opacity_speed)
+		if Input.is_action_pressed("decrease_opacity") and modulate.a > 0:
+			change_opacity(-delta * opacity_speed)
+
 
 func _input(event : InputEvent) -> void:
 	if event is InputEventKey:
@@ -129,6 +130,7 @@ func _input(event : InputEvent) -> void:
 
 
 func set_controller(on : bool) -> void:
+	if Controller.mode == Controller.Mode.OFF: return
 	var connected := Controller.is_connected("fade", change_opacity)
 	if on and not connected:
 		Controller.fade.connect(change_opacity)
