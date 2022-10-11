@@ -26,7 +26,7 @@ _global_script_class_icons={
 
 [application]
 
-config/name="Speed Test"
+config/name="Seek"
 run/main_scene="res://loading.tscn"
 config/features=PackedStringArray("4.0")
 config/icon="res://icon.png"
@@ -50,10 +50,10 @@ window/size/height=1080
 
 [editor]
 
-movie_writer/mjpeg_quality=0.9
-movie_writer/movie_file="/home/ryankelln/Documents/EverythingDances/seek_90.avi"
+movie_writer/mjpeg_quality=0.8
+movie_writer/movie_file="/home/ryankelln/Documents/Seek/seek_90.avi"
 movie_writer/disable_vsync=true
-movie_writer/fps=10
+movie_writer/fps=30
 
 [input]
 
@@ -119,6 +119,7 @@ next_animation={
 help={
 "deadzone": 0.5,
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":4194305,"physical_keycode":0,"unicode":0,"echo":false,"script":null)
+, Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"window_id":0,"alt_pressed":false,"shift_pressed":true,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":52,"unicode":0,"echo":false,"script":null)
 ]
 }
 beat_match={
