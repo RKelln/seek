@@ -18,7 +18,8 @@ var compress := true
 		active = on
 		set_controller(active)
 
-
+const max_speed : float = 10.0
+const max_speed_fps : float = 30.0
 var speed : float = 1.0 :
 	get:
 		return speed
@@ -85,7 +86,7 @@ func _ready():
 			start_anim = animation_name
 	
 	# start with last animation
-	change_animation(start_anim)
+	_init_animation(start_anim)
 	
 	print("Animations: ", animations)
 	print("Current animation: ", animation)
@@ -106,7 +107,6 @@ func _on_frame_changed():
 func set_controller(on : bool) -> void:
 	var connected := Controller.is_connected("skip_frame", skip_frame)
 	if on and not connected:
-		printt(_index, "animatedimages", "turn controller")
 		Controller.skip_frame.connect(skip_frame)
 		Controller.change_speed.connect(change_relative_speed)
 		#Controller.pause.connect(pause)
@@ -123,19 +123,26 @@ func set_controller(on : bool) -> void:
 func change_animation_relative(direction : int) -> void:
 	if not active: return
 	change_animation(next_animation(direction))
+	
+	
+func _init_animation(animation_name : String) -> void:
+	_anim_fps = frames.get_animation_speed(animation_name)
+	assert(_anim_fps > 0)
+	frame_skip = maxi(1, floor(frames.get_frame_count(animation_name) * percent_frames_for_skip)) # % of frames
+	speed = _speeds[animation_name]
+	speed_scale = speed
+	if animation_name not in frame_counts:
+		frame_counts[animation_name] - frames.get_frame_count(animation_name)
 
 
 func change_animation(requested_animation : String) -> void:
-	printt(_index, "animated.change_animation", requested_animation)
+	if not active: return
+	#printt(_index, "animated.change_animation", requested_animation)
 	if frame_counts[requested_animation] <= 0:
 		return
 
 	# alsways set these:
-	_anim_fps = frames.get_animation_speed(requested_animation)
-	assert(_anim_fps > 0)
-	frame_skip = maxi(1, floor(frames.get_frame_count(requested_animation) * percent_frames_for_skip)) # % of frames
-	speed = _speeds[requested_animation]
-	speed_scale = speed
+	_init_animation(requested_animation)
 	
 	printt(_index, "change animation to ", requested_animation, "_anim_fps:", _anim_fps, "frame_skip:", frame_skip, "speed:", speed)
 	
@@ -160,7 +167,7 @@ func info() -> Dictionary:
 	
 	
 func next_animation(inc : int) -> StringName:
-	var anim_names = frames.get_animation_names()
+	var anim_names = frames.get_valid_animation_names()
 	var i = anim_names.find(animation)
 	for anim in anim_names: # loop maximum of once
 		i = fposmod(i + inc, anim_names.size())
@@ -197,7 +204,7 @@ func set_frame_duration(duration_s : float) -> void:
 	
 
 func next_frame(increment : int = 1) -> void:
-	printt(_index, "next_frame", increment)
+	#printt(_index, "next_frame", increment)
 	if increment > 0 and increment < 1:
 		increment = 1
 	elif increment < 0 and increment > -1:
@@ -241,76 +248,10 @@ func rescale():
 			#printt(viewsize, framesize, viewscale, scale, offset)
 
 
-func _input(event : InputEvent) -> void:
-	if not active: return
-	
-	# shift + number key: change animation
-	if event is InputEventKey:
-		#controller.handle_input(event)
-		
-		if not event.pressed: # releaased
-			if event.echo == false:
-				var anims := frames.get_animation_names()
-				var count := anims.size()
-				var selected_anim := 0
-				match event.keycode:
-					KEY_1:
-						selected_anim = 1
-					KEY_2:
-						selected_anim = 2
-					KEY_3:
-						selected_anim = 3
-					KEY_4:
-						selected_anim = 4
-					KEY_5:
-						selected_anim = 5
-					KEY_6:
-						selected_anim = 6
-					KEY_7:
-						selected_anim = 7
-					KEY_8:
-						selected_anim = 8
-					KEY_9:
-						selected_anim = 9
-					KEY_0:
-						selected_anim = 10
-				if event.shift_pressed:
-					match event.keycode:
-						KEY_1:
-							selected_anim = 11
-						KEY_2:
-							selected_anim = 12
-						KEY_3:
-							selected_anim = 13
-						KEY_4:
-							selected_anim = 14
-						KEY_5:
-							selected_anim = 15
-						KEY_6:
-							selected_anim = 16
-						KEY_7:
-							selected_anim = 17
-						KEY_8:
-							selected_anim = 18
-						KEY_9:
-							selected_anim = 19
-						KEY_0:
-							selected_anim = 20
-				if selected_anim > 0 and selected_anim < count:
-					printt("AnimatedImage input", event.physical_keycode, selected_anim)
-					change_animation(anims[selected_anim]) #NOTE: default is animation 0
-	
-#
-#			if event.is_action_pressed("skip_forward"):
-#				skip_frame(1)
-#			elif event.is_action_pressed("skip_backward"):
-#				skip_frame(-1)
-
-
 func skip_frame(direction : float = 0.0) -> void:
 	if not active: return
 	
-	printt(_index, "skip_frame", frame_skip, direction)
+	#printt(_index, "skip_frame", frame_skip, direction)
 	# default to skip 0.3sec or 1 of frames whatever is less, but allow for direction to modulate
 	if playing:
 		next_frame(direction * clampi(0.3 * _anim_fps * speed, 1, frame_skip))
@@ -321,25 +262,45 @@ func skip_frame(direction : float = 0.0) -> void:
 func change_relative_speed(relative_speed : float = 0.0) -> void:
 	if not active: return
 	
-	relative_speed = clampf(relative_speed, -1.0, 1.0)
+	if speed <= 2.0 and speed > 0.1:
+		speed *= 1.0 + (relative_speed / speed * 0.05)
+	elif speed > 2.0:
+		speed += relative_speed * speed * 0.1
+	else:
+		speed += relative_speed * 0.05
+	printt(_index, "change_relative_speed", relative_speed, speed, _anim_fps)
 	
-	#var rdist2 = remap(relative_speed, -0.5, 0.5, -0.2, 0.2) # less change near the middle
-	#speed = 0.5 * (abs(relative_speed) + abs(rdist2)) * _anim_fps * 20.0 # FIXME: add fps here?
+	speed = clampf(speed, 0.0, max_speed)
+	if speed <= 0:
+		stop()
+	else:
+		speed_scale = speed 
+		play(animation, _backwards)
 	
-	var eased := ease(abs(relative_speed), 2)
+
+
+func change_relative_normalized(normalized_speed : float = 0.0) -> void:
+	if not active: return
+	
+	normalized_speed = clampf(normalized_speed, -1.0, 1.0)
+	
+	#var rdist2 = remap(normalized_speed, -0.5, 0.5, -0.2, 0.2) # less change near the middle
+	#speed = 0.5 * (abs(normalized_speed) + abs(rdist2)) * _anim_fps * 20.0 # FIXME: add fps here?
+	
+	var eased := ease(abs(normalized_speed), 2)
 	if _anim_fps < 1:
 		speed = remap(eased, 0, 1.0, 0, 10.0 + 90.0 * (1.0 - _anim_fps))
 	elif _anim_fps < 10:
 		speed = remap(eased, 0, 1.0, 0, 5.0 + 9.0 * (10.0 - _anim_fps))
 	else:
 		speed = remap(eased, 0, 1.0, 0, 5.0)
-	printt(_index, "change_relative_speed", relative_speed, eased, speed, _anim_fps)
+	printt(_index, "change_normalized_speed", normalized_speed, eased, speed, _anim_fps)
 	
 	speed = clampf(speed, 0.0, 100.0)
 	
 	speed_scale = speed 
 	
-	if relative_speed < 0:
+	if normalized_speed < 0:
 		_backwards = true
 		play(animation, _backwards)
 	else:

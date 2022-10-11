@@ -97,10 +97,12 @@ func _input(event: InputEvent) -> void:
 					info['skip_frame'] = -1
 					
 				knob1_clockwise:
-					speed = linear_to_relative(speed, 1, -max_speed, max_speed, change_speed, -1.0)
+					#speed = linear_to_relative(speed, 1, -max_speed, max_speed, change_speed, -1.0)
+					change_speed.emit(1)
 					info['speed'] = speed
 				knob1_cclockwise:
-					speed = linear_to_relative(speed, -1, -max_speed, max_speed, change_speed, -1.0)
+					#speed = linear_to_relative(speed, -1, -max_speed, max_speed, change_speed, -1.0)
+					change_speed.emit(-1)
 					info['speed'] = speed
 				
 				# change animation (NOTE: knob not working)
