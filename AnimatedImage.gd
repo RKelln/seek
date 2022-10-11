@@ -155,6 +155,7 @@ func change_animation(requested_animation : String) -> void:
 	_requested_animation = false
 	
 	frame = current_frame[animation] # sets current frame
+	_current_texture = frames.get_frame(animation, frame)
 	
 	if stretch: rescale()
 
