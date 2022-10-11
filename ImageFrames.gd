@@ -224,7 +224,8 @@ static func combine_image_packs(packs : Array[ImageFrames]) -> ImageFrames:
 		offset += p.get_base_frame_count()
 	for i in packs.size():
 		var anims : Array = packs[i].get_valid_animation_names()
-		combined.add_frames(packs[i], anims[-1], offsets[i])
+		for anim_name in anims:
+			combined.add_frames(packs[i], anim_name, offsets[i])
 	
 	return combined
 
