@@ -53,7 +53,9 @@ jobs:
           mkdir -p ${TEMPLATES_DIR}
           wget -q https://github.com/GodotBuilder/godot-builds/releases/download/4.0-prerelease-templates/Godot_v${GODOT_FULL_VERSION}_export_templates.tpz
           unzip Godot_v${GODOT_FULL_VERSION}_export_templates.tpz
-          mv templates/* ${TEMPLATES_DIR}
+          mv -v templates/* ${TEMPLATES_DIR}
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
       - name: Export macOS
         if: ${{ matrix.preset == 'macOS' }}
         env:
