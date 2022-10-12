@@ -1,19 +1,17 @@
-name: MacOS_Release
+name: OSX_Release
 
 # Based on: https://github.com/robpc/maze-test-game/blob/osx-test/.github/workflows/release-macos.yml
 
 env:
-  godot_version: "4.0"
+  godot_version: 4.0
   godot_release: beta2
   filename: seek
   version: 0.1
 
 on:
   push:
-    branches: [ "main" ]
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+    branches:
+      - main
 
 jobs:
   exports:
@@ -22,12 +20,12 @@ jobs:
       matrix:
         include:
           - preset: macOS # must match the name of the preset in export_presets.cfg
-            runner: macos-12
+            runner: macos-latest
             export_file: seek.app
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
         with:
           lfs: true
       - name: Set Env Vars
@@ -39,6 +37,10 @@ jobs:
           # ^^ Orig ${GITHUB_REF/refs\/tags\/v/}
           echo "version=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
           echo "package=${FILENAME}-v${VERSION}-${PRESET}.zip" >> $GITHUB_ENV
+      - name: Install MoltenVK
+        env:
+        run: |
+          brew install molten-vk
       - name: Export macOS
         if: ${{ matrix.preset == 'macOS' }}
         env:
@@ -58,6 +60,8 @@ jobs:
           wget -q https://github.com/GodotBuilder/godot-builds/releases/download/4.0-prerelease-templates/Godot_v${GODOT_FULL_VERSION}_export_templates.tpz
           unzip Godot_v${GODOT_FULL_VERSION}_export_templates.tpz
           mv templates/* ${TEMPLATES_DIR}
+
+          cp /usr/local/opt/molten-vk/lib/libMoltenVK.dylib Godot.app/Frameworks/
 
           mkdir -p ${BUILD_DIR}
           Godot.app/Contents/MacOS/Godot --export ${PRESET} ${BUILD_DIR}/${FILENAME}
