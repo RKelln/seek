@@ -38,7 +38,6 @@ jobs:
           echo "version=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
           echo "package=${FILENAME}-v${VERSION}-${PRESET}.zip" >> $GITHUB_ENV
       - name: Install MoltenVK
-        env:
         run: |
           brew install molten-vk
       - name: Export macOS
