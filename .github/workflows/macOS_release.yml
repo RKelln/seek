@@ -38,8 +38,26 @@ jobs:
           echo "version=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
           echo "package=${FILENAME}-v${VERSION}-${PRESET}.zip" >> $GITHUB_ENV
       - name: Install MoltenVK
+        env:
         run: |
           brew install molten-vk
+      - name: Install Godot
+        if: ${{ matrix.preset == 'macOS' }}
+        env:
+          GODOT_VERSION: ${{ env.godot_version }}
+          GODOT_RELEASE: ${{ env.godot_release }}
+        run: |
+          export GODOT_FULL_VERSION="${GODOT_VERSION}-${GODOT_RELEASE}"
+          export XDG_DATA_HOME="$(pwd)/xdg_data_home"
+          export TEMPLATES_DIR="${XDG_DATA_HOME}/godot/templates/${GODOT_FULL_VERSION}/"
+          
+          wget -q https://downloads.tuxfamily.org/godotengine/${GODOT_VERSION}/${GODOT_RELEASE}/Godot_v${GODOT_FULL_VERSION}_macos.universal.zip
+          unzip Godot_v${GODOT_FULL_VERSION}_macos.universal.zip
+
+          mkdir -p ${TEMPLATES_DIR}
+          wget -q https://github.com/GodotBuilder/godot-builds/releases/download/4.0-prerelease-templates/Godot_v${GODOT_FULL_VERSION}_export_templates.tpz
+          unzip Godot_v${GODOT_FULL_VERSION}_export_templates.tpz
+          mv templates/* ${TEMPLATES_DIR}
       - name: Export macOS
         if: ${{ matrix.preset == 'macOS' }}
         env:
@@ -50,17 +68,10 @@ jobs:
           FILENAME: ${{ env.package }}
         run: |
           export GODOT_FULL_VERSION="${GODOT_VERSION}-${GODOT_RELEASE}"
-          wget -q https://downloads.tuxfamily.org/godotengine/${GODOT_VERSION}/${GODOT_RELEASE}/Godot_v${GODOT_FULL_VERSION}_macos.universal.zip
-          unzip Godot_v${GODOT_FULL_VERSION}_macos.universal.zip
-
           export XDG_DATA_HOME="$(pwd)/xdg_data_home"
           export TEMPLATES_DIR="${XDG_DATA_HOME}/godot/templates/${GODOT_FULL_VERSION}/"
-          mkdir -p ${TEMPLATES_DIR}
-          wget -q https://github.com/GodotBuilder/godot-builds/releases/download/4.0-prerelease-templates/Godot_v${GODOT_FULL_VERSION}_export_templates.tpz
-          unzip Godot_v${GODOT_FULL_VERSION}_export_templates.tpz
-          mv templates/* ${TEMPLATES_DIR}
 
-          cp /usr/local/opt/molten-vk/lib/libMoltenVK.dylib Godot.app/Frameworks/
+          cp /usr/local/opt/molten-vk/lib/libMoltenVK.dylib Godot.app/Contents/MacOS/Frameworks/
 
           mkdir -p ${BUILD_DIR}
           Godot.app/Contents/MacOS/Godot --export ${PRESET} ${BUILD_DIR}/${FILENAME}
@@ -69,4 +80,3 @@ jobs:
         with:
           name: ${{ env.package }}
           path: build/${{ env.package }}
-
