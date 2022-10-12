@@ -60,6 +60,10 @@ jobs:
           BUILD_DIR: build
           FILENAME: ${{ env.package }}
         run: |
+          export XDG_DATA_HOME="$(pwd)/xdg_data_home"
+          export TEMPLATES_DIR="${XDG_DATA_HOME}/Godot/export_templates/${GODOT_VERSION}.${GODOT_RELEASE}/"
+
+          mkdir -p ${XDG_DATA_HOME}/.godot
           mkdir -p ${BUILD_DIR}
           Godot.app/Contents/MacOS/Godot --headless --export ${PRESET} ${BUILD_DIR}/${FILENAME}
       - name: Upload package
