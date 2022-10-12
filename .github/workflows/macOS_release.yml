@@ -1,4 +1,4 @@
-name: OSX_Release
+name: MacOS_Release
 
 # Based on: https://github.com/robpc/maze-test-game/blob/osx-test/.github/workflows/release-macos.yml
 
@@ -6,7 +6,7 @@ env:
   godot_version: "4.0"
   godot_release: beta2
   filename: seek
-  version: 0.1
+  version: "0.1"
 
 on:
   push:
@@ -21,7 +21,6 @@ jobs:
         include:
           - preset: macOS # must match the name of the preset in export_presets.cfg
             runner: macos-latest
-            export_file: seek.app
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Check out repository
@@ -37,9 +36,6 @@ jobs:
           # ^^ Orig ${GITHUB_REF/refs\/tags\/v/}
           echo "version=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
           echo "package=${FILENAME}-v${VERSION}-${PRESET}.zip" >> $GITHUB_ENV
-      - name: Install MoltenVK
-        run: |
-          brew install molten-vk
       - name: Install Godot
         if: ${{ matrix.preset == 'macOS' }}
         env:
@@ -47,8 +43,9 @@ jobs:
           GODOT_RELEASE: ${{ env.godot_release }}
         run: |
           export GODOT_FULL_VERSION="${GODOT_VERSION}-${GODOT_RELEASE}"
+          echo "$GODOT_FULL_VERSION"
           export XDG_DATA_HOME="$(pwd)/xdg_data_home"
-          export TEMPLATES_DIR="${XDG_DATA_HOME}/godot/templates/${GODOT_FULL_VERSION}/"
+          export TEMPLATES_DIR="${XDG_DATA_HOME}/godot/templates/${GODOT_VERSION}.${GODOT_RELEASE}/"
           
           wget -q https://downloads.tuxfamily.org/godotengine/${GODOT_VERSION}/${GODOT_RELEASE}/Godot_v${GODOT_FULL_VERSION}_macos.universal.zip
           unzip Godot_v${GODOT_FULL_VERSION}_macos.universal.zip
@@ -68,9 +65,11 @@ jobs:
         run: |
           export GODOT_FULL_VERSION="${GODOT_VERSION}-${GODOT_RELEASE}"
           export XDG_DATA_HOME="$(pwd)/xdg_data_home"
-          export TEMPLATES_DIR="${XDG_DATA_HOME}/godot/templates/${GODOT_FULL_VERSION}/"
-          export VK_ICD_FILENAMES="/usr/local/opt/molten-vk/share/vulkan/icd.d/MoltenVK_icd.json"
+          export TEMPLATES_DIR="${XDG_DATA_HOME}/godot/templates/${GODOT_VERSION}.${GODOT_RELEASE}/"
 
+          mkdir -p .godot
+          mkdir -p "${XDG_DATA_HOME}/.godot"
+          mkdir -p "$(pwd)/.godot"
           mkdir -p ${BUILD_DIR}
           Godot.app/Contents/MacOS/Godot --headless --export ${PRESET} ${BUILD_DIR}/${FILENAME}
       - name: Upload package
