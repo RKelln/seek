@@ -14,6 +14,7 @@ theme = ExtResource("1_ng58q")
 script = ExtResource("2_4s27l")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -22,12 +23,14 @@ grow_vertical = 2
 theme = ExtResource("1_ng58q")
 
 [node name="NameVBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
 offset_left = 50.0
 offset_top = 25.0
 offset_right = 1870.0
 offset_bottom = 1055.0
 
 [node name="NameChooseLabel" type="Label" parent="MarginContainer/NameVBoxContainer"]
+layout_mode = 2
 offset_right = 1820.0
 offset_bottom = 26.0
 size_flags_vertical = 0
@@ -36,6 +39,7 @@ text = "Choose a name for this image series:"
 [node name="NameTextEdit" type="TextEdit" parent="MarginContainer/NameVBoxContainer"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2i(0, 40)
+layout_mode = 2
 offset_top = 36.0
 offset_right = 1820.0
 offset_bottom = 76.0
@@ -44,12 +48,14 @@ scroll_fit_content_height = true
 caret_blink = true
 
 [node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/NameVBoxContainer"]
+layout_mode = 2
 offset_top = 86.0
 offset_right = 1820.0
 offset_bottom = 117.0
 
 [node name="FPSLabel" type="Label" parent="MarginContainer/NameVBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
+layout_mode = 2
 offset_top = 2.0
 offset_right = 93.0
 offset_bottom = 28.0
@@ -57,6 +63,7 @@ text = "Frames/sec:"
 
 [node name="FPSSpinBox" type="SpinBox" parent="MarginContainer/NameVBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
+layout_mode = 2
 offset_left = 97.0
 offset_right = 180.0
 offset_bottom = 31.0
@@ -65,12 +72,14 @@ value = 1.0
 
 [node name="FPSCheckButton" type="CheckButton" parent="MarginContainer/NameVBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
+layout_mode = 2
 offset_left = 184.0
 offset_right = 228.0
 offset_bottom = 31.0
 
 [node name="SPFLabel" type="Label" parent="MarginContainer/NameVBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
+layout_mode = 2
 offset_left = 232.0
 offset_top = 2.0
 offset_right = 344.0
@@ -79,6 +88,7 @@ text = "or Secs/frame:"
 
 [node name="SPFSpinBox" type="SpinBox" parent="MarginContainer/NameVBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
+layout_mode = 2
 offset_left = 348.0
 offset_right = 431.0
 offset_bottom = 31.0
@@ -88,6 +98,7 @@ value = 1.0
 [node name="NameOKButton" type="Button" parent="MarginContainer/NameVBoxContainer"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2i(100, 0)
+layout_mode = 2
 offset_left = 860.0
 offset_top = 127.0
 offset_right = 960.0
