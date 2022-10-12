@@ -72,7 +72,7 @@ jobs:
           export VK_ICD_FILENAMES="/usr/local/opt/molten-vk/share/vulkan/icd.d/MoltenVK_icd.json"
 
           mkdir -p ${BUILD_DIR}
-          Godot.app/Contents/MacOS/Godot --export ${PRESET} ${BUILD_DIR}/${FILENAME}
+          Godot.app/Contents/MacOS/Godot --headless --export ${PRESET} ${BUILD_DIR}/${FILENAME}
       - name: Upload package
         uses: actions/upload-artifact@v2
         with:
