@@ -283,10 +283,10 @@ func change_relative_speed(relative_speed : float = 0.0) -> void:
 	else:
 		speed_scale = speed 
 		play(animation, _backwards)
-	
 
 
-func change_relative_normalized(normalized_speed : float = 0.0) -> void:
+
+func change_relative_speed_normalized(normalized_speed : float = 0.0) -> void:
 	if not active: return
 	
 	normalized_speed = clampf(normalized_speed, -1.0, 1.0)
@@ -337,6 +337,15 @@ func handle_input():
 	elif Input.is_action_just_pressed("skip_backward"):
 		next_frame(-1)
 	
+	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
+		stop()
+		var w : float = float(get_viewport().get_visible_rect().size.x)
+		# NOTE: leave a small amount on each side the is always start and end of sequence
+		frame = int(remap(get_viewport().get_mouse_position().x, 0.1 * w, 0.9 * w, 0, frame_counts[animation]))
+		#printt("jump to", get_viewport().get_mouse_position().x, frame)
+	elif not playing:
+		play(animation, _backwards)
+	
 	# other input requires scenes to be playing:
 	if not playing: 
 		return 
@@ -345,18 +354,9 @@ func handle_input():
 		var w : float = float(get_viewport().get_visible_rect().size.x)
 		var relative_dist = remap(get_viewport().get_mouse_position().x, 0, w, -1.0, 1.0)
 		
-		change_relative_speed(relative_dist)
-			
+		change_relative_speed_normalized(relative_dist)
 		#printt(w, get_viewport().get_mouse_position().x, relative_dist, dist)
 	
-	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
-		stop()
-		var w : float = float(get_viewport().get_visible_rect().size.x)
-		# NOTE: leave a small amount on each side the is always start and end of sequence
-		frame = int(remap(get_viewport().get_mouse_position().x, 0.1 * w, 0.9 * w, 0, frame_counts[animation]))
-	elif not playing:
-		play(animation, _backwards)
-			
 	if Input.is_action_just_pressed('next_animation'):
 		change_animation(next_animation(1))
 			
