@@ -330,6 +330,7 @@ func handle_input():
 			pause()
 		else:
 			resume()
+		return # only action allowed this drame
 	
 	# allow the following while paused:
 	if Input.is_action_just_pressed("skip_forward"):
@@ -343,8 +344,6 @@ func handle_input():
 		# NOTE: leave a small amount on each side the is always start and end of sequence
 		frame = int(remap(get_viewport().get_mouse_position().x, 0.1 * w, 0.9 * w, 0, frame_counts[animation]))
 		#printt("jump to", get_viewport().get_mouse_position().x, frame)
-	elif not playing:
-		play(animation, _backwards)
 	
 	# other input requires scenes to be playing:
 	if not playing: 
