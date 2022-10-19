@@ -8,7 +8,7 @@ var images : Node
 var help : Window
 var paused := false
 
-var active_layers : Array = Array()
+var selecting_layers : Array = Array()
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -83,32 +83,29 @@ func _input(event : InputEvent) -> void:
 		%SavePackFileDialog.popup()
 
 
-	# number key: change active layer
+	# change active layer
 	# set active layers by checking all keys that are pressed
 	if event is InputEventKey:
-		if event.keycode >= KEY_KP_1 and event.keycode <= KEY_KP_3:
-			var layer = event.keycode - KEY_KP_1
-			# on press add to active
-			if event.pressed and event.echo == false:
-				#printt("numpad", layer, $Stage.get_child_count(), event)
-				if layer <= $Stage.get_child_count():
-					var n = $Stage.get_child(layer)
-					if n:
-						prints("activate", layer)
-						n.active = true
-						active_layers.append(layer)
-	
-			# release: anything not in active_layers gets turned off
-			# once all layer eys are release
-			if not event.pressed: 
-				if Input.is_key_pressed(KEY_KP_1) or Input.is_key_pressed(KEY_KP_2) or Input.is_key_pressed(KEY_KP_3):
-					return
-				# release active layers
-				for i in $Stage.get_child_count():
-					if not active_layers.has(i):
-						prints("turn off layer", i)
-						$Stage.get_child(i).active = false
-				active_layers.clear()
+		# use number keys plus ctrl/command:
+		if event.is_command_or_control_pressed(): 
+			if event.keycode >= KEY_1 and event.keycode <= KEY_3:
+				var layer = event.keycode - KEY_1
+				# on press add to active
+				if event.pressed and event.echo == false:
+					if layer <= $Stage.get_child_count():
+						var n = $Stage.get_child(layer)
+						if n:
+							prints("activate layer", layer)
+							n.active = true
+							selecting_layers.append(layer)
+							
+		elif selecting_layers.size() > 0:
+			# release ctrl: anything not in selecting_layers gets turned off
+			for i in $Stage.get_child_count():
+				if not selecting_layers.has(i):
+					prints("turn off layer", i)
+					$Stage.get_child(i).active = false
+			selecting_layers.clear()
 
 
 func change_layer(layer_num : int) -> void:
