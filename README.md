@@ -100,9 +100,10 @@ Sequences can be viewed and modified very basically using the `i` or `e` key, bu
 * `1 - 9, 0`: Select sequence
 
 * `D`: Duplicate layer
-* `Numpad 1 - 3`: Set active layer
+* `Ctrl / Cmd + 1 - 3`: Set active layer(s)
 
+Note: For selecting the active layers, the Ctrl / Cmd key plus one or more of the number keys activates those layers, and when you release the Ctrl / Cmd key any layer that you didn't activate will be deactivated. Thus you can do: press Ctrl, press and release 1, press and release 2, release Ctrl, and layers 1 and 2 will be active and layer 3 will be deactivated (if it was previously active). Input will now affect both layers 1 and 2.
 
 ## Known Issues
 
-* TODO
+* Godot v4.0-beta3 builds of Seek have some issues on some machines when making duplicate layers. Releases currently use beta2 which should avoid this problem.
