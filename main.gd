@@ -79,7 +79,6 @@ func _input(event : InputEvent) -> void:
 		else:
 			get_tree().get_root().mode = Window.MODE_FULLSCREEN
 
-
 	if event.is_action_released("save"):
 		%SavePackFileDialog.popup()
 
