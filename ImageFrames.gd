@@ -90,7 +90,7 @@ func update_frames(animation_name : String, new_sequence : PackedInt32Array) -> 
 	clear(animation_name)
 	for i in new_sequence.size():
 		var index = new_sequence[i]
-		_add_frame(animation_name, index, get_frame(base_animation_name, index))
+		_add_frame(animation_name, index, get_frame_texture(base_animation_name, index))
 	
 	
 func copy_frames(from_animation : String, to_animation : String) -> void:
@@ -107,7 +107,7 @@ func copy_frames(from_animation : String, to_animation : String) -> void:
 	set_animation_speed(to_animation, get_animation_speed(from_animation))
 	
 	for i in get_frame_count(from_animation):
-		_add_frame(to_animation, i, get_frame(from_animation, i))
+		_add_frame(to_animation, i, get_frame_texture(from_animation, i))
 	
 	
 func info() -> Dictionary:
@@ -120,8 +120,8 @@ func info() -> Dictionary:
 	}
 	print(info)
 	for i in get_base_frame_count():
-		if i != get_frame(base_animation_name, i).get_meta(animation_meta_key):
-			printt("index mismatch:", i, get_frame(base_animation_name, i).get_meta(animation_meta_key))
+		if i != get_frame_texture(base_animation_name, i).get_meta(animation_meta_key):
+			printt("index mismatch:", i, get_frame_texture(base_animation_name, i).get_meta(animation_meta_key))
 	return info
 
 
@@ -191,7 +191,7 @@ func get_sequence(seq_name : String = base_animation_name) -> PackedInt32Array:
 	for i in get_frame_count(seq_name):
 		# even though the meta index info is only added the the base animation, the texture should be reused
 		# TODO: check if that is true for .res loaded ImageFrames
-		var tex : Texture2D = get_frame(seq_name, i)
+		var tex : Texture2D = get_frame_texture(seq_name, i)
 		#printt(seq_name, i, tex, tex.get_meta_list())
 		var index = tex.get_meta(animation_meta_key)
 		assert(index != null)
@@ -215,7 +215,7 @@ func add_sequence(seq_name : String, sequence : PackedInt32Array) -> void:
 	
 	#printt("add_sequence", seq_name, sequence)
 	for i in sequence:
-		_add_frame(seq_name, i, get_frame(base_animation_name, i))
+		_add_frame(seq_name, i, get_frame_texture(base_animation_name, i))
 
 
 static func normalize_name(str : String) -> StringName:
@@ -251,7 +251,9 @@ static func load_image_pack(file_path : String) -> ImageFrames:
 	
 	# ensure normalized names
 	for old_name in iframes.get_animation_names():
-		iframes.rename_animation(old_name, normalize_name(old_name))
+		var normalized := normalize_name(old_name)
+		if old_name != normalized:
+			iframes.rename_animation(old_name, normalized)
 		
 	# ensure default
 	if not iframes.has_animation(base_animation_name):
@@ -263,7 +265,7 @@ static func load_image_pack(file_path : String) -> ImageFrames:
 			
 	# ensure the default has sequence info
 	for i in iframes.get_frame_count(base_animation_name):
-		var f = iframes.get_frame(base_animation_name, i)
+		var f = iframes.get_frame_texture(base_animation_name, i)
 		if f.get_meta(animation_meta_key) == null:
 			iframes.get_frame(base_animation_name, i).set_meta(animation_meta_key, i)
 	return iframes

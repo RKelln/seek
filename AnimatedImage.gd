@@ -101,7 +101,7 @@ func _on_frame_changed():
 	# update current frame
 	if not _requested_animation:
 		current_frame[animation] = frame
-		_current_texture = frames.get_frame(animation, frame)
+		_current_texture = frames.get_frame_texture(animation, frame)
 		real_frame_changed.emit(frame)
 
 
@@ -146,7 +146,7 @@ func _change_animation(requested_animation : String) -> void:
 	_requested_animation = false
 	
 	frame = current_frame[animation] # sets current frame
-	_current_texture = frames.get_frame(animation, frame)
+	_current_texture = frames.get_frame_texture(animation, frame)
 	
 	if stretch: rescale()
 
@@ -191,7 +191,7 @@ func get_frame_duration() -> float:
 
 
 func get_current_frame() -> Texture2D:
-	#return frames.get_frame(animation, frame)
+	#return frames.get_frame_texture(animation, frame)
 	return _current_texture
 
 

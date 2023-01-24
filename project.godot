@@ -8,22 +8,6 @@
 
 config_version=5
 
-_global_script_classes=[{
-"base": "SpriteFrames",
-"class": &"ImageFrames",
-"language": &"GDScript",
-"path": "res://ImageFrames.gd"
-}, {
-"base": "Container",
-"class": &"ImageGrid",
-"language": &"GDScript",
-"path": "res://image_grid.gd"
-}]
-_global_script_class_icons={
-"ImageFrames": "",
-"ImageGrid": ""
-}
-
 [application]
 
 config/name="Seek"
@@ -54,6 +38,7 @@ movie_writer/mjpeg_quality=0.8
 movie_writer/movie_file="/home/ryankelln/Documents/Projects/EverythingDances/seek/seek_plants_ai.avi"
 movie_writer/disable_vsync=true
 movie_writer/fps=30
+export/convert_text_resources_to_binary=true
 
 [input]
 

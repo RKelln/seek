@@ -283,7 +283,7 @@ func get_textures(anim_name : String = "") -> Array[Texture2D]:
 	var f = Array()
 	for i in get_frame_count():
 		# add sequence number to the frames meta data
-		var t2d = sp.get_frame(anim_name, i)
+		var t2d = sp.get_frame_texture(anim_name, i)
 		t2d.set_meta(anim_name, i)
 		f.append(t2d)
 	return f

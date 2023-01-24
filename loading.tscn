@@ -21,68 +21,81 @@ visible = false
 offset = Vector2(960, 540)
 
 [node name="ActiveContainer" type="MarginContainer" parent="."]
-anchors_preset = 15
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="VFlowContainer" type="VFlowContainer" parent="ActiveContainer"]
+layout_mode = 2
 size_flags_horizontal = 4
 
 [node name="TopContainer" type="CenterContainer" parent="ActiveContainer/VFlowContainer"]
+layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 6
 
 [node name="ButtonContainer" type="VBoxContainer" parent="ActiveContainer/VFlowContainer/TopContainer"]
+layout_mode = 2
 theme_override_constants/separation = 20
 alignment = 1
 
 [node name="CreateImagePackButton" type="Button" parent="ActiveContainer/VFlowContainer/TopContainer/ButtonContainer"]
 unique_name_in_owner = true
+layout_mode = 2
 text = "Create Image Pack
 "
 
 [node name="LoadPackButton" type="Button" parent="ActiveContainer/VFlowContainer/TopContainer/ButtonContainer"]
 unique_name_in_owner = true
+layout_mode = 2
 text = "Load Image Pack"
 
 [node name="SaveAsButton" type="Button" parent="ActiveContainer/VFlowContainer/TopContainer/ButtonContainer"]
 unique_name_in_owner = true
+layout_mode = 2
 disabled = true
 text = "Save All As..."
 
 [node name="LoadSequenceButton" type="Button" parent="ActiveContainer/VFlowContainer/TopContainer/ButtonContainer"]
 unique_name_in_owner = true
+layout_mode = 2
 disabled = true
 text = "Load sequence"
 
 [node name="StartButton" type="Button" parent="ActiveContainer/VFlowContainer/TopContainer/ButtonContainer"]
 unique_name_in_owner = true
+layout_mode = 2
 disabled = true
 text = "Start"
 
 [node name="BottomContainer" type="MarginContainer" parent="ActiveContainer/VFlowContainer"]
+layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 3
 
 [node name="InfoContainer" type="HFlowContainer" parent="ActiveContainer/VFlowContainer/BottomContainer"]
 unique_name_in_owner = true
+layout_mode = 2
 size_flags_horizontal = 4
 theme_override_constants/h_separation = 20
 theme_override_constants/v_separation = 20
 
 [node name="LoadingContainer" type="VBoxContainer" parent="."]
 visible = false
+layout_mode = 0
 offset_left = 922.0
 offset_top = 508.0
 offset_right = 997.0
 offset_bottom = 571.0
 
 [node name="Loading" type="Label" parent="LoadingContainer"]
+layout_mode = 2
 text = "Loading..."
 
 [node name="ProgressBar" type="ProgressBar" parent="LoadingContainer"]
+layout_mode = 2
 rounded = true
 
 [node name="ImagesFileDialog" type="FileDialog" parent="."]

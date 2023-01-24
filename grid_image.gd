@@ -1,14 +1,14 @@
 extends TextureRect
 
 func _ready():
-	ignore_texture_size = true
+	#ignore_texture_size = true
 	stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 
 
 func _get_drag_data(_position : Vector2) -> Variant:
 	var trect = TextureRect.new()
 	trect.texture = texture
-	trect.ignore_texture_size = true
+	#trect.ignore_texture_size = true
 	trect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	trect.size = size
 	#printt("texture size",  size, texture.get_size())
