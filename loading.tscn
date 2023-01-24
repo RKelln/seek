@@ -99,9 +99,12 @@ layout_mode = 2
 rounded = true
 
 [node name="ImagesFileDialog" type="FileDialog" parent="."]
+initial_position = 1
 title = "Open a Directory"
 size = Vector2i(600, 400)
+current_screen = -2
 wrap_controls = false
+min_size = Vector2i(600, 400)
 ok_button_text = "Select Current Folder"
 dialog_text = "Choose the folder containing the images to be loaded"
 dialog_hide_on_ok = true
@@ -109,23 +112,32 @@ file_mode = 2
 access = 2
 
 [node name="SequenceFileDialog" type="FileDialog" parent="."]
+initial_position = 1
 title = "Open a File"
-size = Vector2i(781, 600)
+size = Vector2i(786, 400)
+current_screen = -2
+min_size = Vector2i(600, 400)
 ok_button_text = "Open"
 file_mode = 0
 access = 2
 filters = PackedStringArray("*.txt", "*.seq")
 
 [node name="PackFileDialog" type="FileDialog" parent="."]
+initial_position = 1
 title = "Open a File"
-size = Vector2i(600, 600)
+size = Vector2i(600, 400)
+current_screen = -2
+min_size = Vector2i(600, 400)
 ok_button_text = "Open"
 file_mode = 0
 access = 1
 filters = PackedStringArray("*.res")
 
 [node name="SavePackFileDialog" type="FileDialog" parent="."]
-size = Vector2i(898, 600)
+initial_position = 1
+size = Vector2i(903, 400)
+current_screen = -2
+min_size = Vector2i(600, 400)
 ok_button_text = "Save"
 access = 2
 filters = PackedStringArray("*.res")

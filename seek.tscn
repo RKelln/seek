@@ -1,7 +1,6 @@
-[gd_scene load_steps=6 format=3 uid="uid://c7k6owyakecfp"]
+[gd_scene load_steps=5 format=3 uid="uid://c7k6owyakecfp"]
 
 [ext_resource type="Script" path="res://main.gd" id="1_jwgh7"]
-[ext_resource type="VideoStream" path="res://plants_test.ogv" id="2_3tr4v"]
 [ext_resource type="PackedScene" uid="uid://c5iuftyxetc8s" path="res://image_grid_control.tscn" id="2_gio0i"]
 [ext_resource type="Script" path="res://HelpPopup.gd" id="3_alv6i"]
 [ext_resource type="PackedScene" uid="uid://c8s1ep1ha01vx" path="res://help_screen.tscn" id="4_aa6yu"]
@@ -10,15 +9,6 @@
 script = ExtResource("1_jwgh7")
 
 [node name="Stage" type="Node2D" parent="."]
-
-[node name="VideoStreamPlayer" type="VideoStreamPlayer" parent="Stage"]
-offset_right = 1920.0
-offset_bottom = 1088.0
-size_flags_horizontal = 4
-size_flags_vertical = 4
-stream = ExtResource("2_3tr4v")
-autoplay = true
-buffering_msec = 1000
 
 [node name="GUI" type="Control" parent="."]
 top_level = true

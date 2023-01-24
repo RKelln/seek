@@ -15,18 +15,21 @@ var loaded_image_packs : Array[ImageFrames]
 
 var InfoPanel := preload("res://pack_info_panel.tscn")
 
+var popup_size_ratio := 0.7
+
+
 func _ready() -> void:
 	# signals:
-	%CreateImagePackButton.pressed.connect(func (): $ImagesFileDialog.popup() )
+	%CreateImagePackButton.pressed.connect(func (): $ImagesFileDialog.popup_centered_ratio(popup_size_ratio) )
 	$ImagesFileDialog.dir_selected.connect(_on_images_file_dialog_dir_selected)
 	
-	%LoadPackButton.pressed.connect(func (): $PackFileDialog.popup_centered() )
+	%LoadPackButton.pressed.connect(func (): $PackFileDialog.popup_centered_ratio(popup_size_ratio) )
 	$PackFileDialog.file_selected.connect(_on_pack_file_dialog_file_selected)
 
 	%SaveAsButton.pressed.connect(_on_save_as_button_pressed)
 	$SavePackFileDialog.file_selected.connect(_on_save_pack_file_dialog_file_selected)
 
-	%LoadSequenceButton.pressed.connect(func (): $SequenceFileDialog.popup_centered() )
+	%LoadSequenceButton.pressed.connect(func (): $SequenceFileDialog.popup_centered_ratio(popup_size_ratio) )
 	$SequenceFileDialog.file_selected.connect(_on_sequence_file_dialog_file_selected)
 
 	%StartButton.pressed.connect(_on_start_button_pressed)
@@ -49,7 +52,7 @@ func _process(_delta):
 			images_finished_loading()
 			var save_path = file_format % [create_pack_name, active_image_pack.get_base_frame_count()]
 			$SavePackFileDialog.current_file = save_path
-			$SavePackFileDialog.popup()
+			$SavePackFileDialog.popup_centered_ratio(popup_size_ratio)
 
 
 func images_finished_loading() -> void:
@@ -83,7 +86,7 @@ func combine_image_packs(packs : Array) -> ImageFrames:
 	return combined
 
 func _on_create_image_pack_button_pressed():
-	$ImagesFileDialog.popup()
+	$ImagesFileDialog.popup_centered_ratio(popup_size_ratio)
 
 
 func _on_images_file_dialog_dir_selected(dir : String):
@@ -93,7 +96,7 @@ func _on_images_file_dialog_dir_selected(dir : String):
 	var last_folder = dir.rsplit("/", false, 1)[1]
 	last_folder = ImageFrames.normalize_name(last_folder)
 	$AnimationNamePopup.set_default_name(last_folder)
-	$AnimationNamePopup.popup_centered()
+	$AnimationNamePopup.popup_centered_ratio(popup_size_ratio)
 	
 	#create_pack_name = await %NamePanel.response_submitted
 	var values = await %NamePanel.response_submitted
@@ -128,11 +131,11 @@ func _on_images_file_dialog_dir_selected(dir : String):
 	
 
 func _on_load_sequence_button_pressed():
-	$SequenceFileDialog.popup()
+	$SequenceFileDialog.popup_centered_ratio(popup_size_ratio)
 
 
 func _on_load_pack_button_pressed():
-	$PackFileDialog.popup_centered()
+	$PackFileDialog.popup_centered_ratio(popup_size_ratio)
 
 
 func _on_pack_file_dialog_file_selected(path):
@@ -181,7 +184,7 @@ func _on_save_as_button_pressed():
 	active_image_pack.pack_name = ImageFrames.normalize_name(save_pack_name)
 	active_image_pack.fps = fps
 	$SavePackFileDialog.current_file = save_pack_name
-	$SavePackFileDialog.popup()
+	$SavePackFileDialog.popup_centered_ratio(popup_size_ratio)
 
 
 func _on_save_pack_file_dialog_file_selected(path):
