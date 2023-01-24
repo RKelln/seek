@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bfsh4t1qnrutw"
-path="res://.godot/imported/seek_icon.png-5108a494fe8c9d8fb1fe2c92d9ddd72f.ctex"
+uid="uid://wj7gxbxx26hb"
+path="res://.godot/imported/seek_icon_v2_256.png-b65ba970d2f59f589cbf9879b7194084.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://seek_icon.png"
-dest_files=["res://.godot/imported/seek_icon.png-5108a494fe8c9d8fb1fe2c92d9ddd72f.ctex"]
+source_file="res://seek_icon_v2_256.png"
+dest_files=["res://.godot/imported/seek_icon_v2_256.png-b65ba970d2f59f589cbf9879b7194084.ctex"]
 
 [params]
 

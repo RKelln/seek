@@ -13,7 +13,9 @@ config_version=5
 config/name="Seek"
 run/main_scene="res://loading.tscn"
 config/features=PackedStringArray("4.0")
+boot_splash/image="res://seek_icon_v2.png"
 config/icon="res://icon.png"
+boot_splash/minimum_display_time=500
 
 [autoload]
 
@@ -29,6 +31,7 @@ formats/zstd/long_distance_matching=true
 window/size/viewport_width=1920
 window/size/viewport_height=1080
 window/stretch/mode="canvas_items"
+window/stretch/scale=1.4
 window/size/width=1920
 window/size/height=1080
 
