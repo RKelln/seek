@@ -168,7 +168,7 @@ func _on_start_button_pressed() -> void:
 		Loader.images = combine_image_packs(loaded_image_packs)
 	else:
 		Loader.images = active_image_pack
-	get_tree().change_scene_to_file("res://speed_test.tscn")
+	get_tree().change_scene_to_file("res://seek.tscn")
 
 
 func _on_save_as_button_pressed():

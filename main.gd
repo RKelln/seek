@@ -8,16 +8,30 @@ var images : Node
 var help : Window
 var paused := false
 
-var active_layers : Array = Array()
+var active_layers : Array[int] = Array()
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	images = preload("res://images.tscn").instantiate()
-	if Loader.images.get_total_frame_count() <= 0:
-		images.set_image_frames(Loader.load_defaults())
-	else:
-		images.set_image_frames(Loader.images)
-	$Stage.add_child(images)
+#	images = preload("res://images.tscn").instantiate()
+#	if Loader.images.get_total_frame_count() <= 0:
+#		images.set_image_frames(Loader.load_defaults())
+#	else:
+#		images.set_image_frames(Loader.images)
+#	$Stage.add_child(images)
+#	images.active = true
+	
+	# create other layers
+	var num_layers = 3
+	for i in range(num_layers):
+		var c = preload("res://images.tscn").instantiate()
+		if Loader.images.get_total_frame_count() <= 0:
+			c.set_image_frames(Loader.load_defaults())
+		else:
+			c.set_image_frames(Loader.images)
+		$Stage.add_child(c)
+		c.active = false
+	
+	images = $Stage.get_child(-1)
 	images.active = true
 	
 	help = %HelpPopup

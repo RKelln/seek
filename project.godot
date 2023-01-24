@@ -51,7 +51,7 @@ window/size/height=1080
 [editor]
 
 movie_writer/mjpeg_quality=0.8
-movie_writer/movie_file="/home/ryankelln/Documents/Seek/seek_90.avi"
+movie_writer/movie_file="/home/ryankelln/Documents/Projects/EverythingDances/seek/seek_plants_ai.avi"
 movie_writer/disable_vsync=true
 movie_writer/fps=30
 

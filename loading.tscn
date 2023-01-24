@@ -27,79 +27,48 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TopContainer" type="MarginContainer" parent="ActiveContainer"]
-custom_minimum_size = Vector2i(0, 500)
-offset_left = 50.0
-offset_top = 25.0
-offset_right = 1950.0
-offset_bottom = 525.0
-size_flags_vertical = 0
-
-[node name="ButtonContainer" type="VBoxContainer" parent="ActiveContainer/TopContainer"]
-offset_left = 874.0
-offset_top = 240.0
-offset_right = 1026.0
-offset_bottom = 475.0
+[node name="VFlowContainer" type="VFlowContainer" parent="ActiveContainer"]
 size_flags_horizontal = 4
-size_flags_vertical = 8
-size_flags_stretch_ratio = 2.0
-theme_override_constants/separation = 20
 
-[node name="CreateImagePackButton" type="Button" parent="ActiveContainer/TopContainer/ButtonContainer"]
+[node name="TopContainer" type="CenterContainer" parent="ActiveContainer/VFlowContainer"]
+size_flags_horizontal = 4
+size_flags_vertical = 6
+
+[node name="ButtonContainer" type="VBoxContainer" parent="ActiveContainer/VFlowContainer/TopContainer"]
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="CreateImagePackButton" type="Button" parent="ActiveContainer/VFlowContainer/TopContainer/ButtonContainer"]
 unique_name_in_owner = true
-offset_right = 152.0
-offset_bottom = 31.0
 text = "Create Image Pack
 "
 
-[node name="LoadPackButton" type="Button" parent="ActiveContainer/TopContainer/ButtonContainer"]
+[node name="LoadPackButton" type="Button" parent="ActiveContainer/VFlowContainer/TopContainer/ButtonContainer"]
 unique_name_in_owner = true
-offset_top = 51.0
-offset_right = 152.0
-offset_bottom = 82.0
 text = "Load Image Pack"
 
-[node name="SaveAsButton" type="Button" parent="ActiveContainer/TopContainer/ButtonContainer"]
+[node name="SaveAsButton" type="Button" parent="ActiveContainer/VFlowContainer/TopContainer/ButtonContainer"]
 unique_name_in_owner = true
-offset_top = 102.0
-offset_right = 152.0
-offset_bottom = 133.0
 disabled = true
 text = "Save All As..."
 
-[node name="LoadSequenceButton" type="Button" parent="ActiveContainer/TopContainer/ButtonContainer"]
+[node name="LoadSequenceButton" type="Button" parent="ActiveContainer/VFlowContainer/TopContainer/ButtonContainer"]
 unique_name_in_owner = true
-offset_top = 153.0
-offset_right = 152.0
-offset_bottom = 184.0
 disabled = true
 text = "Load sequence"
 
-[node name="StartButton" type="Button" parent="ActiveContainer/TopContainer/ButtonContainer"]
+[node name="StartButton" type="Button" parent="ActiveContainer/VFlowContainer/TopContainer/ButtonContainer"]
 unique_name_in_owner = true
-offset_top = 204.0
-offset_right = 152.0
-offset_bottom = 235.0
 disabled = true
 text = "Start"
 
-[node name="BottomContainer" type="MarginContainer" parent="ActiveContainer"]
-custom_minimum_size = Vector2i(0, 500)
-offset_left = 50.0
-offset_top = 555.0
-offset_right = 1950.0
-offset_bottom = 1055.0
-size_flags_vertical = 8
-
-[node name="InfoContainer" type="HFlowContainer" parent="ActiveContainer/BottomContainer"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2i(1800, 0)
-offset_left = 50.0
-offset_top = 25.0
-offset_right = 1850.0
-offset_bottom = 25.0
+[node name="BottomContainer" type="MarginContainer" parent="ActiveContainer/VFlowContainer"]
 size_flags_horizontal = 4
-size_flags_vertical = 0
+size_flags_vertical = 3
+
+[node name="InfoContainer" type="HFlowContainer" parent="ActiveContainer/VFlowContainer/BottomContainer"]
+unique_name_in_owner = true
+size_flags_horizontal = 4
 theme_override_constants/h_separation = 20
 theme_override_constants/v_separation = 20
 
@@ -111,21 +80,15 @@ offset_right = 997.0
 offset_bottom = 571.0
 
 [node name="Loading" type="Label" parent="LoadingContainer"]
-offset_right = 75.0
-offset_bottom = 26.0
 text = "Loading..."
 
 [node name="ProgressBar" type="ProgressBar" parent="LoadingContainer"]
-offset_top = 36.0
-offset_right = 75.0
-offset_bottom = 63.0
 rounded = true
 
 [node name="ImagesFileDialog" type="FileDialog" parent="."]
 title = "Open a Directory"
-size = Vector2i(1920, 1080)
+size = Vector2i(600, 400)
 wrap_controls = false
-min_size = Vector2i(600, 400)
 ok_button_text = "Select Current Folder"
 dialog_text = "Choose the folder containing the images to be loaded"
 dialog_hide_on_ok = true
@@ -134,8 +97,7 @@ access = 2
 
 [node name="SequenceFileDialog" type="FileDialog" parent="."]
 title = "Open a File"
-size = Vector2i(600, 600)
-min_size = Vector2i(600, 600)
+size = Vector2i(781, 600)
 ok_button_text = "Open"
 file_mode = 0
 access = 2
@@ -143,16 +105,14 @@ filters = PackedStringArray("*.txt", "*.seq")
 
 [node name="PackFileDialog" type="FileDialog" parent="."]
 title = "Open a File"
-size = Vector2i(1920, 1080)
-min_size = Vector2i(600, 600)
+size = Vector2i(600, 600)
 ok_button_text = "Open"
 file_mode = 0
 access = 1
 filters = PackedStringArray("*.res")
 
 [node name="SavePackFileDialog" type="FileDialog" parent="."]
-size = Vector2i(1920, 1080)
-min_size = Vector2i(600, 600)
+size = Vector2i(898, 600)
 ok_button_text = "Save"
 access = 2
 filters = PackedStringArray("*.res")
@@ -165,3 +125,4 @@ script = ExtResource("3_byous")
 
 [node name="NamePanel" parent="AnimationNamePopup" instance=ExtResource("4_28pck")]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(550, 250)
