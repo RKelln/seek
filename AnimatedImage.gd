@@ -16,7 +16,7 @@ var compress := true
 		if active and on: return
 		if not active and not on: return
 		active = on
-		set_controller(active)
+		# set_controller(active)
 
 const max_speed : float = 10.0
 const max_speed_fps : float = 30.0
@@ -35,8 +35,6 @@ var paused : bool = false
 
 var frame_counts : Dictionary
 var current_frame : Dictionary
-
-#var controller : Controller = Controller.new()
 
 var _backwards := false
 var _anim_fps : float = 0
@@ -105,25 +103,45 @@ func _on_frame_changed():
 		real_frame_changed.emit(frame)
 
 
-func set_controller(on : bool) -> void:
-	if Controller.mode == Controller.Mode.OFF: return
-	var connected := Controller.is_connected("skip_frame", skip_frame)
-	if on and not connected:
-		Controller.skip_frame.connect(skip_frame)
-		Controller.change_speed.connect(change_relative_speed)
-		#Controller.pause.connect(pause)
-		Controller.reverse.connect(reverse)
-		Controller.change_animation.connect(change_animation_relative)
-	elif not on and connected:
-		Controller.skip_frame.disconnect(skip_frame)
-		Controller.change_speed.disconnect(change_relative_speed)
-		#Controller.pause.disconnect(pause)
-		Controller.reverse.disconnect(reverse)
-		Controller.change_animation.disconnect(change_animation_relative)
+#func set_controller(on : bool) -> void:
+#	if controller.mode == CustomController.Mode.OFF: return
+#	var connected := controller.is_connected("skip_frame", skip_frame)
+#	if on and not connected:
+#		controller.skip_frame.connect(skip_frame)
+#		controller.change_speed.connect(change_relative_speed)
+#		#controller.pause.connect(pause)
+#		controller.reverse.connect(reverse)
+#		controller.change_animation.connect(change_animation_relative)
+#	elif not on and connected:
+#		controller.skip_frame.disconnect(skip_frame)
+#		controller.change_speed.disconnect(change_relative_speed)
+#		#controller.pause.disconnect(pause)
+#		controller.reverse.disconnect(reverse)
+#		controller.change_animation.disconnect(change_animation_relative)
 
 
-func change_animation_relative(direction : int) -> void:
-	if not active: return
+func connect_controller(controller : CustomController) -> void:
+	prints("Animatedimage connect controller", _index)
+	controller.skip_frame.connect(skip_frame)
+	controller.change_speed.connect(change_speed)
+	controller.change_relative_speed.connect(change_relative_speed)
+	#controller.pause.connect(pause)
+	controller.reverse.connect(reverse)
+	controller.change_animation.connect(change_animation_relative)
+
+func disconnect_controller(controller : CustomController) -> void:
+	controller.skip_frame.disconnect(skip_frame)
+	controller.change_speed.disconnect(change_speed)
+	controller.change_relative_speed.disconnect(change_relative_speed)
+	#controller.pause.disconnect(pause)
+	controller.reverse.disconnect(reverse)
+	controller.change_animation.disconnect(change_animation_relative)
+
+
+func change_animation_relative(direction : int, layer : int = -1) -> void:
+	if layer < 0 and not active: return
+	if layer >= 0 and layer != _index : return
+	
 	change_animation(next_animation(direction))
 	
 	
@@ -134,7 +152,7 @@ func _init_animation(animation_name : String) -> void:
 	speed = _speeds[animation_name]
 	speed_scale = speed
 	if animation_name not in frame_counts:
-		frame_counts[animation_name] - frames.get_frame_count(animation_name)
+		frame_counts[animation_name] = frames.get_frame_count(animation_name)
 
 # always changes animation, regardless of current and state
 func _change_animation(requested_animation : String) -> void:
@@ -216,7 +234,7 @@ func next_frame(increment : int = 1) -> void:
 		increment = 1
 	elif increment < 0 and increment > -1:
 		increment = -1
-	frame = fposmod(frame + increment, frame_counts[animation])
+	frame = floor(fposmod(frame + increment, frame_counts[animation]))
 
 
 func pause():
@@ -255,8 +273,9 @@ func rescale():
 			#printt(viewsize, framesize, viewscale, scale, offset)
 
 
-func skip_frame(direction : float = 0.0) -> void:
-	if not active: return
+func skip_frame(direction : float = 0.0, layer : int = -1) -> void:
+	if layer < 0 and not active: return
+	if layer >= 0 and layer != _index : return
 	
 	#printt(_index, "skip_frame", frame_skip, direction)
 	# default to skip 0.3sec or 1 of frames whatever is less, but allow for direction to modulate
@@ -266,8 +285,9 @@ func skip_frame(direction : float = 0.0) -> void:
 		next_frame(sign(direction))
 
 
-func change_relative_speed(relative_speed : float = 0.0) -> void:
-	if not active: return
+func change_relative_speed(relative_speed : float = 0.0, layer : int = -1) -> void:
+	if layer < 0 and not active: return
+	if layer >= 0 and layer != _index : return
 	
 	if speed <= 2.0 and speed > 0.1:
 		speed *= 1.0 + (relative_speed / speed * 0.05)
@@ -285,9 +305,24 @@ func change_relative_speed(relative_speed : float = 0.0) -> void:
 		play(animation, _backwards)
 
 
+func change_speed(normalized_speed : float = 0.0, layer : int = -1) -> void:
+	if layer < 0 and not active: return
+	if layer >= 0 and layer != _index : return
+	
+	speed = remap(normalized_speed, 0.0, 1.0, 0.0, max_speed)
+	printt(_index, "change_speed", normalized_speed, speed)
+	
+	if speed <= 0:
+		stop()
+	else:
+		speed_scale = speed 
+		play(animation, _backwards)
 
-func change_relative_speed_normalized(normalized_speed : float = 0.0) -> void:
-	if not active: return
+
+
+func change_relative_speed_normalized(normalized_speed : float = 0.0, layer : int = -1) -> void:
+	if layer < 0 and not active: return
+	if layer >= 0 and layer != _index : return
 	
 	normalized_speed = clampf(normalized_speed, -1.0, 1.0)
 	
@@ -315,8 +350,9 @@ func change_relative_speed_normalized(normalized_speed : float = 0.0) -> void:
 		play(animation, _backwards)
 
 
-func reverse() -> void:
-	if not active: return
+func reverse(layer : int = -1) -> void:
+	if layer < 0 and not active: return
+	if layer >= 0 and layer != _index : return
 	
 	_backwards = !_backwards
 	play(animation, _backwards)

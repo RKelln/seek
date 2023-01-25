@@ -50,6 +50,8 @@ const AnimatedImage = preload("res://AnimatedImage.gd")
 var cur_img : AnimatedImage
 var prev_img : Sprite2D
 
+var controller : CustomController
+
 var _index : int
 
 func _init_node(nodeOrPath, defaultPath) -> Node:
@@ -88,6 +90,10 @@ func _ready():
 	
 	_index = get_index()
 	cur_img._index = _index
+	
+	controller = preload("res://midi_controller.gd").new()
+	controller.mode = CustomController.Mode.TEST
+	add_child(controller)
 
 
 func _process(delta : float) -> void:
@@ -130,22 +136,40 @@ func _input(event : InputEvent) -> void:
 
 
 func set_controller(on : bool) -> void:
-	if Controller.mode == Controller.Mode.OFF: return
-	var connected := Controller.is_connected("fade", change_opacity)
+	if controller.mode == CustomController.Mode.OFF: return
+	var connected := controller.is_connected("fade", change_opacity)
 	if on and not connected:
-		Controller.fade.connect(change_opacity)
-		Controller.beat.connect(beat_match)
-		Controller.change_animation.connect(change_animation)
-		Controller.pause.connect(pause)
+		connect_controller(controller)
 	elif not on and connected:
-		Controller.fade.disconnect(change_opacity)
-		Controller.beat.disconnect(beat_match)
-		Controller.change_animation.disconnect(change_animation)
-		Controller.pause.disconnect(pause)
+		disconnect_controller(controller)
+
+func connect_controller(controller : CustomController) -> void:
+	controller.fade.connect(change_opacity)
+	controller.beat.connect(beat_match)
+	controller.change_animation.connect(change_animation)
+	controller.pause.connect(change_pause)
+	if cur_img != null:
+		cur_img.connect_controller(controller)
+		
+func disconnect_controller(controller : CustomController) -> void:
+	controller.fade.disconnect(change_opacity)
+	controller.beat.disconnect(beat_match)
+	controller.change_animation.disconnect(change_animation)
+	controller.pause.disconnect(change_pause)
+	if cur_img != null:
+		cur_img.disconnect_controller(controller)
 
 
-func change_animation(_dir : int = 0) -> void:
-	if not active: return
+func change_pause(layer : int = -1) -> void:
+	if layer < 0 and not active: return
+	if layer >= 0 and layer != _index : return
+	pause()
+
+
+func change_animation(_dir : int = 0, layer : int = -1) -> void:
+	if layer < 0 and not active: return
+	if layer >= 0 and layer != _index : return
+	
 	#printt(_index, "images.change_animation_relative", _dir)
 	if transition:
 		prev_img.visible = false
@@ -157,16 +181,18 @@ func change_animation(_dir : int = 0) -> void:
 			cur_img.modulate.a = 1.0
 
 
-func change_opacity(amount : float) -> void:
-	if not active: return
+func change_opacity(amount : float, layer : int = -1) -> void:
+	if layer < 0 and not active: return
+	if layer >= 0 and layer != _index : return
 	
 	printt(_index, "change_opacity", amount)
 	var n = self # $CanvasGroup doesn't help
 	n.modulate.a = clampf(n.modulate.a + amount, 0.0, 1.0)
 
 
-func change_transition_duration(percent_change : float) -> void:
-	if not active: return
+func change_transition_duration(percent_change : float, layer : int = -1) -> void:
+	if layer < 0 and not active: return
+	if layer >= 0 and layer != _index : return
 	#transition_percent = smoothstep(0, 1.0, transition_percent + percent_change)
 	transition_percent = clampf(transition_percent + percent_change, 0.0, 1.0)
 	printt(_index, "change_transition_duration", percent_change, transition_percent)
@@ -367,7 +393,9 @@ func set_timing(duration_ms : float):
 		cur_img.next_frame() # immediately advance to sync to beat
 
 
-func beat_match() -> void:
+func beat_match(layer : int = -1) -> void:
+	if layer < 0 and not active: return
+	if layer >= 0 and layer != _index : return
 	
 	# just getting started
 	if last_beat_ms == 0.0:
