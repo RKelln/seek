@@ -15,7 +15,6 @@ extends Node2D
 		active = on
 		if cur_img:
 			cur_img.active = on
-		set_controller(active)
 
 @export var pack_name : String = "":
 	get:
@@ -104,14 +103,35 @@ func _process(delta : float) -> void:
 			change_opacity(-delta * opacity_speed)
 
 
-func _input(event : InputEvent) -> void:
-	if event is InputEventKey:
-		if event.is_action_pressed("beat_match"):
-			beat_match()
+func _unhandled_input(event : InputEvent) -> void:
+	if not active: return
+	if event is InputEventMouseMotion: return
 		
-		if event.is_action_released('next_animation'):
-			change_animation(1)
-
+	if event is InputEventTargetedAction:
+		# note: do not check for pressed, 
+		#       as these events may have strength
+		#       that changes throughout a "press"
+		if valid_target(event.target):
+			prints("InputEventTargetedAction", event.as_text())
+			var handled := true
+			match event.action:
+				"set_opacity":
+					set_opacity(event.strength, event.target)
+				"set_transition_duration":
+					set_transition_duration(event.strength, event.target)
+				_:
+					handled = false
+			if handled:
+				get_viewport().set_input_as_handled()
+		return
+	
+	if event.is_action_pressed("beat_match"):
+		beat_match()
+	elif event.is_action_pressed("next_animation"):
+		change_animation(1)
+	
+	# handle switching packs using keys
+	if event is InputEventKey:
 		if not event.pressed: # releaased
 			if event.keycode >= KEY_0 and event.keycode <= KEY_9:
 				var anims : PackedStringArray = get_valid_animation_names()
@@ -127,48 +147,30 @@ func _input(event : InputEvent) -> void:
 					if get_sequence_name() != anims[selected_anim]:
 						change_animation()
 						cur_img.change_animation(anims[selected_anim])
-
-	if event is InputEventMouseButton:
-		if event.is_action_pressed("fade_less"):
-			change_transition_duration(-0.05)
-		elif event.is_action_pressed("fade_more"):
-			change_transition_duration(0.05)
-
-
-func set_controller(on : bool) -> void:
-	if controller.mode == CustomController.Mode.OFF: return
-	var connected := controller.is_connected("fade", change_opacity)
-	if on and not connected:
-		connect_controller(controller)
-	elif not on and connected:
-		disconnect_controller(controller)
-
-func connect_controller(controller : CustomController) -> void:
-	controller.fade.connect(change_opacity)
-	controller.beat.connect(beat_match)
-	controller.change_animation.connect(change_animation)
-	controller.pause.connect(change_pause)
-	if cur_img != null:
-		cur_img.connect_controller(controller)
+		return
 		
-func disconnect_controller(controller : CustomController) -> void:
-	controller.fade.disconnect(change_opacity)
-	controller.beat.disconnect(beat_match)
-	controller.change_animation.disconnect(change_animation)
-	controller.pause.disconnect(change_pause)
-	if cur_img != null:
-		cur_img.disconnect_controller(controller)
+	if event is InputEventMouseButton:
+		if event.pressed:
+			match event.action:
+				"fade_less":
+					change_transition_duration(-0.05)
+				"fade_more":
+					change_transition_duration(0.05)
+
+
+func valid_target(index : int = -1) -> bool:
+	if index < 0 and not active: return false
+	if index >= 0 and index != _index : return false
+	return true
 
 
 func change_pause(layer : int = -1) -> void:
-	if layer < 0 and not active: return
-	if layer >= 0 and layer != _index : return
+	if not valid_target(layer): return
 	pause()
 
 
 func change_animation(_dir : int = 0, layer : int = -1) -> void:
-	if layer < 0 and not active: return
-	if layer >= 0 and layer != _index : return
+	if not valid_target(layer): return
 	
 	#printt(_index, "images.change_animation_relative", _dir)
 	if transition:
@@ -182,20 +184,32 @@ func change_animation(_dir : int = 0, layer : int = -1) -> void:
 
 
 func change_opacity(amount : float, layer : int = -1) -> void:
-	if layer < 0 and not active: return
-	if layer >= 0 and layer != _index : return
+	if not valid_target(layer): return
 	
 	printt(_index, "change_opacity", amount)
-	var n = self # $CanvasGroup doesn't help
-	n.modulate.a = clampf(n.modulate.a + amount, 0.0, 1.0)
+	modulate.a = clampf(modulate.a + amount, 0.0, 1.0)
+
+
+func set_opacity(amount : float, layer : int = -1) -> void:
+	if not valid_target(layer): return
+	
+	printt(_index, "set_opacity", amount)
+	modulate.a = clampf(amount, 0.0, 1.0)
 
 
 func change_transition_duration(percent_change : float, layer : int = -1) -> void:
-	if layer < 0 and not active: return
-	if layer >= 0 and layer != _index : return
+	if not valid_target(layer): return
+	
 	#transition_percent = smoothstep(0, 1.0, transition_percent + percent_change)
 	transition_percent = clampf(transition_percent + percent_change, 0.0, 1.0)
 	printt(_index, "change_transition_duration", percent_change, transition_percent)
+
+
+func set_transition_duration(duration : float, layer : int = -1) -> void:
+	if not valid_target(layer): return
+	
+	transition_percent = clampf(duration, 0.0, 1.0)
+	printt(_index, "set_transition_duration", transition_percent)
 
 
 func set_image_frames(iframes : ImageFrames) -> void:
@@ -394,8 +408,7 @@ func set_timing(duration_ms : float):
 
 
 func beat_match(layer : int = -1) -> void:
-	if layer < 0 and not active: return
-	if layer >= 0 and layer != _index : return
+	if not valid_target(layer): return
 	
 	# just getting started
 	if last_beat_ms == 0.0:

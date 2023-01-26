@@ -16,7 +16,6 @@ var compress := true
 		if active and on: return
 		if not active and not on: return
 		active = on
-		# set_controller(active)
 
 const max_speed : float = 10.0
 const max_speed_fps : float = 30.0
@@ -103,44 +102,118 @@ func _on_frame_changed():
 		real_frame_changed.emit(frame)
 
 
-#func set_controller(on : bool) -> void:
-#	if controller.mode == CustomController.Mode.OFF: return
-#	var connected := controller.is_connected("skip_frame", skip_frame)
-#	if on and not connected:
-#		controller.skip_frame.connect(skip_frame)
-#		controller.change_speed.connect(change_relative_speed)
-#		#controller.pause.connect(pause)
-#		controller.reverse.connect(reverse)
-#		controller.change_animation.connect(change_animation_relative)
-#	elif not on and connected:
-#		controller.skip_frame.disconnect(skip_frame)
-#		controller.change_speed.disconnect(change_relative_speed)
-#		#controller.pause.disconnect(pause)
-#		controller.reverse.disconnect(reverse)
-#		controller.change_animation.disconnect(change_animation_relative)
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(_delta):
+	if frames == null or frame_counts[animation] == 0: return
+
+	# slows things down but if iamges are all different sizes this can make them appear more similar
+	if playing and stretch: # per frame
+		rescale()
+	
+#	if Input.is_anything_pressed():
+#		handle_input()
 
 
-func connect_controller(controller : CustomController) -> void:
-	prints("Animatedimage connect controller", _index)
-	controller.skip_frame.connect(skip_frame)
-	controller.change_speed.connect(change_speed)
-	controller.change_relative_speed.connect(change_relative_speed)
-	#controller.pause.connect(pause)
-	controller.reverse.connect(reverse)
-	controller.change_animation.connect(change_animation_relative)
+func _unhandled_input(event : InputEvent):
+	if not active:
+		return
+	# no mouse motion events handled here
+	if event is InputEventMouseMotion: return
+	
+	if event is InputEventTargetedAction:
+		# note: do not check for pressed, 
+		#       as these events may have strength
+		#       that changes throughout a "press"
+		if valid_target(event.target):
+			print(event.as_text())
+			match event.action:
+				"set_speed":
+					set_speed(event.strength, event.target)
 
-func disconnect_controller(controller : CustomController) -> void:
-	controller.skip_frame.disconnect(skip_frame)
-	controller.change_speed.disconnect(change_speed)
-	controller.change_relative_speed.disconnect(change_relative_speed)
-	#controller.pause.disconnect(pause)
-	controller.reverse.disconnect(reverse)
-	controller.change_animation.disconnect(change_animation_relative)
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_RIGHT:
+			stop()
+			var w : float = float(get_viewport().get_visible_rect().size.x)
+			# NOTE: leave a small amount on each side the is always start and end of sequence
+			frame = int(remap(get_viewport().get_mouse_position().x, 0.1 * w, 0.9 * w, 0, frame_counts[animation]))
+			#printt("jump to", get_viewport().get_mouse_position().x, frame)
+
+	# allow when playing or not:
+
+	if event is InputEventKey:
+		if event.is_action_pressed("play_toggle"):
+			if playing:
+				pause()
+			else:
+				resume()
+		elif event.is_action_pressed("skip_forward"):
+			next_frame(1)
+		elif event.is_action_pressed("skip_backward"):
+			next_frame(-1)
+	
+	# other input requires scenes to be playing:
+	if not playing: 
+		return
+	
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_RIGHT:
+			var w : float = float(get_viewport().get_visible_rect().size.x)
+			var relative_dist = remap(get_viewport().get_mouse_position().x, 0, w, -1.0, 1.0)
+			
+			change_relative_speed_normalized(relative_dist)
+			#printt(w, get_viewport().get_mouse_position().x, relative_dist, dist)
+		return # no other mouse events below
+		
+	# repeatable actions:
+	if event.is_action_pressed("fast_forward", true):
+		speed_scale = frame_skip * speed
+		play(animation, false)
+	elif event.is_action_pressed("fast_backward", true):
+		speed_scale = frame_skip * speed
+		play(animation, true)
+	# non-repeated actions:
+	elif event.is_action_pressed("next_animation"):
+		change_animation(next_animation(1))
+	elif event.is_action_pressed("reverse"):
+		reverse()
+	elif event.is_action_pressed("faster"):
+		speed *= 1.25
+		print("speed:", speed)
+		speed_scale = speed
+	elif event.is_action_pressed("slower"):
+		speed /= 1.25
+		print("speed:", speed)
+		speed_scale = speed
+	elif event.is_action_pressed("speed_reset"):
+		speed = 1.0
+		print("speed:", speed)
+		speed_scale = speed
+	elif event.is_action_pressed("skip_forward"):
+		next_frame(frame_skip)
+	elif event.is_action_pressed("skip_backward"):
+		next_frame(-frame_skip)
+	elif event.is_action_pressed("random"):
+		frame = randi() % frame_counts[animation]
+
+	# on release
+	elif (event.is_action_released("fast_forward")
+		or event.is_action_released("fast_backward")):
+		# resume normal play
+		speed_scale = speed
+		if paused:
+			stop()
+		else:
+			play(animation, _backwards)
+	
+
+func valid_target(index : int = -1) -> bool:
+	if index < 0 and not active: return false
+	if index >= 0 and index != _index : return false
+	return true
 
 
 func change_animation_relative(direction : int, layer : int = -1) -> void:
-	if layer < 0 and not active: return
-	if layer >= 0 and layer != _index : return
+	if not valid_target(layer): return
 	
 	change_animation(next_animation(direction))
 	
@@ -249,16 +322,6 @@ func resume():
 		paused = false
 
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(_delta):
-	if frames == null or frame_counts[animation] == 0: return
-
-	# slows things down but if iamges are all different sizes this can make them appear more similar
-	if playing and stretch: # per frame
-		rescale()
-	
-	if Input.is_anything_pressed():
-		handle_input()
 
 
 func rescale():
@@ -274,8 +337,7 @@ func rescale():
 
 
 func skip_frame(direction : float = 0.0, layer : int = -1) -> void:
-	if layer < 0 and not active: return
-	if layer >= 0 and layer != _index : return
+	if not valid_target(layer): return
 	
 	#printt(_index, "skip_frame", frame_skip, direction)
 	# default to skip 0.3sec or 1 of frames whatever is less, but allow for direction to modulate
@@ -286,8 +348,7 @@ func skip_frame(direction : float = 0.0, layer : int = -1) -> void:
 
 
 func change_relative_speed(relative_speed : float = 0.0, layer : int = -1) -> void:
-	if layer < 0 and not active: return
-	if layer >= 0 and layer != _index : return
+	if not valid_target(layer): return
 	
 	if speed <= 2.0 and speed > 0.1:
 		speed *= 1.0 + (relative_speed / speed * 0.05)
@@ -298,31 +359,25 @@ func change_relative_speed(relative_speed : float = 0.0, layer : int = -1) -> vo
 	printt(_index, "change_relative_speed", relative_speed, speed, _anim_fps)
 	
 	speed = clampf(speed, 0.0, max_speed)
-	if speed <= 0:
-		stop()
-	else:
-		speed_scale = speed 
+	speed_scale = speed 
+	if speed > 0:
 		play(animation, _backwards)
 
 
-func change_speed(normalized_speed : float = 0.0, layer : int = -1) -> void:
-	if layer < 0 and not active: return
-	if layer >= 0 and layer != _index : return
+func set_speed(normalized_speed : float = 0.0, layer : int = -1) -> void:
+	if not valid_target(layer): return
 	
 	speed = remap(normalized_speed, 0.0, 1.0, 0.0, max_speed)
-	printt(_index, "change_speed", normalized_speed, speed)
+	printt(_index, "set_speed", normalized_speed, speed)
 	
-	if speed <= 0:
-		stop()
-	else:
-		speed_scale = speed 
+	speed_scale = speed 
+	if speed > 0:
 		play(animation, _backwards)
 
 
 
 func change_relative_speed_normalized(normalized_speed : float = 0.0, layer : int = -1) -> void:
-	if layer < 0 and not active: return
-	if layer >= 0 and layer != _index : return
+	if not valid_target(layer): return
 	
 	normalized_speed = clampf(normalized_speed, -1.0, 1.0)
 	
@@ -351,89 +406,10 @@ func change_relative_speed_normalized(normalized_speed : float = 0.0, layer : in
 
 
 func reverse(layer : int = -1) -> void:
-	if layer < 0 and not active: return
-	if layer >= 0 and layer != _index : return
+	if not valid_target(layer): return
 	
 	_backwards = !_backwards
 	play(animation, _backwards)
 
 
-func handle_input():
-	if not active: return
-	
-	if Input.is_action_just_pressed("play_toggle"):
-		if playing:
-			pause()
-		else:
-			resume()
-		return # only action allowed this drame
-	
-	# allow the following while paused:
-	if Input.is_action_just_pressed("skip_forward"):
-		next_frame(1)
-	elif Input.is_action_just_pressed("skip_backward"):
-		next_frame(-1)
-	
-	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
-		stop()
-		var w : float = float(get_viewport().get_visible_rect().size.x)
-		# NOTE: leave a small amount on each side the is always start and end of sequence
-		frame = int(remap(get_viewport().get_mouse_position().x, 0.1 * w, 0.9 * w, 0, frame_counts[animation]))
-		#printt("jump to", get_viewport().get_mouse_position().x, frame)
-	
-	# other input requires scenes to be playing:
-	if not playing: 
-		return 
-	
-	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-		var w : float = float(get_viewport().get_visible_rect().size.x)
-		var relative_dist = remap(get_viewport().get_mouse_position().x, 0, w, -1.0, 1.0)
-		
-		change_relative_speed_normalized(relative_dist)
-		#printt(w, get_viewport().get_mouse_position().x, relative_dist, dist)
-	
-	if Input.is_action_just_pressed('next_animation'):
-		change_animation(next_animation(1))
-			
-	if Input.is_action_just_pressed("reverse"):
-		reverse()
-	
-	if Input.is_action_just_pressed("faster"):
-		speed *= 1.25
-		print("speed:", speed)
-		speed_scale = speed
-	elif Input.is_action_just_pressed("slower"):
-		speed /= 1.25
-		print("speed:", speed)
-		speed_scale = speed
-	elif Input.is_action_just_pressed("speed_reset"):
-		speed = 1.0
-		print("speed:", speed)
-		speed_scale = speed
-	
-	if Input.is_action_just_pressed("skip_forward"):
-		if playing:
-			next_frame(frame_skip)
-		else:
-			next_frame(1)
-	elif Input.is_action_just_pressed("skip_backward"):
-		if playing:
-			next_frame(-frame_skip)
-		else:
-			next_frame(-1)
-	if Input.is_action_pressed("fast_forward"):
-		speed_scale = frame_skip * speed
-		play(animation, false)
-	elif Input.is_action_pressed("fast_backward"):
-		speed_scale = frame_skip * speed
-		play(animation, true)
-	elif Input.is_action_just_released("fast_forward") or Input.is_action_just_released("fast_backward"):
-		# resume normal play
-		speed_scale = speed
-		if paused:
-			stop()
-		else:
-			play(animation, _backwards)
-	
-	if Input.is_action_just_pressed("random"):
-		frame = randi() % frame_counts[animation]
+

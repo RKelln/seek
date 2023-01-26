@@ -74,71 +74,92 @@ func _handle_input(event: InputEvent) -> void:
 					print("Unmapped key: ", event.keycode, event)
 					
 		Mode.ON:
+			var ev = InputEventTargetedAction.new()
+			ev.pressed = true
+			ev.strength = sensitivity
+			ev.target = -1
+			
 			match event.keycode:
 				knob_clockwise:
-					skip_frame.emit(sensitivity)
+					ev.action = "skip_frame"
+					ev.strength = sensitivity
 					info['skip_frame'] = 1
 				knob_cclockwise:
-					skip_frame.emit(-sensitivity)
+					ev.action = "skip_frame"
+					ev.strength = -sensitivity
 					info['skip_frame'] = -1
 					
 				knob1_clockwise:
 					#speed = linear_to_relative(speed, 1, -max_speed, max_speed, change_speed, -1.0)
-					change_speed.emit(1)
+					#change_speed.emit(1)
+					ev.action = "change_speed"
+					ev.strength = 1
 					info['speed'] = speed
 				knob1_cclockwise:
 					#speed = linear_to_relative(speed, -1, -max_speed, max_speed, change_speed, -1.0)
-					change_speed.emit(-1)
+					#change_speed.emit(-1)
+					ev.action = "change_speed"
+					ev.strength = -1
 					info['speed'] = speed
 				
 				# change animation (NOTE: knob not working)
 				knob2_clockwise:
-					change_animation.emit(1)
+					#change_animation.emit(1)
+					ev.action = "change_animation"
+					ev.strength = 1
 					info['change_animation'] = 1
 				knob2_cclockwise:
-					change_animation.emit(-1)
+					#change_animation.emit(-1)
+					ev.action = "change_animation"
+					ev.strength = -1
 					info['change_animation'] = -1
 				
 				# fade
 				knob3_clockwise:
-					fade.emit(fade_amount)
+					#fade.emit(fade_amount)
+					ev.action = "increase_opacity"
 					info['fade'] = fade_amount
 				knob3_cclockwise:
-					fade.emit(-fade_amount)
+					#fade.emit(-fade_amount)
+					ev.action = "decrease_opacity"
 					info['fade'] = -fade_amount
 				
 				# pause / reverse
 				btn_c:
 					if event.pressed:
-						pause.emit()
+						ev.action = "play_toggle"
 						info['pause'] = true
 					else:
-						reverse.emit()
+						ev.action = "reverse"
 						info['reverse'] = true
 				
 				# jump forward/back
 				btn_l:
 					if event.pressed and not event.is_echo():
-						skip_frame.emit(-6)
-						info['skip_frame'] = -6
+						ev.action = "skip_backward"
+						ev.strength = 6
+						info['skip_frame'] = ev.strength
 				btn_r:
 					if event.pressed and not event.is_echo():
-						skip_frame.emit(3)
-						info['skip_frame'] = 3
+						ev.action = "skip_forward"
+						ev.strength = 3
+						info['skip_frame'] = ev.strength
 				
 				# change animation
 				btn_tr:
 					if not event.pressed:
-						change_animation.emit(1)
+						ev.action = "change_animation"
+						ev.strength = 1
 						info['change_animation'] = 1
 				btn_tl:
 					if not event.pressed:
-						change_animation.emit(-1)
+						ev.action = "change_animation"
+						ev.strength = -1
 						info['change_animation'] = -1
 				# beat match
 				btn_t:
 					if event.pressed and not event.is_echo():
-						beat.emit()
+						ev.action = "beat_match"
 						info['beat'] = true
 
 	printt("mode:", mode, "key:", event.keycode, info)

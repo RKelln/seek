@@ -7,14 +7,6 @@ enum Mode {OFF, ON, TEST}
 @export var mode : Mode = Mode.OFF
 @export var sensitivity : float = 1.0
 
-signal skip_frame(value : float, layer : int)
-signal change_speed(value : float, layer : int)
-signal change_relative_speed(value : float, layer : int)
-signal fade(value : float, layer : int)
-signal pause(layer : int)
-signal reverse(layer : int)
-signal change_animation(value : int, layer : int)
-signal beat(layer : int)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if mode == Mode.OFF: return
