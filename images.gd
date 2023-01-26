@@ -97,6 +97,9 @@ func _ready():
 
 func _process(delta : float) -> void:
 	if active:
+		# this interacts awkwardly with pressed action check in _unhandled_input
+		# but is the simplest way to allow for the same control to do step-by-step
+		# (from knob) and continuously held input (from keyboard)
 		if Input.is_action_pressed("increase_opacity") and modulate.a < 1.0:
 			change_opacity(delta * opacity_speed)
 		if Input.is_action_pressed("decrease_opacity") and modulate.a > 0:
@@ -113,23 +116,26 @@ func _unhandled_input(event : InputEvent) -> void:
 		#       that changes throughout a "press"
 		if valid_target(event.target):
 			prints("InputEventTargetedAction", event.as_text())
-			var handled := true
 			match event.action:
 				"set_opacity":
 					set_opacity(event.strength, event.target)
 				"set_transition_duration":
 					set_transition_duration(event.strength, event.target)
-				_:
-					handled = false
-			if handled:
-				get_viewport().set_input_as_handled()
 		return
 	
 	if event.is_action_pressed("beat_match"):
 		beat_match()
 	elif event.is_action_pressed("next_animation"):
 		change_animation(1)
-	
+	elif event.is_action_pressed("fade_less"):
+		change_transition_duration(-0.05)
+	elif event.is_action_pressed("fade_more"):
+		change_transition_duration(0.05)
+	elif event.is_action_pressed("increase_opacity") and modulate.a < 1.0:
+		change_opacity(0.1 * opacity_speed)
+	elif event.is_action_pressed("decrease_opacity") and modulate.a > 0:
+		change_opacity(-0.1 * opacity_speed)
+		
 	# handle switching packs using keys
 	if event is InputEventKey:
 		if not event.pressed: # releaased
@@ -148,14 +154,6 @@ func _unhandled_input(event : InputEvent) -> void:
 						change_animation()
 						cur_img.change_animation(anims[selected_anim])
 		return
-		
-	if event is InputEventMouseButton:
-		if event.pressed:
-			match event.action:
-				"fade_less":
-					change_transition_duration(-0.05)
-				"fade_more":
-					change_transition_duration(0.05)
 
 
 func valid_target(index : int = -1) -> bool:

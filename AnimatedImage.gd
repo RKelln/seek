@@ -27,6 +27,7 @@ var speed : float = 1.0 :
 		_speeds[animation] = value
 
 const percent_frames_for_skip = 0.02
+const max_frame_skip = 10
 var frame_skip = 10
 var stretch := true
 
@@ -140,19 +141,20 @@ func _unhandled_input(event : InputEvent):
 
 	# allow when playing or not:
 
-	if event is InputEventKey:
-		if event.is_action_pressed("play_toggle"):
-			if playing:
-				pause()
-			else:
-				resume()
-		elif event.is_action_pressed("skip_forward"):
+	if event.is_action_pressed("play_toggle"):
+		if playing:
+			pause()
+		else:
+			resume()
+			
+	if not playing:
+		# allow for frame skip
+		if event.is_action_pressed("skip_forward"):
 			next_frame(1)
 		elif event.is_action_pressed("skip_backward"):
 			next_frame(-1)
 	
-	# other input requires scenes to be playing:
-	if not playing: 
+		# other input requires scenes to be playing:
 		return
 	
 	if event is InputEventMouseButton:
@@ -165,17 +167,17 @@ func _unhandled_input(event : InputEvent):
 		return # no other mouse events below
 		
 	# repeatable actions:
-	if event.is_action_pressed("fast_forward", true):
+	if event.is_action_pressed("fast_forward", true): # allow echo
 		speed_scale = frame_skip * speed
 		play(animation, false)
-	elif event.is_action_pressed("fast_backward", true):
+	elif event.is_action_pressed("fast_backward", true): # allow echo
 		speed_scale = frame_skip * speed
 		play(animation, true)
 	# non-repeated actions:
-	elif event.is_action_pressed("next_animation"):
-		change_animation(next_animation(1))
-	elif event.is_action_pressed("reverse"):
-		reverse()
+	elif event.is_action_pressed("skip_forward"):
+		next_frame(frame_skip)
+	elif event.is_action_pressed("skip_backward"):
+		next_frame(-frame_skip)
 	elif event.is_action_pressed("faster"):
 		speed *= 1.25
 		print("speed:", speed)
@@ -184,14 +186,14 @@ func _unhandled_input(event : InputEvent):
 		speed /= 1.25
 		print("speed:", speed)
 		speed_scale = speed
+	elif event.is_action_pressed("reverse"):
+		reverse()
+	elif event.is_action_pressed("next_animation"):
+		change_animation(next_animation(1))
 	elif event.is_action_pressed("speed_reset"):
 		speed = 1.0
 		print("speed:", speed)
 		speed_scale = speed
-	elif event.is_action_pressed("skip_forward"):
-		next_frame(frame_skip)
-	elif event.is_action_pressed("skip_backward"):
-		next_frame(-frame_skip)
 	elif event.is_action_pressed("random"):
 		frame = randi() % frame_counts[animation]
 
@@ -221,7 +223,7 @@ func change_animation_relative(direction : int, layer : int = -1) -> void:
 func _init_animation(animation_name : String) -> void:
 	_anim_fps = frames.get_animation_speed(animation_name)
 	assert(_anim_fps > 0)
-	frame_skip = maxi(1, floor(frames.get_frame_count(animation_name) * percent_frames_for_skip)) # % of frames
+	frame_skip = mini(max_frame_skip, maxi(1, floor(frames.get_frame_count(animation_name) * percent_frames_for_skip))) # % of frames
 	speed = _speeds[animation_name]
 	speed_scale = speed
 	if animation_name not in frame_counts:
@@ -302,7 +304,7 @@ func set_frame_duration(duration_s : float) -> void:
 	
 
 func next_frame(increment : int = 1) -> void:
-	#printt(_index, "next_frame", increment)
+	printt(_index, "next_frame", increment)
 	if increment > 0 and increment < 1:
 		increment = 1
 	elif increment < 0 and increment > -1:
