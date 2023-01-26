@@ -32,4 +32,4 @@ func create_entry(key : String, value : Variant, index : int = -1) -> void:
 	key_node.text = key
 	var value_node = Label.new()
 	key_node.text = str(value)
-	$MarginContainer/VBoxContainer/GridContainer
+	#$MarginContainer/VBoxContainer/GridContainer

@@ -10,7 +10,7 @@ const animation_meta_key : StringName = "animation_index"
 	get:
 		return pack_name
 	set(value):
-		pack_name = normalize_name(value)
+		pack_name = ImageFrames.normalize_name(value)
 
 @export var stretch := true
 @export var fps : float  = 1.0  # default fps 
@@ -36,10 +36,10 @@ func get_base_frame_count() -> int:
 
 
 func get_all_fps() -> Dictionary:
-	var fps = {}
+	var all_fps = {}
 	for anim in get_animation_names():
-		fps[anim] = get_animation_speed(anim)
-	return fps
+		all_fps[anim] = get_animation_speed(anim)
+	return all_fps
 
 
 func get_fps(animation_name : String) -> float:
@@ -111,18 +111,18 @@ func copy_frames(from_animation : String, to_animation : String) -> void:
 	
 	
 func info() -> Dictionary:
-	var info := {
+	var current_info := {
 		'pack_name' : pack_name,
 		'frames': get_base_frame_count(),
 		'sequences': get_animation_names(),
 		'frame_counts': get_frame_counts(),
 		'fps': get_all_fps()
 	}
-	print(info)
+	print(current_info)
 	for i in get_base_frame_count():
 		if i != get_frame_texture(base_animation_name, i).get_meta(animation_meta_key):
 			printt("index mismatch:", i, get_frame_texture(base_animation_name, i).get_meta(animation_meta_key))
-	return info
+	return current_info
 
 
 func create_frames(image_paths: Array, animation_name : String, loaderFn) -> void:
@@ -218,8 +218,8 @@ func add_sequence(seq_name : String, sequence : PackedInt32Array) -> void:
 		_add_frame(seq_name, i, get_frame_texture(base_animation_name, i))
 
 
-static func normalize_name(str : String) -> StringName:
-	return StringName(str.strip_edges().to_snake_case().validate_node_name())
+static func normalize_name(name : String) -> StringName:
+	return StringName(name.strip_edges().to_snake_case().validate_node_name())
 
 
 static func combine_image_packs(packs : Array[ImageFrames]) -> ImageFrames:
