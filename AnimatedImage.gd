@@ -4,11 +4,11 @@ var base_animation_name : String = "default"
 var compress := true
 @export var pack_name : String = "":
 	get:
-		if not frames: return ""
-		return frames.pack_name
+		if not sprite_frames: return ""
+		return sprite_frames.pack_name
 	set(value):
-		if frames:
-			frames.pack_name = value
+		if sprite_frames:
+			sprite_frames.pack_name = value
 @export var active : bool = false:
 	get:
 		return active
@@ -48,23 +48,23 @@ signal real_frame_changed(frame: int)
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	#if not frames: return
+	#if not sprite_frames: return
 	
 	self.frame_changed.connect(_on_frame_changed)
 	
-	var animations = frames.get_animation_names()
+	var animations = sprite_frames.get_animation_names()
 	if animations.size() == 0:
 		print("No animations!")
 	
 	if base_animation_name not in animations:
 		print("no default animation!")
-	if not frames.has_animation(base_animation_name) or frames.get_frame_count(base_animation_name) == 0:
+	if not sprite_frames.has_animation(base_animation_name) or sprite_frames.get_frame_count(base_animation_name) == 0:
 		print("no default or has no frames!")
 		# try to fix:
 		for anim_name in animations:
-			if frames.get_frame_count(anim_name) > 0:
+			if sprite_frames.get_frame_count(anim_name) > 0:
 				print("recreating new base animation from ", anim_name)
-				frames.copy_frames(anim_name, base_animation_name)
+				sprite_frames.copy_frames(anim_name, base_animation_name)
 				break
 	
 	# set up frame_counts and current_frame
@@ -78,7 +78,7 @@ func _ready():
 		
 		if animation_name not in frame_counts or frame_counts[animation_name] <= 0:
 			# something has gone wrong
-			frame_counts[animation_name] = frames.get_frame_count(animation_name)
+			frame_counts[animation_name] = sprite_frames.get_frame_count(animation_name)
 	
 		if animation_name != base_animation_name:
 			start_anim = animation_name
@@ -99,16 +99,16 @@ func _on_frame_changed():
 	# update current frame
 	if not _requested_animation:
 		current_frame[animation] = frame
-		_current_texture = frames.get_frame_texture(animation, frame)
+		_current_texture = sprite_frames.get_frame_texture(animation, frame)
 		real_frame_changed.emit(frame)
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta):
-	if frames == null or frame_counts[animation] == 0: return
+	if sprite_frames == null or frame_counts[animation] == 0: return
 
-	# slows things down but if iamges are all different sizes this can make them appear more similar
-	if playing and stretch: # per frame
+	# slows things down but if images are all different sizes this can make them appear more similar
+	if is_playing() and stretch: # per frame
 		rescale()
 	
 #	if Input.is_anything_pressed():
@@ -142,12 +142,12 @@ func _unhandled_input(event : InputEvent):
 	# allow when playing or not:
 
 	if event.is_action_pressed("play_toggle"):
-		if playing:
+		if is_playing():
 			pause()
 		else:
 			resume()
 			
-	if not playing:
+	if not is_playing():
 		# allow for frame skip
 		if event.is_action_pressed("skip_forward"):
 			next_frame(1)
@@ -221,13 +221,13 @@ func change_animation_relative(direction : int, layer : int = -1) -> void:
 	
 	
 func _init_animation(animation_name : String) -> void:
-	_anim_fps = frames.get_animation_speed(animation_name)
+	_anim_fps = sprite_frames.get_animation_speed(animation_name)
 	assert(_anim_fps > 0)
-	frame_skip = mini(max_frame_skip, maxi(1, floor(frames.get_frame_count(animation_name) * percent_frames_for_skip))) # % of frames
+	frame_skip = mini(max_frame_skip, maxi(1, floor(sprite_frames.get_frame_count(animation_name) * percent_frames_for_skip))) # % of frames
 	speed = _speeds[animation_name]
 	speed_scale = speed
 	if animation_name not in frame_counts:
-		frame_counts[animation_name] = frames.get_frame_count(animation_name)
+		frame_counts[animation_name] = sprite_frames.get_frame_count(animation_name)
 
 # always changes animation, regardless of current and state
 func _change_animation(requested_animation : String) -> void:
@@ -239,7 +239,7 @@ func _change_animation(requested_animation : String) -> void:
 	_requested_animation = false
 	
 	frame = current_frame[animation] # sets current frame
-	_current_texture = frames.get_frame_texture(animation, frame)
+	_current_texture = sprite_frames.get_frame_texture(animation, frame)
 	
 	if stretch: rescale()
 
@@ -261,13 +261,13 @@ func change_animation(requested_animation : String) -> void:
 
 func info() -> Dictionary:
 	var i : Dictionary
-	if frames:
-		i = frames.info()
+	if sprite_frames:
+		i = sprite_frames.info()
 	return i
 	
 	
 func next_animation(inc : int) -> StringName:
-	var anim_names = frames.get_valid_animation_names()
+	var anim_names = sprite_frames.get_valid_animation_names()
 	var i = anim_names.find(animation)
 	for anim in anim_names: # loop maximum of once
 		i = fposmod(i + inc, anim_names.size())
@@ -284,7 +284,7 @@ func get_frame_duration() -> float:
 
 
 func get_current_frame() -> Texture2D:
-	#return frames.get_frame_texture(animation, frame)
+	#return sprite_frames.get_frame_texture(animation, frame)
 	return _current_texture
 
 
@@ -313,29 +313,28 @@ func next_frame(increment : int = 1) -> void:
 
 
 func pause():
-	if playing:
+	if is_playing():
 		stop()
 		paused = true
 
 
 func resume():
-	if not playing:
+	if not is_playing():
 		play(animation, _backwards)
 		paused = false
 
 
-
-
 func rescale():
-	var viewsize : Vector2 = get_viewport().get_visible_rect().size # Vector2(1920, 1080) # FIXME: get these from project settings? # get_viewport().size
+	var viewsize : Vector2 = get_viewport().get_visible_rect().size # Vector2(1920, 1080) # FIXME: get these from project settings? # get_viewport().sizes
 	if _current_texture:
 		var framesize := _current_texture.get_size()
-		var viewscale : float = min( viewsize.x / framesize.x, viewsize.y / framesize.y)
+		var viewscale : float = min( float(viewsize.x) / float(framesize.x), float(viewsize.y) / float(framesize.y))
 		if not is_equal_approx(viewscale, scale.x):
 			scale = Vector2(viewscale, viewscale)
 			# bug in godot 4 requires offset adjustment?
-			offset = Vector2( viewsize.x / viewscale, viewsize.y / viewscale ) * 0.5
-			#printt(viewsize, framesize, viewscale, scale, offset)
+			offset = Vector2i( viewsize.x / viewscale, viewsize.y / viewscale ) * 0.5
+			offset = Vector2i( 1920 / viewscale, 1080 / viewscale ) * 0.5
+		#printt(viewsize, framesize, viewscale, scale, offset)
 
 
 func skip_frame(direction : float = 0.0, layer : int = -1) -> void:
@@ -343,7 +342,7 @@ func skip_frame(direction : float = 0.0, layer : int = -1) -> void:
 	
 	#printt(_index, "skip_frame", frame_skip, direction)
 	# default to skip 0.3sec or 1 of frames whatever is less, but allow for direction to modulate
-	if playing:
+	if is_playing():
 		next_frame(direction * clampi(0.3 * _anim_fps * speed, 1, frame_skip))
 	else:
 		next_frame(sign(direction))

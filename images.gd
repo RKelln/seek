@@ -1,9 +1,9 @@
 extends Node2D
 
-@export_node_path(Label) var _frameNode
-@export_node_path(Label) var _totalFramesNode
-@export_node_path(Label) var _actualFrameNode
-@export_node_path(Label) var _runningTotalFramesNode
+@export_node_path("Label") var _frameNode
+@export_node_path("Label") var _totalFramesNode
+@export_node_path("Label") var _actualFrameNode
+@export_node_path("Label") var _runningTotalFramesNode
 
 @export var active : bool = false:
 	get:
@@ -36,6 +36,12 @@ var transition_cutoff := 0.042 # 24 fps = 0.042
 var transition_percent := 0.1 # scale transition time such that 0.1 = 10% transition, 90% hold on full image
 var _prevTexture : Texture2D
 var _next_transition_delay : SceneTreeTimer
+
+# ken burns effect
+var movement_amplitude := 1.2
+var movement_frequency := 10.0
+var movement_tween : Tween
+
 
 # alpha
 var opacity_speed := 0.6
@@ -93,6 +99,15 @@ func _ready():
 	controller = preload("res://midi_controller.gd").new()
 	controller.mode = CustomController.Mode.TEST
 	add_child(controller)
+	
+	if movement_frequency >= 0:
+		movement_tween = create_tween().set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE).set_loops()
+		movement_tween.tween_property($CanvasGroup/Camera2D, "zoom", Vector2(movement_amplitude,movement_amplitude), movement_frequency).set_delay(movement_frequency * 0.1)
+		movement_tween.tween_property($CanvasGroup/Camera2D, "zoom", Vector2(1.0,1.0), movement_frequency).set_delay(movement_frequency * 0.1)
+		movement_tween.tween_callback(func(): print("ken burns finished"))
+
+
+
 
 
 func _process(delta : float) -> void:
@@ -155,6 +170,10 @@ func _unhandled_input(event : InputEvent) -> void:
 						cur_img.change_animation(anims[selected_anim])
 		return
 
+# called eery process from the movement_tween that does a sin-like movement
+func _update_movement(value : float) -> void:
+	printt("_update_movement", value)
+
 
 func valid_target(index : int = -1) -> bool:
 	if index < 0 and not active: return false
@@ -211,7 +230,7 @@ func set_transition_duration(duration : float, layer : int = -1) -> void:
 
 
 func set_image_frames(iframes : ImageFrames) -> void:
-	$CanvasGroup/AnimatedSprite2D.frames = iframes
+	$CanvasGroup/AnimatedSprite2D.sprite_frames = iframes
  
 
 func _on_real_frame_changed( frame : int) -> void:
@@ -292,25 +311,25 @@ func _on_real_frame_changed( frame : int) -> void:
 
 
 func get_total_frame_count() -> int:
-	if cur_img == null or cur_img.frames == null: return 0
+	if cur_img == null or cur_img.sprite_frames == null: return 0
 	
 	var count := 0
-	for anim in cur_img.frames.get_animation_names():
-		count += cur_img.frames.get_frame_count(anim)
+	for anim in cur_img.sprite_frames.get_animation_names():
+		count += cur_img.sprite_frames.get_frame_count(anim)
 	return count
 
 
 func get_frame_count(anim_name : String = "") -> int:
-	if cur_img == null or cur_img.frames == null: return 0
+	if cur_img == null or cur_img.sprite_frames == null: return 0
 	
 	if anim_name == "":
 		anim_name = cur_img.animation
 		
-	return cur_img.frames.get_frame_count(anim_name)
+	return cur_img.sprite_frames.get_frame_count(anim_name)
 
 
 func get_image_frames() -> ImageFrames:
-	return cur_img.frames
+	return cur_img.sprite_frames
 
 
 func get_textures(anim_name : String = "") -> Array[Texture2D]:
@@ -336,19 +355,19 @@ func get_sequence_name() -> StringName:
 
 
 func get_sequence(seq_name : String = "") -> PackedInt32Array:
-	return cur_img.frames.get_sequence(seq_name)
+	return cur_img.sprite_frames.get_sequence(seq_name)
 
 
 func update_sequence(seq_name : String, sequence : PackedInt32Array) -> void:
 	cur_img.pause()
-	cur_img.animation = cur_img.frames.base_animation_name # switch away temporarily
-	cur_img.frames.update_frames(seq_name, sequence)
+	cur_img.animation = cur_img.sprite_frames.base_animation_name # switch away temporarily
+	cur_img.sprite_frames.update_frames(seq_name, sequence)
 	cur_img.change_animation(seq_name)
 	restart()
 
 
 func get_valid_animation_names() -> PackedStringArray:
-	return cur_img.frames.get_valid_animation_names()
+	return cur_img.sprite_frames.get_valid_animation_names()
 
 
 func info() -> Dictionary:
