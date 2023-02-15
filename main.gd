@@ -8,7 +8,7 @@ var images : Node
 var help : Window
 var paused := false
 
-var active_layers : Array[int] = Array()
+var active_layers : Array[int] = []
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -31,8 +31,8 @@ func _ready() -> void:
 #		$Stage.add_child(c)
 #		c.active = false
 	
-	images = $Stage.get_child(-1)
-	images.active = true
+	#images = $Stage.get_child(-1)
+	#images.active = true
 	
 	help = %HelpPopup
 	help.close_requested.connect(resume)

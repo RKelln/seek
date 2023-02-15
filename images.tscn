@@ -16,3 +16,7 @@ script = ExtResource("1_4ai3v")
 [node name="PrevImage" type="Sprite2D" parent="CanvasGroup"]
 unique_name_in_owner = true
 offset = Vector2(960, 540)
+
+[node name="Camera2D" type="Camera2D" parent="CanvasGroup"]
+offset = Vector2(960, 540)
+process_callback = 0

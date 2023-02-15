@@ -9,7 +9,7 @@ var texture_loader
 var file_format = "framedata_%s_%d.res"
 var default_save_path = "user://"
 
-var _image_files : Array[String]
+var _image_files : PackedStringArray
 var active_image_pack : ImageFrames # currently loading/selected image pack
 var loaded_image_packs : Array[ImageFrames]
 

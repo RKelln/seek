@@ -30,15 +30,14 @@ formats/zstd/long_distance_matching=true
 window/size/viewport_width=1920
 window/size/viewport_height=1080
 window/stretch/mode="canvas_items"
-window/stretch/scale=1.4
+window/stretch/scale=1.5
 window/size/width=1920
 window/size/height=1080
 
 [editor]
 
 movie_writer/mjpeg_quality=0.8
-movie_writer/movie_file="/home/ryankelln/Documents/Projects/EverythingDances/seek/seek_plants_ai.avi"
-movie_writer/disable_vsync=true
+movie_writer/movie_file="/home/ryankelln/Documents/Projects/Art/PIF_2023/songs/migration/migration_3_test.avi"
 movie_writer/fps=30
 
 [input]
@@ -190,6 +189,7 @@ common/enable_pause_aware_picking=true
 
 [rendering]
 
+textures/vram_compression/import_etc2_astc=true
 environment/defaults/default_clear_color=Color(0, 0, 0, 1)
 threads/thread_model=2
 environment/default_clear_color=Color(0, 0, 0, 1)

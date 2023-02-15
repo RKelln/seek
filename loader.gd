@@ -3,13 +3,13 @@ extends Node
 var images : ImageFrames
 
 var default_image_compression := 0.7
-var default_image_pack := 'user://framedata_laura_164.res'
+var default_image_pack := 'user://framedata_migration_3_480.res'
 var max_image_size := Vector2(1920,1080)
 
 # https://godotengine.org/qa/5175/how-to-get-all-the-files-inside-a-folder
 func get_dir_contents(rootPath: String, extensions : Array = ["png", "jpg", "jpeg", "webp"]) -> Array:
-	var files = Array()
-	var directories = Array()
+	var files = PackedStringArray()
+	var directories = PackedStringArray()
 	var dir = DirAccess.open(rootPath)
 
 	if dir:
@@ -37,7 +37,7 @@ func get_dir_contents(rootPath: String, extensions : Array = ["png", "jpg", "jpe
 #        print("An error occurred when trying to access the path.")
 
 
-func _add_dir_contents(dir: DirAccess, files: Array, directories: Array, extensions: Array) -> void:
+func _add_dir_contents(dir: DirAccess, files: PackedStringArray, directories: PackedStringArray, extensions: Array) -> void:
 	var file_name = dir.get_next()
 
 	# TODO: ensure lowercase extensions
@@ -99,7 +99,7 @@ func load_image(image_path: String, compress : float = default_image_compression
 		image.resize(floor(image_size.x), floor(image_size.y), Image.INTERPOLATE_CUBIC)
 	
 	if not image.is_compressed() and compress > 0:
-		image.compress(Image.COMPRESS_S3TC, Image.COMPRESS_SOURCE_SRGB, compress)
+		image.compress(Image.COMPRESS_S3TC, Image.COMPRESS_SOURCE_SRGB, Image.ASTC_FORMAT_8x8)
 		
 	return image
 

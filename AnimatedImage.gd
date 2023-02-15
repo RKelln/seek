@@ -143,9 +143,9 @@ func _unhandled_input(event : InputEvent):
 
 	if event.is_action_pressed("play_toggle"):
 		if is_playing():
-			pause()
+			_pause()
 		else:
-			resume()
+			_resume()
 			
 	if not is_playing():
 		# allow for frame skip
@@ -311,14 +311,14 @@ func next_frame(increment : int = 1) -> void:
 		increment = -1
 	frame = floor(fposmod(frame + increment, frame_counts[animation]))
 
-
-func pause():
+# TODO: without underscore this overrides the existing pause and needs to be changed
+func _pause():
 	if is_playing():
 		stop()
 		paused = true
 
 
-func resume():
+func _resume():
 	if not is_playing():
 		play(animation, _backwards)
 		paused = false
@@ -372,7 +372,7 @@ func set_speed(normalized_speed : float = 0.0, layer : int = -1) -> void:
 	printt(_index, "set_speed", normalized_speed, speed)
 	
 	speed_scale = speed 
-	if speed > 0:
+	if not is_playing() and speed > 0:
 		play(animation, _backwards)
 
 

@@ -241,7 +241,7 @@ static func combine_image_packs(packs : Array[ImageFrames]) -> ImageFrames:
 
 
 static func load_image_pack(file_path : String) -> ImageFrames:
-	var iframes : ImageFrames = ResourceLoader.load(file_path, "ImageFrames")
+	var iframes : ImageFrames #= ResourceLoader.load(file_path, "ImageFrames")
 	if iframes == null:
 		iframes = ResourceLoader.load(file_path) as ImageFrames
 	if iframes == null:
