@@ -167,22 +167,22 @@ func _unhandled_input(event : InputEvent):
 		return # no other mouse events below
 		
 	# repeatable actions:
-	if event.is_action_pressed("fast_forward", true): # allow echo
+	if event.is_action_pressed("fast_forward", true, true): # allow echo
 		speed_scale = frame_skip * speed
 		play(animation, false)
-	elif event.is_action_pressed("fast_backward", true): # allow echo
+	elif event.is_action_pressed("fast_backward", true, true): # allow echo
 		speed_scale = frame_skip * speed
 		play(animation, true)
 	# non-repeated actions:
-	elif event.is_action_pressed("skip_forward"):
+	elif event.is_action_pressed("skip_forward", true, true):
 		next_frame(frame_skip)
-	elif event.is_action_pressed("skip_backward"):
+	elif event.is_action_pressed("skip_backward", true, true):
 		next_frame(-frame_skip)
-	elif event.is_action_pressed("faster"):
+	elif event.is_action_pressed("faster", true, true):
 		speed *= 1.25
 		print("speed:", speed)
 		speed_scale = speed
-	elif event.is_action_pressed("slower"):
+	elif event.is_action_pressed("slower", true, true):
 		speed /= 1.25
 		print("speed:", speed)
 		speed_scale = speed

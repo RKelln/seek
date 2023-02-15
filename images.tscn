@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://btvxvr36m31xm"]
+[gd_scene load_steps=4 format=3 uid="uid://btvxvr36m31xm"]
 
 [ext_resource type="Script" path="res://AnimatedImage.gd" id="1_4ai3v"]
 [ext_resource type="Script" path="res://images.gd" id="1_bypof"]
+[ext_resource type="PackedScene" uid="uid://c5kyn206tymg" path="res://dynamic_movement.tscn" id="3_ui8t2"]
 
 [node name="Images" type="Node2D"]
 script = ExtResource("1_bypof")
@@ -20,3 +21,30 @@ offset = Vector2(960, 540)
 [node name="Camera2D" type="Camera2D" parent="CanvasGroup"]
 offset = Vector2(960, 540)
 process_callback = 0
+
+[node name="Zoom" parent="CanvasGroup/Camera2D" instance=ExtResource("3_ui8t2")]
+min_val = 1.0
+max_val = 1.2
+ease = -3.31284
+hold = 0.2
+value = 1.0
+frequency_inc_input = &"ken_burns_zoom_inc"
+frequency_dec_input = &"ken_burns_zoom_dec"
+
+[node name="TranslateX" parent="CanvasGroup/Camera2D" instance=ExtResource("3_ui8t2")]
+max_val = 100.0
+ease = -3.0
+hold = 0.2
+fuzz = 1.0
+centered = true
+frequency_inc_input = &"ken_burns_translate_inc"
+frequency_dec_input = &"ken_burns_translate_dec"
+
+[node name="TranslateY" parent="CanvasGroup/Camera2D" instance=ExtResource("3_ui8t2")]
+max_val = 100.0
+ease = -3.0
+hold = 0.2
+fuzz = 1.0
+centered = true
+frequency_inc_input = &"ken_burns_translate_inc"
+frequency_dec_input = &"ken_burns_translate_dec"

@@ -1,0 +1,36 @@
+[gd_scene load_steps=4 format=3 uid="uid://iyexo8q3c4dx"]
+
+[ext_resource type="Texture2D" uid="uid://2lousf3343bk" path="res://seek_icon_v2.png" id="1_vn67o"]
+[ext_resource type="Script" path="res://KenBurnsCamera.gd" id="2_8k8iy"]
+[ext_resource type="PackedScene" uid="uid://c5kyn206tymg" path="res://dynamic_movement.tscn" id="2_x5447"]
+
+[node name="Node2D" type="Sprite2D"]
+texture = ExtResource("1_vn67o")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+script = ExtResource("2_8k8iy")
+
+[node name="DynamicMovement" parent="Camera2D" instance=ExtResource("2_x5447")]
+min_val = 0.5
+max_val = 2.0
+ease = -3.31284
+hold = 0.2
+value = 1.0
+frequency_inc_input = &"ken_burns_zoom_inc"
+frequency_dec_input = &"ken_burns_zoom_dec"
+
+[node name="DynamicMovement2" parent="Camera2D" instance=ExtResource("2_x5447")]
+max_val = 200.0
+hold = 0.2
+fuzz = 1.0
+centered = true
+frequency_inc_input = &"ken_burns_translate_inc"
+frequency_dec_input = &"ken_burns_translate_dec"
+
+[node name="DynamicMovement3" parent="Camera2D" instance=ExtResource("2_x5447")]
+max_val = 100.0
+hold = 0.2
+fuzz = 1.0
+centered = true
+frequency_inc_input = &"ken_burns_translate_inc"
+frequency_dec_input = &"ken_burns_translate_dec"

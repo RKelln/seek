@@ -37,12 +37,6 @@ var transition_percent := 0.1 # scale transition time such that 0.1 = 10% transi
 var _prevTexture : Texture2D
 var _next_transition_delay : SceneTreeTimer
 
-# ken burns effect
-var movement_amplitude := 1.2
-var movement_frequency := 10.0
-var movement_tween : Tween
-
-
 # alpha
 var opacity_speed := 0.6
 
@@ -102,15 +96,6 @@ func _ready():
 		controller.mode = CustomController.Mode.TEST
 		add_child(controller)
 	
-	if movement_frequency >= 0:
-		movement_tween = create_tween().set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE).set_loops()
-		movement_tween.tween_property($CanvasGroup/Camera2D, "zoom", Vector2(movement_amplitude,movement_amplitude), movement_frequency).set_delay(movement_frequency * 0.1)
-		movement_tween.tween_property($CanvasGroup/Camera2D, "zoom", Vector2(1.0,1.0), movement_frequency).set_delay(movement_frequency * 0.1)
-		movement_tween.tween_callback(func(): print("ken burns finished"))
-
-
-
-
 
 func _process(delta : float) -> void:
 	if active:
@@ -122,6 +107,12 @@ func _process(delta : float) -> void:
 		if Input.is_action_pressed("decrease_opacity") and modulate.a > 0:
 			change_opacity(-delta * opacity_speed)
 
+		# camera movement
+		$CanvasGroup/Camera2D.zoom.x = $CanvasGroup/Camera2D/Zoom.process(delta)
+		$CanvasGroup/Camera2D.zoom.y = $CanvasGroup/Camera2D.zoom.x
+		$CanvasGroup/Camera2D.position.x = $CanvasGroup/Camera2D/TranslateX.process(delta)
+		$CanvasGroup/Camera2D.position.x = $CanvasGroup/Camera2D/TranslateY.process(delta)
+		
 
 func _unhandled_input(event : InputEvent) -> void:
 	if not active: return
