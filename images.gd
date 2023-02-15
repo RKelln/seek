@@ -96,9 +96,11 @@ func _ready():
 	_index = get_index()
 	cur_img._index = _index
 	
-	controller = preload("res://midi_controller.gd").new()
-	controller.mode = CustomController.Mode.TEST
-	add_child(controller)
+	# midi and movie maker do not work together
+	if not OS.has_feature("movie"):
+		controller = preload("res://midi_controller.gd").new()
+		controller.mode = CustomController.Mode.TEST
+		add_child(controller)
 	
 	if movement_frequency >= 0:
 		movement_tween = create_tween().set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE).set_loops()
@@ -337,7 +339,7 @@ func get_textures(anim_name : String = "") -> Array[Texture2D]:
 		anim_name = cur_img.animation
 		
 	var sp = get_image_frames()
-	var f = Array()
+	var f : Array[Texture2D] = []
 	for i in get_frame_count():
 		# add sequence number to the frames meta data
 		var t2d = sp.get_frame_texture(anim_name, i)
