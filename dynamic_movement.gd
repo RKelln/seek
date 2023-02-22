@@ -2,12 +2,14 @@ extends Node
 
 const EASE_IN_OUT = -1.6521
 const MAX_FREQUENCY = 10.0
+const MAX_AMPLITUDE = 10.0
+const FREQUENCY_CYCLE = 7.0 # seconds (a 1 second cycle seems really fast)
 
 @export var min_val : float = 0.0
 @export var max_val : float = 1.0
 @export var amplitude : float = 0.0
 @export_range(0.0, MAX_FREQUENCY) var frequency : float = 0.0
-@export_exp_easing var ease : float = EASE_IN_OUT
+@export_exp_easing var easing : float = EASE_IN_OUT
 # seconds to hold at the extremes
 @export_range(0.0, 10.0, 0.1, "or_greater") var hold : float = 0.0 
 # percentage to fuzz the min and max values each cycle
@@ -23,6 +25,11 @@ const MAX_FREQUENCY = 10.0
 @export var frequency_inc_input : StringName
 @export var frequency_dec_input : StringName
 @export var frequency_input_strength := 1.0
+
+@export var amplitude_input : StringName
+@export var amplitude_inc_input : StringName
+@export var amplitude_dec_input : StringName
+@export var amplitude_input_strength := 1.0
 
 var paused := false
 var progress : float = 0
@@ -41,7 +48,7 @@ func _ready():
 func _process(delta : float):
 	if paused: return
 	if self_process and frequency > 0 and amplitude > 0:
-		value = _update_value(value, curr_min, curr_max, amplitude, frequency, ease, delta)
+		value = _update_value(value, curr_min, curr_max, amplitude, frequency, easing, delta)
 	
 	
 func _unhandled_input(event):
@@ -49,16 +56,26 @@ func _unhandled_input(event):
 	
 	if frequency_input != "" and event.is_action_pressed(frequency_input):
 		frequency = event.get_action_strength()
-		
+	if amplitude_input != "" and event.is_action_pressed(amplitude_input):
+		amplitude = event.get_action_strength()
+
 
 func input_poll(delta : float):
 	if frequency_inc_input != "" and Input.is_action_pressed(frequency_inc_input):
 		frequency = clampf(frequency + delta * frequency_input_strength, 0.0, MAX_FREQUENCY)
-		printt("frequency:", frequency)
+		printt(frequency_inc_input, frequency)
 		
 	if frequency_dec_input != "" and Input.is_action_pressed(frequency_dec_input):
 		frequency = clampf(frequency - delta * frequency_input_strength, 0.0, MAX_FREQUENCY)
-		printt("frequency:", frequency)
+		printt(frequency_dec_input, frequency)
+
+	if amplitude_inc_input != "" and Input.is_action_pressed(amplitude_inc_input):
+		amplitude = clampf(amplitude + delta * amplitude_input_strength, 0.0, MAX_AMPLITUDE)
+		printt(amplitude_inc_input, amplitude)
+
+	if amplitude_dec_input != "" and Input.is_action_pressed(amplitude_dec_input):
+		amplitude = clampf(amplitude - delta * amplitude_input_strength, 0.0, MAX_AMPLITUDE)
+		printt(amplitude_dec_input, amplitude)
 
 
 func process(delta : float):
@@ -66,7 +83,7 @@ func process(delta : float):
 	
 	input_poll(delta)
 	if frequency > 0 and amplitude > 0:
-		value = _update_value(value, curr_min, curr_max, amplitude, frequency, ease, delta)
+		value = _update_value(value, curr_min, curr_max, amplitude, frequency, easing, delta)
 
 	return value
 
@@ -105,7 +122,7 @@ func update_max():
 
 
 func _update_value(current : float, minv : float, maxv : float, 
-	amplitude : float, frequency : float, ease : float, delta : float) -> float:
+	_amplitude : float, _frequency : float, _easing : float, delta : float) -> float:
 	
 	if hold > 0.0 and held_duration >= 0.0:
 		held_duration += delta
@@ -115,7 +132,7 @@ func _update_value(current : float, minv : float, maxv : float,
 		else:
 			return current
 
-	progress = progress + frequency * delta * direction
+	progress = progress + _frequency / FREQUENCY_CYCLE * delta * direction
 	if progress <= 0:
 		if hold:
 			progress = 0.0
@@ -132,6 +149,13 @@ func _update_value(current : float, minv : float, maxv : float,
 			progress = 1.0 - (progress - 1.0)
 		direction = -1.0
 		update_min()
-		
-	return lerpf(minv, maxv * amplitude, ease(progress, ease))
+	
+	var dist := (maxv - minv) * _amplitude
+	if dist == 0:
+		return current
+	var v := lerpf(minv, minv + dist, ease(progress, _easing))
+	# don't jump too much
+	if abs(v - current) > abs(current) * 0.1:
+		v = smoothstep(current, v, delta)
+	return v
 	
