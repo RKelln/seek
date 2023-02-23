@@ -158,11 +158,15 @@ func _unhandled_input(event : InputEvent):
 		return
 	
 	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_RIGHT:
-			var w : float = float(get_viewport().get_visible_rect().size.x)
-			var relative_dist = remap(get_viewport().get_mouse_position().x, 0, w, -1.0, 1.0)
-			
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			# no modifier keys pressed
+			if Input.is_key_pressed(KEY_CTRL) or Input.is_key_pressed(KEY_ALT) or Input.is_key_pressed(KEY_SHIFT):
+				return
+			var mpos := get_viewport().get_mouse_position()
+			var viewsize := get_viewport().get_visible_rect().size
+			var relative_dist = remap(mpos.x, 0, float(mpos.x), -1.0, 1.0)
 			change_relative_speed_normalized(relative_dist)
+			get_viewport().set_input_as_handled()
 			#printt(w, get_viewport().get_mouse_position().x, relative_dist, dist)
 		return # no other mouse events below
 		
@@ -170,6 +174,7 @@ func _unhandled_input(event : InputEvent):
 	if event.is_action_pressed("fast_forward", true, true): # allow echo
 		speed_scale = frame_skip * speed
 		play(animation, false)
+		
 	elif event.is_action_pressed("fast_backward", true, true): # allow echo
 		speed_scale = frame_skip * speed
 		play(animation, true)

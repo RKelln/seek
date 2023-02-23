@@ -111,7 +111,7 @@ func _process(delta : float) -> void:
 		$CanvasGroup/Camera2D.zoom.x = $CanvasGroup/Camera2D/Zoom.process(delta)
 		$CanvasGroup/Camera2D.zoom.y = $CanvasGroup/Camera2D.zoom.x
 		$CanvasGroup/Camera2D.position.x = $CanvasGroup/Camera2D/TranslateX.process(delta)
-		$CanvasGroup/Camera2D.position.x = $CanvasGroup/Camera2D/TranslateY.process(delta)
+		$CanvasGroup/Camera2D.position.y = $CanvasGroup/Camera2D/TranslateY.process(delta)
 		
 
 func _unhandled_input(event : InputEvent) -> void:
@@ -129,6 +129,18 @@ func _unhandled_input(event : InputEvent) -> void:
 					set_opacity(event.strength, event.target)
 				"set_transition_duration":
 					set_transition_duration(event.strength, event.target)
+		return
+	
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT and Input.is_key_pressed(KEY_CTRL):
+			var mpos := get_viewport().get_mouse_position()
+			var viewsize := get_viewport().get_visible_rect().size
+			var centered_pos := mpos - (viewsize / 2.0)
+			$CanvasGroup/Camera2D/TranslateX.target = centered_pos.x
+			#$CanvasGroup/Camera2D/TranslateX.set_target(centered_pos.x)
+			$CanvasGroup/Camera2D/TranslateY.target = centered_pos.y
+			#$CanvasGroup/Camera2D/TranslateY.set_target(centered_pos.y)
+			get_viewport().set_input_as_handled()
 		return
 	
 	if event.is_action_pressed("beat_match"):

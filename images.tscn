@@ -37,16 +37,26 @@ amplitude_dec_input = &"ken_burns_zoom_dec"
 
 [node name="TranslateX" parent="CanvasGroup/Camera2D" instance=ExtResource("3_ui8t2")]
 max_val = 100.0
+frequency = 1.0
 hold = 0.2
 fuzz = 1.0
 centered = true
-frequency_inc_input = &"ken_burns_translate_inc"
-frequency_dec_input = &"ken_burns_translate_dec"
+frequency_input = &"ken_burns_translate_freq"
+frequency_inc_input = &"ken_burns_translate_freq_inc"
+frequency_dec_input = &"ken_burns_translate_freq_dec"
+amplitude_input = &"ken_burns_translate"
+amplitude_inc_input = &"ken_burns_translate_inc"
+amplitude_dec_input = &"ken_burns_translate_dec"
 
 [node name="TranslateY" parent="CanvasGroup/Camera2D" instance=ExtResource("3_ui8t2")]
 max_val = 100.0
+frequency = 1.0
 hold = 0.2
 fuzz = 1.0
 centered = true
+frequency_input = &"ken_burns_translate_freq"
 frequency_inc_input = &"ken_burns_translate_inc"
 frequency_dec_input = &"ken_burns_translate_dec"
+amplitude_input = &"ken_burns_translate"
+amplitude_inc_input = &"ken_burns_translate_inc"
+amplitude_dec_input = &"ken_burns_translate_dec"
