@@ -36,6 +36,11 @@ var paused : bool = false
 var frame_counts : Dictionary
 var current_frame : Dictionary
 
+# dictionary of named Sequences
+# Sequences are associated to an animation, either with the same name or the default/base animation
+var sequences : Dictionary = {}
+var current_sequence : StringName
+
 var _backwards := false
 var _anim_fps : float = 0
 var _requested_animation : bool = false # tracks if animation change has been requested
@@ -70,16 +75,7 @@ func _ready():
 	# set up frame_counts and current_frame
 	var start_anim : String
 	for animation_name in animations:
-		if animation_name not in current_frame:
-			current_frame[animation_name] = 0
-			
-		if animation_name not in _speeds:
-			_speeds[animation_name] = 1.0
-		
-		if animation_name not in frame_counts or frame_counts[animation_name] <= 0:
-			# something has gone wrong
-			frame_counts[animation_name] = sprite_frames.get_frame_count(animation_name)
-	
+		_add_animation(animation_name)
 		if animation_name != base_animation_name:
 			start_anim = animation_name
 	
@@ -87,9 +83,7 @@ func _ready():
 	_init_animation(start_anim)
 	_change_animation(start_anim)
 	
-	print("Animations: ", animations)
-	print("Current animation: ", animation)
-	print("Frame count: ", frame_counts[animation])
+	debug_info()
 
 	play(animation)
 	paused = false
@@ -98,8 +92,17 @@ func _ready():
 func _on_frame_changed():
 	# update current frame
 	if not _requested_animation:
-		current_frame[animation] = frame
-		_current_texture = sprite_frames.get_frame_texture(animation, frame)
+		if current_sequence in sequences:
+			# TODO: support _backwards???
+			
+			# some hacky magic here, we don't want to update more than once
+			if sequences[current_sequence].current_value() != frame:
+				current_frame[current_sequence] = sequences[current_sequence].next()
+				frame = current_frame[current_sequence]
+		else:
+			current_frame[animation] = frame
+		#_current_texture = sprite_frames.get_frame_texture(animation, frame)
+		_current_texture = sequences[animation].get_frame_texture(sprite_frames, frame)
 		real_frame_changed.emit(frame)
 
 
@@ -211,7 +214,7 @@ func _unhandled_input(event : InputEvent):
 			stop()
 		else:
 			play(animation, _backwards)
-	
+
 
 func valid_target(index : int = -1) -> bool:
 	if index < 0 and not active: return false
@@ -226,13 +229,38 @@ func change_animation_relative(direction : int, layer : int = -1) -> void:
 	
 	
 func _init_animation(animation_name : String) -> void:
-	_anim_fps = sprite_frames.get_animation_speed(animation_name)
+	if animation_name in sequences:
+		_anim_fps = sprite_frames.get_animation_speed(base_animation_name)
+	else:
+		_anim_fps = sprite_frames.get_animation_speed(animation_name)
 	assert(_anim_fps > 0)
-	frame_skip = mini(max_frame_skip, maxi(1, floor(sprite_frames.get_frame_count(animation_name) * percent_frames_for_skip))) # % of frames
+	
+	frame_skip = mini(max_frame_skip, maxi(1, floor(frame_counts[animation_name] * percent_frames_for_skip))) # % of frames
 	speed = _speeds[animation_name]
 	speed_scale = speed
 	if animation_name not in frame_counts:
 		frame_counts[animation_name] = sprite_frames.get_frame_count(animation_name)
+
+
+func _add_animation(animation_name : String) -> void:
+	if animation_name not in current_frame:
+		current_frame[animation_name] = 0
+		
+	if animation_name not in _speeds:
+		_speeds[animation_name] = 1.0
+	
+	# use base animation frame count as default (to support sequences)
+	var frame_count = sprite_frames.get_frame_count(base_animation_name)
+	if animation_name in sprite_frames.get_animation_names():
+		frame_count =  sprite_frames.get_frame_count(animation_name)
+			
+	if animation_name not in frame_counts or frame_counts[animation_name] <= 0:
+		frame_counts[animation_name] = frame_count
+	
+	if animation_name not in sequences:
+		# TODO: pass in actual frame indices
+		sequences[animation_name] = AnimatedSequence.new(frame_count, animation_name, frame_count)
+
 
 # always changes animation, regardless of current and state
 func _change_animation(requested_animation : String) -> void:
@@ -241,10 +269,13 @@ func _change_animation(requested_animation : String) -> void:
 	# NOTE: when changing animations it signals frame_changed and sets the frame back to the start
 	_requested_animation = true # now that this is set, it won't update current_frame or signal real_frame_changed
 	animation = requested_animation
+	current_sequence = animation
 	_requested_animation = false
 	
-	frame = current_frame[animation] # sets current frame
-	_current_texture = sprite_frames.get_frame_texture(animation, frame)
+	#frame = current_frame[animation] # sets current frame
+	frame = sequences[current_sequence].current_value()
+	#_current_texture = sprite_frames.get_frame_texture(animation, frame)
+	_current_texture = sequences[current_sequence].get_frame_texture(sprite_frames, frame)
 	
 	if stretch: rescale()
 
@@ -270,6 +301,14 @@ func info() -> Dictionary:
 		i = sprite_frames.info()
 	return i
 	
+
+func debug_info():
+	print(info())
+	print("Animations: ", sprite_frames.get_animation_names())
+	# TODO: print("Sequences: ", get_valid_sequence_names())
+	print("Current sequence: ", current_sequence)
+	print("Frame count: ", frame_counts[current_sequence])
+	
 	
 func next_animation(inc : int) -> StringName:
 	var anim_names = sprite_frames.get_valid_animation_names()
@@ -293,6 +332,10 @@ func get_current_frame() -> Texture2D:
 	return _current_texture
 
 
+func get_texture(seq_name : String = "", index : int = -1) -> Texture2D:
+	return sequences[seq_name].get_frame_texture(index) 
+
+
 func get_rect() -> Rect2:
 	var size = get_current_frame().get_size()
 	var pos = offset
@@ -314,7 +357,9 @@ func next_frame(increment : int = 1) -> void:
 		increment = 1
 	elif increment < 0 and increment > -1:
 		increment = -1
-	frame = floor(fposmod(frame + increment, frame_counts[animation]))
+	#frame = floor(fposmod(frame + increment, frame_counts[animation]))
+	frame = sequences[animation].next(increment)
+
 
 # TODO: without underscore this overrides the existing pause and needs to be changed
 func _pause():

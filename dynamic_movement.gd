@@ -200,10 +200,7 @@ func _update_value(current : float, minv : float, maxv : float,
 		printt(name, minv, maxv, _amplitude)
 		return current
 	var v := lerpf(minv, minv + dist, ease(progress, _easing))
-	# don't jump too much in one step
-	#if abs(v - current) > abs(current) * 0.1:
-	#	v = smoothstep(current, v, delta)
-	
+
 	# once we arrive at target set to INF
 	if target != INF and is_equal_approx(abs(v - target), 0.0):
 		target = INF
