@@ -1,28 +1,27 @@
-extends Resource
+class_name Sequence extends Resource
 
 # Simple Sequence
 
-# A sequence that stores ints in order. Each int also has a int flag that can be used for masking.
-
-signal cycle_completed
+# A sequence that stores ints in order. Each int also has a bitflag that can be used for masking.
 
 var values := PackedInt32Array()
+var flags := PackedInt64Array()
 var filtered_values : PackedInt32Array 
-var flags := PackedByteArray()
 
 enum BIT_FLAGS { 
 	NONE = 0, 
-	F1 = 0b00000001,
-	F2 = 0b00000010,
-	F3 = 0b00000100,
-	F4 = 0b00001000,
-	F5 = 0b00010000,
-	F6 = 0b00100000,
-	F7 = 0b01000000,
-	F8 = 0b10000000,
+	F1 = 1,
+	F2 = 1 << 1,
+	F3 = 1 << 2,
+	F4 = 1 << 3,
+	F5 = 1 << 4,
+	F6 = 1 << 5,
+	F7 = 1 << 6,
+	F8 = 1 << 7,
 }
+const ALL_FLAGS = 9223372036854775807 # max int 64
 
-var current_index := -1
+var current_index := 0
 var active_flags := 0
 
 enum LOOP_TYPE {NONE, LOOP, PINGPONG}
@@ -150,8 +149,14 @@ class PingPongIterator:
 		return current
 
 
-func _init() -> void:
-	loop = LOOP_TYPE.LOOP
+func _init(initial_values : Variant, loop_type := LOOP_TYPE.LOOP) -> void:
+	assert(initial_values is int || initial_values is Array)
+	loop = loop_type
+	
+	if initial_values is int:
+		values = range(initial_values)
+	elif initial_values is Array:
+		values = initial_values
 
 
 func value(i : int = -1) -> int:
@@ -159,15 +164,20 @@ func value(i : int = -1) -> int:
 	return values[i]
 
 
+func current_value() -> int:
+	assert(current_index >= 0)
+	return values[current_index]
+
+
 func flag(i : int = -1) -> int:
 	if i == -1: i = current_index
-	return flags.decode_u8(i)
+	return flags[i]
 
 
-func filter_values(bitmask := 0b0):
+func filter_values(bitmask : int = 0):
 	filtered_values.clear()
 	for i in values.size():
-		if bitmask & flags.decode_u8(i) == bitmask:
+		if bitmask & flags[i] == bitmask:
 			filtered_values.append(values[i])
 
 
@@ -175,6 +185,14 @@ func get_values() -> PackedInt32Array:
 	if active_flags > 0:
 		return filtered_values
 	return values
+
+
+func max_value() -> int:
+	return Array(values).max()
+
+
+func min_value() -> int:
+	return Array(values).min()
 
 
 func next(inc : int = 1) -> int:
