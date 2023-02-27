@@ -140,8 +140,8 @@ func update_min() -> void:
 			curr_min = min_val + randf() * fuzz * abs(max_val - min_val)
 		else:
 			curr_min = min_val
-	if curr_min == curr_max:
-		print(name, "min", curr_min, curr_max, min_val, max_val)
+#	if curr_min == curr_max:
+#		print(name, "min", curr_min, curr_max, min_val, max_val)
 
 
 func update_max() -> void:
@@ -159,8 +159,8 @@ func update_max() -> void:
 		curr_max = min_val + dir * (max_val * 0.5) * fuzz_scaler
 	else:
 		curr_max = max_val * fuzz_scaler
-	if curr_min == curr_max:
-		print(name, "max", curr_min, curr_max, min_val, max_val)
+#	if curr_min == curr_max:
+#		print(name, "max", curr_min, curr_max, min_val, max_val)
 
 
 func _update_value(current : float, minv : float, maxv : float, 
@@ -197,14 +197,14 @@ func _update_value(current : float, minv : float, maxv : float,
 		maxv = (1.0 - delta) * maxv + delta * target
 	var dist := (maxv - minv) * _amplitude
 	if dist == 0:
-		printt(name, minv, maxv, _amplitude)
+		#printt(name, minv, maxv, _amplitude)
 		return current
 	var v := lerpf(minv, minv + dist, ease(progress, _easing))
 
 	# once we arrive at target set to INF
 	if target != INF and is_equal_approx(abs(v - target), 0.0):
 		target = INF
-	if int(snappedf(progress, 0.01) * 100) % 25 == 0:
-		printt(name, snappedf(progress, 0.01), v, minv, maxv, target, abs(v - target))
+#	if int(snappedf(progress, 0.01) * 100) % 25 == 0:
+#		printt(name, snappedf(progress, 0.01), v, minv, maxv, target, abs(v - target))
 	return v
 	
