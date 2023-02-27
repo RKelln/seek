@@ -47,7 +47,12 @@ var _requested_animation : bool = false # tracks if animation change has been re
 var _current_texture : Texture2D # reference to current texture
 var _index : int
 var _speeds : Dictionary # stores current speeds for each animation
+var _tag_keys_pressed : Dictionary = {} # "key": bool where True is pressed
 
+var listening_for_tags := false
+var tag_key_map : Dictionary
+var _keycode_to_tag : Dictionary = {}
+var _flags_to_tag : Dictionary = {}
 
 signal real_frame_changed(frame: int)
 
@@ -83,6 +88,32 @@ func _ready():
 	_init_animation(start_anim)
 	_change_animation(start_anim)
 	
+#	var test = {}
+#	test[StringName("a")] = 0
+#	test[&"b"] = 1
+#	for k in test:
+#		prints(k, typeof(k), test[k])
+	
+	# test tags
+	var tag_data := Loader.load_tag_file("user://migration_tags.txt")
+	if tag_data:
+		var tags : Dictionary = tag_data[0]
+		var flags : PackedInt64Array = tag_data[1]
+		tag_key_map = tag_data[2]
+		print(tags, tag_key_map)
+		sequences[start_anim].flags = flags
+		#sequences[start_anim].active_flags = 4096 | 8192
+		# set up mapping for keycodes
+		var keys := tag_key_map.keys()
+		for tag_name in keys:
+			var keycode := OS.find_keycode_from_string(tag_key_map[tag_name])
+			# add key string to key code mapping
+			_keycode_to_tag[keycode] = tag_name
+			# add key code to flags mapping
+			tag_key_map[keycode] = tags[tag_name]
+			# add flag to tag
+			_flags_to_tag[tags[tag_name]] = tag_name
+				
 	debug_info()
 
 	play(animation)
@@ -103,6 +134,8 @@ func _on_frame_changed():
 			current_frame[animation] = frame
 		#_current_texture = sprite_frames.get_frame_texture(animation, frame)
 		_current_texture = sequences[animation].get_frame_texture(sprite_frames, frame)
+		if sequences[current_sequence].active_flags > 0:
+			prints(frame, flags_to_tags(sequences[current_sequence].flag(frame), sequences[current_sequence].active_flags))
 		real_frame_changed.emit(frame)
 
 
@@ -144,7 +177,7 @@ func _unhandled_input(event : InputEvent):
 
 	# allow when playing or not:
 
-	if event.is_action_pressed("play_toggle"):
+	if event.is_action_pressed("play_toggle", false, true):
 		if is_playing():
 			_pause()
 		else:
@@ -152,9 +185,9 @@ func _unhandled_input(event : InputEvent):
 			
 	if not is_playing():
 		# allow for frame skip
-		if event.is_action_pressed("skip_forward"):
+		if event.is_action_pressed("skip_forward", true, true):
 			next_frame(1)
-		elif event.is_action_pressed("skip_backward"):
+		elif event.is_action_pressed("skip_backward", true, true):
 			next_frame(-1)
 	
 		# other input requires scenes to be playing:
@@ -172,7 +205,43 @@ func _unhandled_input(event : InputEvent):
 			get_viewport().set_input_as_handled()
 			#printt(w, get_viewport().get_mouse_position().x, relative_dist, dist)
 		return # no other mouse events below
-		
+	
+	# handle tags:
+	# activate tags for all keys that were pressed while shift was held
+#	if Input.is_physical_key_pressed(KEY_SHIFT):
+#		listening_for_tags = true
+#		print("shift held")
+#	else:
+#		listening_for_tags = false
+#		print("shift released")
+	
+	if event is InputEventKey:
+		if event.keycode == KEY_SHIFT:
+			if event.pressed:
+				listening_for_tags = true
+			else:
+				listening_for_tags = false
+				# activate tags
+				var flags := 0
+				if _tag_keys_pressed.size() > 0:
+					for keycode in _tag_keys_pressed:
+						if _tag_keys_pressed[keycode]:
+							_tag_keys_pressed[keycode] = false
+							flags |= tag_key_map[keycode]
+					_tag_keys_pressed.clear()
+					prints("activating tags", flags_to_tags(flags))
+					sequences[current_sequence].active_flags = flags
+			return
+		elif event.shift_pressed: # shift is held
+			if event.pressed:
+				if event.keycode in tag_key_map:
+					_tag_keys_pressed[event.keycode] = true
+					prints("selecting tag", event.keycode)
+					get_viewport().set_input_as_handled()
+			return
+			
+	# no shift modifier:
+	
 	# repeatable actions:
 	if event.is_action_pressed("fast_forward", true, true): # allow echo
 		speed_scale = frame_skip * speed
@@ -194,20 +263,20 @@ func _unhandled_input(event : InputEvent):
 		speed /= 1.25
 		print("speed:", speed)
 		speed_scale = speed
-	elif event.is_action_pressed("reverse"):
+	elif event.is_action_pressed("reverse", false, true):
 		reverse()
-	elif event.is_action_pressed("next_animation"):
+	elif event.is_action_pressed("next_animation", false, true):
 		change_animation(next_animation(1))
-	elif event.is_action_pressed("speed_reset"):
+	elif event.is_action_pressed("speed_reset", false, true):
 		speed = 1.0
 		print("speed:", speed)
 		speed_scale = speed
-	elif event.is_action_pressed("random"):
+	elif event.is_action_pressed("random", false, true):
 		frame = randi() % frame_counts[animation]
 
 	# on release
-	elif (event.is_action_released("fast_forward")
-		or event.is_action_released("fast_backward")):
+	elif (event.is_action_released("fast_forward", true)
+		or event.is_action_released("fast_backward", true)):
 		# resume normal play
 		speed_scale = speed
 		if paused:
@@ -215,6 +284,21 @@ func _unhandled_input(event : InputEvent):
 		else:
 			play(animation, _backwards)
 
+# SLOW! Only for debugging
+func flags_to_tags(flags : int, active_flags : int = 0) -> String:
+	var tags = []
+	for flag in _flags_to_tag:
+		if flags & flag != 0:
+			var t = _flags_to_tag[flag]
+			if flag & active_flags != 0:
+				t = t.to_upper()
+			tags.append(t)
+	tags.sort()
+	var s := ""
+	for t in tags:
+		s += t + ", "
+	return s.trim_suffix(", ")
+	
 
 func valid_target(index : int = -1) -> bool:
 	if index < 0 and not active: return false

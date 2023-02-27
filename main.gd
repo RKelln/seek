@@ -43,9 +43,10 @@ func _ready() -> void:
 
 	#Controller.mode = Controller.Mode.SKIP  # uncomment to turn on controller
 
+	
 
 func _input(event : InputEvent) -> void:
-	if event.is_action_released('help'):
+	if event.is_action_released('help', true):
 		# FIXME: popup has no variable that works for determining if it is active!
 		#        This is because the esc key and clicking outside the popup by default close it
 		# FIXME: help is a regular window, not popup but is marked as a popup, and needs its own script
@@ -57,7 +58,7 @@ func _input(event : InputEvent) -> void:
 			pause() 
 			help.popup()
 		
-	if event.is_action_released("image_grid"):
+	if event.is_action_released("image_grid", true):
 		if %ImageGridControl.visible:
 			%ImageGridControl.visible = false
 			# update sequence with changes from image grid
@@ -75,7 +76,7 @@ func _input(event : InputEvent) -> void:
 			%ImageGridControl.visible = true
 			%ImageGridControl.set_center(images.get_current_frame_index())
 
-	if event.is_action_released("duplicate_layer"):
+	if event.is_action_released("duplicate_layer", true):
 		if $Stage.get_child_count() >= 3: return
 		printt("duplicating layer")
 		var orig = $Stage.get_child(get_active_layer()) # TODO: get active
@@ -87,14 +88,14 @@ func _input(event : InputEvent) -> void:
 		$Stage.add_child(n)
 		n.active = true
 		
-	if event.is_action_released("fullscreen_toggle"):
+	if event.is_action_released("fullscreen_toggle", true):
 		if get_tree().get_root().mode == Window.MODE_FULLSCREEN:
 			get_tree().get_root().mode = Window.MODE_WINDOWED
 		else:
 			get_tree().get_root().mode = Window.MODE_FULLSCREEN
 
 
-	if event.is_action_released("save"):
+	if event.is_action_released("save", true):
 		%SavePackFileDialog.popup()
 
 
@@ -114,7 +115,7 @@ func _input(event : InputEvent) -> void:
 						active_layers.append(layer)
 	
 			# release: anything not in active_layers gets turned off
-			# once all layer eys are release
+			# once all layer keys are released
 			if not event.pressed: 
 				if Input.is_key_pressed(KEY_KP_1) or Input.is_key_pressed(KEY_KP_2) or Input.is_key_pressed(KEY_KP_3):
 					return

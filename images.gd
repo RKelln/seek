@@ -143,17 +143,17 @@ func _unhandled_input(event : InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		return
 	
-	if event.is_action_pressed("beat_match"):
+	if event.is_action_pressed("beat_match", false, true):
 		beat_match()
-	elif event.is_action_pressed("next_animation"):
+	elif event.is_action_pressed("next_animation", false, true):
 		change_animation(1)
-	elif event.is_action_pressed("fade_less"):
+	elif event.is_action_pressed("fade_less", true, true):
 		change_transition_duration(-0.05)
-	elif event.is_action_pressed("fade_more"):
+	elif event.is_action_pressed("fade_more", true, true):
 		change_transition_duration(0.05)
-	elif event.is_action_pressed("increase_opacity") and modulate.a < 1.0:
+	elif event.is_action_pressed("increase_opacity", true, true) and modulate.a < 1.0:
 		change_opacity(0.1 * opacity_speed)
-	elif event.is_action_pressed("decrease_opacity") and modulate.a > 0:
+	elif event.is_action_pressed("decrease_opacity", true, true) and modulate.a > 0:
 		change_opacity(-0.1 * opacity_speed)
 		
 	# handle switching packs using keys
@@ -242,14 +242,14 @@ func _on_real_frame_changed( frame : int) -> void:
 	#printt("_on_real_frame_changed", frame, get_current_frame_index(), cur_img, prev_img)
 	
 	# update GUI
-	if gui:
-		_frameNode.text = str(cur_img.frame)
-		if cur_img.animation == cur_img.custom_animation:
-			_actualFrameNode.text = str(cur_img.current_sequence[cur_img.frame])
-		else:
-			_actualFrameNode.text = str(cur_img.frame)
-		_runningTotalFramesNode.text = str( _runningTotalFramesNode.text.to_int() + 1)
-		_totalFramesNode.text = str(cur_img.frame_counts[cur_img.animation])
+#	if gui:
+#		_frameNode.text = str(cur_img.frame)
+#		if cur_img.animation == cur_img.custom_animation:
+#			_actualFrameNode.text = str(cur_img.current_sequence[cur_img.frame])
+#		else:
+#			_actualFrameNode.text = str(cur_img.frame)
+#		_runningTotalFramesNode.text = str( _runningTotalFramesNode.text.to_int() + 1)
+#		_totalFramesNode.text = str(cur_img.frame_counts[cur_img.animation])
 	
 	# update crossfade
 	# https://stackoverflow.com/questions/68765045/tween-the-texture-on-a-texturebutton-texturerect-fade-out-image1-while-simult

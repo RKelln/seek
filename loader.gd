@@ -66,8 +66,64 @@ func load_sequence_file(filename) -> PackedInt32Array:
 	for line in _load_text_file(filename):
 		data.append(line.to_int())
 	return data
+
+
+func load_tag_file(filename : String) -> Array:
+	var tags = {}
+	var tag_data = PackedInt64Array()
+	var tag_key_map = {}
 	
-	
+	for line in _load_text_file(filename):
+		line = line.strip_edges()
+		if line.is_empty() or line.left(1) == "#":
+			continue
+		var tag_strings := line.split(",")
+		if tag_strings.size() == 0:
+			continue
+		var tag_flags := 0
+		var tag_keys
+		for t in tag_strings:
+			t = t.strip_edges().to_lower()
+			if ":" in t:
+				# this is a key map directive assigning a tag to a particular key
+				var key_map := t.split(":")
+				tag_key_map[key_map[0].strip_edges()] = key_map[1].strip_edges() if key_map.size() == 2 else ""
+				continue
+			
+			# process tags
+			if t not in tags:
+				tags[t] = 1 << tags.size() # bitflag
+				if t not in tag_key_map:
+					# assign default key
+					var default := ""
+					var existing := tag_key_map.values()
+					for i in t.length():
+						# prefer consonants if not first letter
+						if t[i] not in existing:
+							if i == 0:
+								default = t[i]
+								break
+							elif i > 0 and t[i] not in "aeiouy":
+								default = t[i]
+								break
+					tag_key_map[t] = default
+			tag_flags |= tags[t]
+		if ":" not in line:
+			prints(tag_data.size(), tag_strings, tag_flags)
+			tag_data.append(tag_flags)
+		
+	# fix key maps as best we can
+	for tag in tag_key_map:
+		if tag_key_map[tag] == "":
+			var existing := tag_key_map.values()
+			for i in range(97,123): # a to z
+				if String.chr(i) not in existing:
+					tag_key_map[tag] = String.chr(i)
+					break
+
+	return [tags, tag_data, tag_key_map]
+
+
 func _load_text_file(filename) -> PackedStringArray:
 	var file = FileAccess.open(filename, FileAccess.READ)
 	if file:
