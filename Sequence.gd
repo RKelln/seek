@@ -6,7 +6,8 @@ class_name Sequence extends Resource
 
 var values := PackedInt32Array()
 var flags := PackedInt64Array()
-var filtered_values : PackedInt32Array 
+var filtered_indices : Array[int]
+var current_f_index : int
 
 enum BIT_FLAGS { 
 	NONE = 0, 
@@ -21,132 +22,24 @@ enum BIT_FLAGS {
 }
 const ALL_FLAGS = 9223372036854775807 # max int 64
 
-var current_index := 0
-var active_flags := 0
+var current_index : int = 0:
+	get:
+		return current_index
+	set(value):
+		current_index = clampi(value, 0, values.size() - 1)
+		
+var active_flags : int = 0: 
+	get:
+		return active_flags
+	set(value):
+		active_flags = value
+		if active_flags > 0:
+			filter_values(active_flags)
+
 
 enum LOOP_TYPE {NONE, LOOP, PINGPONG}
 var loop := LOOP_TYPE.LOOP
 var _direction : int = 1
-
-class ForwardIterator:
-	var start : int
-	var current : int
-	var end : int
-
-	func _init(start, stop):
-		self.start = start
-		self.current = start
-		self.end = stop
-
-	func finished():
-		return current >= end
-
-	func reset():
-		current = start
-		
-	func next():
-		if finished():
-			return end 
-		else:
-			_iter_next
-
-	func _iter_init(arg):
-		reset()
-		return not finished()
-
-	func _iter_next(arg):
-		current += 1
-		return not finished()
-
-	func _iter_get(arg):
-		return current
-
-
-class LoopIterator:
-	var start : int
-	var current : int
-	var size : int
-	var looped : bool
-
-	func _init(start : int, size : int):
-		self.start = start
-		self.current = start
-		self.size = size
-		self.looped = false
-
-	func finished():
-		return looped && current == start
-
-	func reset():
-		current = start
-		looped = false
-		
-	func _iter_init(arg):
-		reset()
-		return not finished()
-
-	func _iter_next(arg):
-		current += 1
-		if current >= size:
-			looped = true
-			current = 0
-		return not finished()
-
-	func _iter_get(arg):
-		return current
-
-
-class PingPongIterator:
-	var start
-	var end
-	var current
-	var size
-	var complete_cycle
-	var dir
-	var start_dir
-
-	func _init(start : int, size : int, dir : int = 1):
-		self.start = start
-		self.current = start
-		self.size = size
-		self.complete_cycle = false
-		self.start_dir = dir
-		self.dir = dir
-
-	func finished():
-		return complete_cycle && current == end
-
-	func reset():
-		current = start
-		dir = start_dir
-		# if we start at the beginning or end, then no pingpong
-		# only 1 time through (i.e. see every index at least once)
-		if current == 0:
-			end = size - 1
-			complete_cycle = true
-		elif current == size -1:
-			end = 0
-			complete_cycle = true
-		else:
-			end = start
-			complete_cycle = false
-
-	func _iter_init(arg):
-		reset()
-		return not finished()
-
-	func _iter_next(arg):
-		if current <= 0:
-			dir = 1
-			complete_cycle = true
-		elif current >= size - 1:
-			dir = -1
-			complete_cycle = true
-		current += dir
-		return not finished()
-
-	func _iter_get(arg):
-		return current
 
 
 func _init(initial_values : Variant, loop_type := LOOP_TYPE.LOOP) -> void:
@@ -174,16 +67,25 @@ func flag(i : int = -1) -> int:
 	return flags[i]
 
 
-func filter_values(bitmask : int = 0):
-	filtered_values.clear()
+func filter_values(bitmask : int = 0) -> void:
+	filtered_indices.clear()
+	current_f_index = -1  # represents that the current index may not be part of the filtered set
 	for i in values.size():
 		if bitmask & flags[i] == bitmask:
-			filtered_values.append(values[i])
+			filtered_indices.append(i)
+			# retain the current index if possible
+			# TODO: optimize?
+			if i <= current_index:
+				current_f_index = filtered_indices.size() - 1
+
+
+func get_filtered_values() -> PackedInt32Array:
+	return filtered_indices.map(func(i): return values[i])
 
 
 func get_values() -> PackedInt32Array:
 	if active_flags > 0:
-		return filtered_values
+		return get_filtered_values()
 	return values
 
 
@@ -196,37 +98,41 @@ func min_value() -> int:
 
 
 func next(inc : int = 1) -> int:
-	var v := get_values()
-
-	if inc > 0 and v.size() > 1:
+	var i : int 
+	var size : int
+	if active_flags == 0:
+		i = current_index
+		size = values.size()
+	else:
+		i = current_f_index
+		size = filtered_indices.size()
+	
+	# edge case, start with the first
+	# (typically this is only when current_index isn't part of the filtered set)
+	if i < 0: i = 0
+	
+	if inc != 0 and size > 1:
 		match loop:
 			LOOP_TYPE.LOOP:
-				current_index = (current_index + (_direction * inc)) % v.size()
+				i = (i + (_direction * inc)) % size
 			LOOP_TYPE.NONE:
-				current_index += _direction * inc
+				i += _direction * inc
 			LOOP_TYPE.PINGPONG:
 				var steps : int = abs(inc)
 				while steps > 0:
 					steps -= 1
-					current_index += _direction
-					if current_index < 0:
+					i += _direction * sign(inc)
+					if i < 0:
 						_direction = -_direction
-						current_index = 1 # one from start
-					elif current_index >= v.size():
+						i = 1 # one from start
+					elif i >= size:
 						_direction = -_direction
-						current_index = v.size() - 2 # one from end
+						i = size - 2 # one from end
 	
-	current_index = clampi(current_index, 0, v.size() - 1)
-	
-	return v[current_index]
+		if active_flags == 0:
+			current_index = i
+		else:
+			current_f_index = i
+			current_index = filtered_indices[current_f_index]
 
-
-func get_iterator(type : LOOP_TYPE):
-	match loop:
-		LOOP_TYPE.LOOP:
-			return LoopIterator.new(current_index, values.size())
-		LOOP_TYPE.NONE:
-			return ForwardIterator.new(current_index, values.size())
-		LOOP_TYPE.PINGPONG:
-			return PingPongIterator.new(current_index, values.size())
-
+	return values[current_index]
