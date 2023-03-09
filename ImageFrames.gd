@@ -1,9 +1,10 @@
-extends SpriteFrames
-
-class_name ImageFrames
+class_name ImageFrames extends SpriteFrames
 
 const base_animation_name : StringName = "default"
 const animation_meta_key : StringName = "animation_index"
+const flags_meta_key : StringName = "frame_flags"
+
+var version := "1.0"
 
 @export var compress := true
 @export var pack_name : String = "":
@@ -15,7 +16,14 @@ const animation_meta_key : StringName = "animation_index"
 @export var stretch := true
 @export var fps : float  = 1.0  # default fps 
 
-var version := "1.0"
+# shared by all sequences
+var tags : Dictionary = {} : set  = set_tags
+var flags : PackedInt64Array = PackedInt64Array() : set = set_flags
+var mapping : TagFlagKeyMap : set = set_mapping
+var neighbours : Array[Sequence] : set = set_neighbours
+
+var sequences : Dictionary = {}
+
 
 func get_total_frame_count() -> int:
 	var count := 0
@@ -158,15 +166,20 @@ func _create_animation(animation_name : String, anim_fps : float = fps):
 
 
 # NOTE: i is the index of the base animation
-func _add_frame(animation_name : String, i : int, tex : Texture2D ) -> void:
+func _add_frame(animation_name : String, i : int, tex : Texture2D, flags : int = 0 ) -> void:
 	assert(tex != null)
 	# add index to meta if animation is base
 	if animation_name == base_animation_name:
 		tex.set_meta(animation_meta_key, i)
+		#tex.set_meta(flags_meta_key)
 	elif i >= get_frame_count(base_animation_name):
 		# ensure that it is added the base animation
 		add_frame(base_animation_name, tex)
 		tex.set_meta(animation_meta_key, i)
+			
+	if tex.get_meta(flags_meta_key) == null:
+		tex.set_meta(flags_meta_key, flags)
+
 	add_frame(animation_name, tex) # add to end of animation
 
 
@@ -181,8 +194,8 @@ func save(file_path : String) -> int:
 	print("Saving time (sec): ", (Time.get_ticks_msec() - start) / 1000.0 )
 	return result
 
-
-func get_sequence(seq_name : String = base_animation_name) -> PackedInt32Array:
+# FIXME: update to new sequence format
+func get_sequence_old(seq_name : String = base_animation_name) -> PackedInt32Array:
 	if seq_name == "":
 		seq_name = base_animation_name
 
@@ -200,22 +213,51 @@ func get_sequence(seq_name : String = base_animation_name) -> PackedInt32Array:
 	return seq
 
 
-func add_sequence(seq_name : String, sequence : PackedInt32Array) -> void:
+func get_sequence(seq_name : String = base_animation_name) -> Sequence:
+	return 
+
+
+func add_sequence(seq_name : String, sequence : Sequence) -> void:
 	# adds an new animation given frame indexs of the default an imation
 	if seq_name in get_animation_names():
 		printt("ImageFrames already has animation:", seq_name)
 		return
 	assert(base_animation_name in get_animation_names())
-	assert(Array(sequence).max() < get_base_frame_count())
+	assert(sequence.max_value() < get_base_frame_count())
 	
 	if sequence.size() != get_base_frame_count():
 		printt("Warning sequence size", sequence.size(), "doesn't match number of base animation frames", get_base_frame_count())
 	
 	_create_animation(seq_name)
 	
-	#printt("add_sequence", seq_name, sequence)
-	for i in sequence:
+	for i in sequence.values:
 		_add_frame(seq_name, i, get_frame_texture(base_animation_name, i))
+
+	sequences[seq_name] = AnimatedSequence.from_Sequence(sequence, seq_name)
+
+
+func set_tags(t : Dictionary):
+	tags = t
+
+func set_flags(f : PackedInt64Array):
+	flags = f
+	for s in sequences:
+		sequences[s].flags = flags
+
+func set_mapping(m : TagFlagKeyMap):
+	mapping = m
+	for s in sequences:
+		sequences[s].mapping = mapping
+
+func set_neighbours(n : Array[Sequence]):
+	neighbours = n
+	for s in sequences:
+		if sequences[s] is AnimatedMultiSequence:
+			sequences[s].neighbours = n
+		elif sequences[s] is AnimatedSequence:
+			sequences[s] = AnimatedMultiSequence.from_AnimatedSequence(sequences[s], n)
+		else:
+			assert(false, "Invalid sequence type for sequence: %s" % s)
 
 
 static func normalize_name(name : String) -> StringName:

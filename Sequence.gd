@@ -34,8 +34,9 @@ enum LoopType {NONE, LOOP, PINGPONG}
 var loop := LoopType.LOOP
 var _direction : int = 1
 
-## Debugging: given a flag what is the tag name
-var _flags_to_tag : Dictionary = {}
+## Record tag information and mapping to flags
+## See: Loader.load_tag_file()
+var mapping : TagFlagKeyMap
 
 
 func _init(initial_values : Variant, flags : Variant = [], loop_type := LoopType.LOOP) -> void:
@@ -49,6 +50,10 @@ func _init(initial_values : Variant, flags : Variant = [], loop_type := LoopType
 	
 	set_flags(flags)
 
+
+func set_mapping(mapping : TagFlagKeyMap) -> void:
+	self.mapping = mapping
+	
 
 func value(i : int = -1) -> int:
 	if i == -1: i = current_index
@@ -195,21 +200,3 @@ func next(inc : int = 1) -> int:
 #			current_index = filtered_indices[current_f_index]
 
 	return values[current_index]
-	
-	
-# SLOW! Only for debugging
-func tags() -> String:
-	if flags.size() == 0 or _flags_to_tag.size() == 0: return ""
-	
-	var tags = []
-	for flag in _flags_to_tag:
-		if flags[current_index] & flag != 0:
-			var t = _flags_to_tag[flag]
-			if flag & active_flags != 0:
-				t = t.to_upper()
-			tags.append(t)
-	tags.sort()
-	var s := ""
-	for t in tags:
-		s += t + ", "
-	return s.trim_suffix(", ")

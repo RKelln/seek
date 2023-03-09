@@ -32,6 +32,12 @@ func _ready() -> void:
 	%LoadSequenceButton.pressed.connect(func (): $SequenceFileDialog.popup_centered_ratio(popup_size_ratio) )
 	$SequenceFileDialog.file_selected.connect(_on_sequence_file_dialog_file_selected)
 
+	%LoadTagsButton.pressed.connect(func (): $TagsFileDialog.popup_centered_ratio(popup_size_ratio) )
+	$TagsFileDialog.file_selected.connect(_on_tags_file_dialog_file_selected)
+	
+	%LoadNeighboursButton.pressed.connect(func (): $NeighboursFileDialog.popup_centered_ratio(popup_size_ratio) )
+	$NeighboursFileDialog.file_selected.connect(_on_neighbours_file_dialog_file_selected)
+
 	%StartButton.pressed.connect(_on_start_button_pressed)
 	
 	
@@ -62,6 +68,8 @@ func images_finished_loading() -> void:
 	#$MainCenterContainer/ActiveContainer/ButtonContainer/CreateImagePackButton.disabled = true
 	#$MainCenterContainer/ActiveContainer/ButtonContainer/LoadPackButton.disabled = true
 	%LoadSequenceButton.disabled = false
+	%LoadTagsButton.disabled = false
+	%LoadNeighboursButton.disabled = false
 	%StartButton.disabled = false
 	%SaveAsButton.disabled = false
 	prints("Video texture mem:", Loader.formatBytes(Performance.get_monitor(Performance.RENDER_TEXTURE_MEM_USED)))
@@ -157,13 +165,32 @@ func _on_pack_file_dialog_file_selected(path):
 func _on_sequence_file_dialog_file_selected(path : String):
 	# FIXME: active image pack
 	if active_image_pack:
-		var seq = Loader.load_sequence_file(path)
+		var seq : Sequence = Loader.load_sequence_file(path)
 		if seq and seq.size() > 0:
 			var seq_name = ImageFrames.normalize_name(path.get_file().get_basename())
 			active_image_pack.add_sequence(seq_name, seq)
 			printt(seq_name, seq, active_image_pack.get_animation_names())
 			# TODO: hook up info panel
-	
+
+
+func _on_tags_file_dialog_file_selected(path : String):
+	if active_image_pack:
+		var tag_data = Loader.load_tag_file(path)
+		if tag_data:
+			var tags : Dictionary = tag_data[0]
+			var flags : PackedInt64Array = tag_data[1]
+			var mapping : TagFlagKeyMap = tag_data[2]
+			active_image_pack.tags = tags
+			active_image_pack.flags = flags
+			active_image_pack.mapping = mapping
+
+
+func _on_neighbours_file_dialog_file_selected(path : String):
+	if active_image_pack:
+		var neighbours_data : Array[Sequence] = Loader.load_neighbours_file(path)
+		if neighbours_data:
+			active_image_pack.neighbours = neighbours_data
+
 
 func _on_start_button_pressed() -> void:
 	# combine packs

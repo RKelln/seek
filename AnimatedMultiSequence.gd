@@ -21,9 +21,12 @@ var _display_counts := PackedInt32Array()
 static func from_AnimatedSequence(aseq : AnimatedSequence, sub_sequences : Array, 
 	loop_type := Sequence.LoopType.LOOP, mode := Mode.CHOOSE_ONE
 	) -> AnimatedMultiSequence:
-	return AnimatedMultiSequence.new(
+	var ams := AnimatedMultiSequence.new(
 		aseq.values, aseq.animation, aseq.frame_count, 
 		sub_sequences, aseq.flags, loop_type, mode)
+	if is_instance_valid(aseq.mapping):
+		ams.set_mapping(aseq.mapping)
+	return ams
 
 
 func _init(initial_values: Variant, animation : StringName, frame_count: int, sub_sequences : Array, 

@@ -19,3 +19,12 @@ func _init(initial_values: Variant, animation : StringName, frame_count: int,
 func get_frame_texture(frames : SpriteFrames, index : int = -1) -> Texture2D:
 	if index == -1: index = current_index
 	return frames.get_frame_texture(animation, index)
+
+
+static func from_Sequence(seq : Sequence, animation : StringName,
+	loop_type := Sequence.LoopType.LOOP
+	) -> AnimatedSequence:
+	var aseq := AnimatedSequence.new(seq.values, animation, seq.size(), seq.flags, loop_type)
+	if is_instance_valid(seq.mapping):
+		aseq.set_mapping(seq.mapping)
+	return aseq

@@ -60,12 +60,13 @@ func _add_dir_contents(dir: DirAccess, files: PackedStringArray, directories: Pa
 		file_name = dir.get_next()
 
 
-func load_sequence_file(filename) -> PackedInt32Array:
+func load_sequence_file(filename) -> Sequence:
 	var data = PackedInt32Array()
 	
 	for line in _load_text_file(filename):
 		data.append(line.to_int())
-	return data
+
+	return Sequence.new(data)
 
 
 func load_tag_file(filename : String) -> Array:
@@ -120,8 +121,14 @@ func load_tag_file(filename : String) -> Array:
 				if String.chr(i) not in existing:
 					tag_key_map[tag] = String.chr(i)
 					break
+	
+	var keycodes : Array[int] = []
+	var tag_names : Array[String] = []
+	for tag_name in tags:
+		tag_names.append(tag_name)
+		keycodes.append(OS.find_keycode_from_string(tag_key_map[tag_name]))
 
-	return [tags, tag_data, tag_key_map]
+	return [tags, tag_data, TagFlagKeyMap.new(tag_names, tags.values(), keycodes)]
 
 
 func load_neighbours_file(filename) -> Array[Sequence]:

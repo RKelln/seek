@@ -50,9 +50,6 @@ var _speeds : Dictionary # stores current speeds for each animation
 var _tag_keys_pressed : Dictionary = {} # "key": bool where True is pressed
 
 var listening_for_tags := false
-var tag_key_map : Dictionary
-var _keycode_to_tag : Dictionary = {}
-var _flags_to_tag : Dictionary = {}
 
 signal real_frame_changed(frame: int)
 
@@ -89,32 +86,19 @@ func _ready():
 	_change_animation(start_anim)
 	
 	# test tags
-	var tag_data := Loader.load_tag_file("user://migration_tags.txt")
-	if tag_data:
-		var tags : Dictionary = tag_data[0]
-		var flags : PackedInt64Array = tag_data[1]
-		tag_key_map = tag_data[2]
-		print(tags, tag_key_map)
-		sequences[start_anim].flags = flags
-		#sequences[start_anim].active_flags = 4096 | 8192
-		# set up mapping for keycodes
-		var keys := tag_key_map.keys()
-		for tag_name in keys:
-			var keycode := OS.find_keycode_from_string(tag_key_map[tag_name])
-			# add key string to key code mapping
-			_keycode_to_tag[keycode] = tag_name
-			# add key code to flags mapping
-			tag_key_map[keycode] = tags[tag_name]
-			# add flag to tag
-			_flags_to_tag[tags[tag_name]] = tag_name
-	
-	# test neighbours
-	var neighbours_data := Loader.load_neighbours_file("user://migration_200_neighbours.txt")
-	sequences[start_anim] = AnimatedMultiSequence.from_AnimatedSequence(sequences[start_anim], neighbours_data, 
-		Sequence.LoopType.LOOP, AnimatedMultiSequence.Mode.NEIGHBOURS)
-	
-	sequences[start_anim]._flags_to_tag = _flags_to_tag
-	
+#	var tag_data := Loader.load_tag_file("user://migration_tags.txt")
+#	if tag_data:
+#		var tags : Dictionary = tag_data[0]
+#		var flags : PackedInt64Array = tag_data[1]
+#		sequences[start_anim].flags = flags
+#		sequences[start_anim].set_mapping(tag_data[2])
+#		print(start_anim, sequences[start_anim].mapping)
+#
+#	# test neighbours
+#	var neighbours_data := Loader.load_neighbours_file("user://migration_200_neighbours.txt")
+#	sequences[start_anim] = AnimatedMultiSequence.from_AnimatedSequence(sequences[start_anim], neighbours_data, 
+#		Sequence.LoopType.LOOP, AnimatedMultiSequence.Mode.NEIGHBOURS)
+
 	debug_info()
 
 	play(animation)
@@ -134,23 +118,6 @@ func _on_frame_changed():
 #			if sequences[current_sequence].active_flags > 0:
 #				prints(frame, sequences[current_sequence].tags())
 			real_frame_changed.emit(frame)
-		
-		
-#		if current_sequence in sequences:
-#			# TODO: support _backwards???
-#
-#			# some hacky magic here, we don't want to update more than once
-#			if sequences[current_sequence].current_value() != frame:
-#				current_frame[current_sequence] = sequences[current_sequence].next()
-#				frame = current_frame[current_sequence]
-#
-#		else:
-#			current_frame[animation] = frame
-		#_current_texture = sprite_frames.get_frame_texture(animation, frame)
-#		_current_texture = sequences[animation].get_frame_texture(sprite_frames, frame)
-#		if sequences[current_sequence].active_flags > 0:
-#			prints(frame, flags_to_tags(sequences[current_sequence].flag(frame), sequences[current_sequence].active_flags))
-#		real_frame_changed.emit(frame)
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -182,8 +149,8 @@ func _unhandled_input(event : InputEvent):
 					set_speed(event.strength, event.target)
 			"set_flag":
 				var flag = int(event.target)
-				prints("set_flag", event, _flags_to_tag[flag])
-				sequences[animation].active_flags = flag
+				prints("set_flag", event, sequences[current_sequence].mapping.flag_tag(flag))
+				sequences[current_sequence].active_flags = flag
 
 				
 	if event is InputEventMouseButton:
@@ -227,7 +194,8 @@ func _unhandled_input(event : InputEvent):
 	
 	# handle tags:
 	# activate tags for all keys that were pressed while shift was held
-	if event is InputEventKey:
+	if event is InputEventKey and is_instance_valid(sequences[current_sequence].mapping):
+		print(event)
 		if event.keycode == KEY_SHIFT:
 			if event.pressed:
 				listening_for_tags = true
@@ -243,14 +211,14 @@ func _unhandled_input(event : InputEvent):
 					for keycode in _tag_keys_pressed:
 						if _tag_keys_pressed[keycode]:
 							_tag_keys_pressed[keycode] = false
-							flags |= tag_key_map[keycode]
+							flags |= sequences[current_sequence].mapping.key_flag(keycode)
 					_tag_keys_pressed.clear()
-					prints("activating tags", flags_to_tags(flags))
+					prints("activating tags", sequences[current_sequence].mapping.flags_to_tags(flags))
 					sequences[current_sequence].active_flags = flags
 			return
 		elif event.shift_pressed: # shift is held
 			if event.pressed:
-				if event.keycode in tag_key_map:
+				if sequences[current_sequence].mapping.key_exists(event.keycode):
 					_tag_keys_pressed[event.keycode] = true
 					prints("selecting tag", event.keycode)
 					get_viewport().set_input_as_handled()
@@ -299,21 +267,6 @@ func _unhandled_input(event : InputEvent):
 			stop()
 		else:
 			play(animation, _backwards)
-
-# SLOW! Only for debugging
-func flags_to_tags(flags : int, active_flags : int = 0) -> String:
-	var tags = []
-	for flag in _flags_to_tag:
-		if flags & flag != 0:
-			var t = _flags_to_tag[flag]
-			if flag & active_flags != 0:
-				t = t.to_upper()
-			tags.append(t)
-	tags.sort()
-	var s := ""
-	for t in tags:
-		s += t + ", "
-	return s.trim_suffix(", ")
 	
 
 func valid_target(index : int = -1) -> bool:
