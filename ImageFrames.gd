@@ -4,7 +4,7 @@ const base_animation_name : StringName = "default"
 const animation_meta_key : StringName = "animation_index"
 const flags_meta_key : StringName = "frame_flags"
 
-var version := "1.0"
+var version := "1.1"
 
 @export var compress := true
 @export var pack_name : String = "":
@@ -83,7 +83,7 @@ func add_frames(new_frames : ImageFrames, animation_name : String = '', offset :
 			set_animation_speed(aname, new_frames.get_animation_speed(aname))
 			
 		for i in new_frames.get_frame_count(aname):
-			_add_frame(aname, i+offset, new_frames.get_frame(aname, i))
+			_add_frame(aname, i+offset, new_frames.get_frame_texture(aname, i))
 
 
 func update_frames(animation_name : String, new_sequence : PackedInt32Array) -> void:
@@ -177,8 +177,8 @@ func _add_frame(animation_name : String, i : int, tex : Texture2D, flags : int =
 		add_frame(base_animation_name, tex)
 		tex.set_meta(animation_meta_key, i)
 			
-	if tex.get_meta(flags_meta_key) == null:
-		tex.set_meta(flags_meta_key, flags)
+#	if tex.get_meta(flags_meta_key) == null:
+#		tex.set_meta(flags_meta_key, flags)
 
 	add_frame(animation_name, tex) # add to end of animation
 
@@ -194,27 +194,12 @@ func save(file_path : String) -> int:
 	print("Saving time (sec): ", (Time.get_ticks_msec() - start) / 1000.0 )
 	return result
 
-# FIXME: update to new sequence format
-func get_sequence_old(seq_name : String = base_animation_name) -> PackedInt32Array:
-	if seq_name == "":
-		seq_name = base_animation_name
-
-	var seq = PackedInt32Array()
-	#prints("get sequencee ", seq_name, get_frame(seq_name, 0).get_meta_list(), info())
-	for i in get_frame_count(seq_name):
-		# even though the meta index info is only added the the base animation, the texture should be reused
-		# TODO: check if that is true for .res loaded ImageFrames
-		var tex : Texture2D = get_frame_texture(seq_name, i)
-		#printt(seq_name, i, tex, tex.get_meta_list())
-		var index = tex.get_meta(animation_meta_key)
-		assert(index != null)
-		seq.append(index)
-		
-	return seq
-
 
 func get_sequence(seq_name : String = base_animation_name) -> Sequence:
-	return 
+	if seq_name == "":
+		seq_name = base_animation_name
+	
+	return sequences[seq_name]
 
 
 func add_sequence(seq_name : String, sequence : Sequence) -> void:
@@ -236,6 +221,20 @@ func add_sequence(seq_name : String, sequence : Sequence) -> void:
 	sequences[seq_name] = AnimatedSequence.from_Sequence(sequence, seq_name)
 
 
+func animation_to_sequence(anim_name : String) -> AnimatedSequence:
+	var seq_frames = PackedInt32Array()
+	#prints("get sequencee ", seq_name, get_frame(seq_name, 0).get_meta_list(), info())
+	for i in get_frame_count(anim_name):
+		# even though the meta index info is only added the the base animation, the texture should be reused
+		# TODO: check if that is true for .res loaded ImageFrames
+		var tex : Texture2D = get_frame_texture(anim_name, i)
+		#printt(seq_name, i, tex, tex.get_meta_list())
+		var index = tex.get_meta(animation_meta_key)
+		assert(index != null)
+		seq_frames.append(index)
+	return AnimatedSequence.new(seq_frames, anim_name, seq_frames.size())
+
+
 func set_tags(t : Dictionary):
 	tags = t
 
@@ -253,7 +252,8 @@ func set_neighbours(n : Array[Sequence]):
 	neighbours = n
 	for s in sequences:
 		if sequences[s] is AnimatedMultiSequence:
-			sequences[s].neighbours = n
+			var ams := sequences[s] as AnimatedMultiSequence
+			ams.neighbours = n
 		elif sequences[s] is AnimatedSequence:
 			sequences[s] = AnimatedMultiSequence.from_AnimatedSequence(sequences[s], n)
 		else:
@@ -278,6 +278,11 @@ static func combine_image_packs(packs : Array[ImageFrames]) -> ImageFrames:
 		var anims : Array = packs[i].get_valid_animation_names()
 		for anim_name in anims:
 			combined.add_frames(packs[i], anim_name, offsets[i])
+	
+	# TODO: FIXME: combine tags, mapping, neighbours
+	combined.tags = packs[0].tags
+	combined.neighbours = packs[0].neighbours
+	combined.mapping = packs[0].mapping
 	
 	return combined
 
@@ -310,6 +315,15 @@ static func load_image_pack(file_path : String) -> ImageFrames:
 		var f = iframes.get_frame_texture(base_animation_name, i)
 		if f.get_meta(animation_meta_key) == null:
 			iframes.get_frame(base_animation_name, i).set_meta(animation_meta_key, i)
+	
+	# ensure sequences exist
+	for name in iframes.get_animation_names():
+		if not name in iframes.sequences:
+			var seq : AnimatedSequence = iframes.animation_to_sequence(name)
+			seq.flags = iframes.flags
+			if is_instance_valid(iframes.mapping):
+				seq.mapping = iframes.mapping
+			iframes.sequences[name] = seq
 	return iframes
 
 

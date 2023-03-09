@@ -18,8 +18,6 @@ func test():
 
 	await get_tree().create_timer(2).timeout
 	%ImageGrid.set_images(images.get_textures())
-	print(get_sequence("laura"))
-	print(get_sequence("default"))
 
 
 func set_images(new_images : Array, grid_size : int = 0, center_idx : int = -1) -> void:

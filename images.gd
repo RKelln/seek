@@ -360,7 +360,7 @@ func get_sequence_name() -> StringName:
 
 
 func get_sequence(seq_name : String = "") -> PackedInt32Array:
-	return cur_img.sprite_frames.get_sequence(seq_name)
+	return cur_img.sprite_frames.get_sequence(seq_name).values
 
 
 func update_sequence(seq_name : String, sequence : PackedInt32Array) -> void:

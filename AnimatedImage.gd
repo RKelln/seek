@@ -36,11 +36,6 @@ var paused : bool = false
 var frame_counts : Dictionary
 var current_frame : Dictionary
 
-# dictionary of named Sequences
-# Sequences are associated to an animation, either with the same name or the default/base animation
-var sequences : Dictionary = {}
-var current_sequence : StringName
-
 var _backwards := false
 var _anim_fps : float = 0
 var _requested_animation : bool = false # tracks if animation change has been requested
@@ -85,20 +80,6 @@ func _ready():
 	_init_animation(start_anim)
 	_change_animation(start_anim)
 	
-	# test tags
-#	var tag_data := Loader.load_tag_file("user://migration_tags.txt")
-#	if tag_data:
-#		var tags : Dictionary = tag_data[0]
-#		var flags : PackedInt64Array = tag_data[1]
-#		sequences[start_anim].flags = flags
-#		sequences[start_anim].set_mapping(tag_data[2])
-#		print(start_anim, sequences[start_anim].mapping)
-#
-#	# test neighbours
-#	var neighbours_data := Loader.load_neighbours_file("user://migration_200_neighbours.txt")
-#	sequences[start_anim] = AnimatedMultiSequence.from_AnimatedSequence(sequences[start_anim], neighbours_data, 
-#		Sequence.LoopType.LOOP, AnimatedMultiSequence.Mode.NEIGHBOURS)
-
 	debug_info()
 
 	play(animation)
@@ -110,11 +91,11 @@ func _on_frame_changed():
 	if not _requested_animation:
 		
 		# some hacky magic here, we don't want to update more than once
-		if current_frame[current_sequence] != frame:
-			current_frame[current_sequence] = sequences[current_sequence].next()
-			frame = current_frame[current_sequence]
+		if current_frame[animation] != frame:
+			current_frame[animation] = sprite_frames.sequences[animation].next()
+			frame = current_frame[animation]
 			
-			_current_texture = sequences[animation].get_frame_texture(sprite_frames, frame)
+			_current_texture = sprite_frames.sequences[animation].get_frame_texture(sprite_frames, frame)
 #			if sequences[current_sequence].active_flags > 0:
 #				prints(frame, sequences[current_sequence].tags())
 			real_frame_changed.emit(frame)
@@ -149,8 +130,8 @@ func _unhandled_input(event : InputEvent):
 					set_speed(event.strength, event.target)
 			"set_flag":
 				var flag = int(event.target)
-				prints("set_flag", event, sequences[current_sequence].mapping.flag_tag(flag))
-				sequences[current_sequence].active_flags = flag
+				prints("set_flag", event, sprite_frames.sequences[animation].mapping.flag_tag(flag))
+				sprite_frames.sequences[animation].active_flags = flag
 
 				
 	if event is InputEventMouseButton:
@@ -194,7 +175,7 @@ func _unhandled_input(event : InputEvent):
 	
 	# handle tags:
 	# activate tags for all keys that were pressed while shift was held
-	if event is InputEventKey and is_instance_valid(sequences[current_sequence].mapping):
+	if event is InputEventKey and is_instance_valid(sprite_frames.sequences[animation].mapping):
 		print(event)
 		if event.keycode == KEY_SHIFT:
 			if event.pressed:
@@ -206,19 +187,19 @@ func _unhandled_input(event : InputEvent):
 				if _tag_keys_pressed.size() == 0:
 					# clear tags
 					prints("deactivating tags")
-					sequences[current_sequence].active_flags = 0
+					sprite_frames.sequences[animation].active_flags = 0
 				else:
 					for keycode in _tag_keys_pressed:
 						if _tag_keys_pressed[keycode]:
 							_tag_keys_pressed[keycode] = false
-							flags |= sequences[current_sequence].mapping.key_flag(keycode)
+							flags |= sprite_frames.sequences[animation].mapping.key_flag(keycode)
 					_tag_keys_pressed.clear()
-					prints("activating tags", sequences[current_sequence].mapping.flags_to_tags(flags))
-					sequences[current_sequence].active_flags = flags
+					prints("activating tags", sprite_frames.sequences[animation].mapping.flags_to_tags(flags))
+					sprite_frames.sequences[animation].active_flags = flags
 			return
 		elif event.shift_pressed: # shift is held
 			if event.pressed:
-				if sequences[current_sequence].mapping.key_exists(event.keycode):
+				if sprite_frames.sequences[animation].mapping.key_exists(event.keycode):
 					_tag_keys_pressed[event.keycode] = true
 					prints("selecting tag", event.keycode)
 					get_viewport().set_input_as_handled()
@@ -282,7 +263,7 @@ func change_animation_relative(direction : int, layer : int = -1) -> void:
 	
 	
 func _init_animation(animation_name : String) -> void:
-	if animation_name in sequences:
+	if animation_name in sprite_frames.sequences:
 		_anim_fps = sprite_frames.get_animation_speed(base_animation_name)
 	else:
 		_anim_fps = sprite_frames.get_animation_speed(animation_name)
@@ -309,11 +290,6 @@ func _add_animation(animation_name : String) -> void:
 			
 	if animation_name not in frame_counts or frame_counts[animation_name] <= 0:
 		frame_counts[animation_name] = frame_count
-	
-	if animation_name not in sequences:
-		# TODO: pass in actual frame indices
-		sequences[animation_name] = AnimatedSequence.new(frame_count, animation_name, frame_count)
-
 
 # always changes animation, regardless of current and state
 func _change_animation(requested_animation : String) -> void:
@@ -322,13 +298,11 @@ func _change_animation(requested_animation : String) -> void:
 	# NOTE: when changing animations it signals frame_changed and sets the frame back to the start
 	_requested_animation = true # now that this is set, it won't update current_frame or signal real_frame_changed
 	animation = requested_animation
-	current_sequence = animation
 	_requested_animation = false
 	
-	#frame = current_frame[animation] # sets current frame
-	frame = sequences[current_sequence].current_value()
-	#_current_texture = sprite_frames.get_frame_texture(animation, frame)
-	_current_texture = sequences[current_sequence].get_frame_texture(sprite_frames, frame)
+	print(sprite_frames.sequences)
+	frame = sprite_frames.sequences[animation].current_value()
+	_current_texture = sprite_frames.sequences[animation].get_frame_texture(sprite_frames, frame)
 	
 	if stretch: rescale()
 
@@ -359,8 +333,8 @@ func debug_info():
 	print(info())
 	print("Animations: ", sprite_frames.get_animation_names())
 	# TODO: print("Sequences: ", get_valid_sequence_names())
-	print("Current sequence: ", current_sequence)
-	print("Frame count: ", frame_counts[current_sequence])
+	print("Current sequence: ", animation)
+	print("Frame count: ", frame_counts[animation])
 	
 	
 func next_animation(inc : int) -> StringName:
@@ -386,7 +360,8 @@ func get_current_frame() -> Texture2D:
 
 
 func get_texture(seq_name : String = "", index : int = -1) -> Texture2D:
-	return sequences[seq_name].get_frame_texture(index) 
+	if seq_name == "": seq_name = base_animation_name
+	return sprite_frames.sequences[seq_name].get_frame_texture(index) 
 
 
 func get_rect() -> Rect2:
@@ -411,7 +386,7 @@ func next_frame(increment : int = 1) -> void:
 	elif increment < 0 and increment > -1:
 		increment = -1
 	#frame = floor(fposmod(frame + increment, frame_counts[animation]))
-	frame = sequences[animation].next(increment)
+	frame = sprite_frames.sequences[animation].next(increment)
 
 
 # TODO: without underscore this overrides the existing pause and needs to be changed
