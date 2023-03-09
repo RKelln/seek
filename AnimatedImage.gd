@@ -88,12 +88,6 @@ func _ready():
 	_init_animation(start_anim)
 	_change_animation(start_anim)
 	
-#	var test = {}
-#	test[StringName("a")] = 0
-#	test[&"b"] = 1
-#	for k in test:
-#		prints(k, typeof(k), test[k])
-	
 	# test tags
 	var tag_data := Loader.load_tag_file("user://migration_tags.txt")
 	if tag_data:
@@ -113,7 +107,14 @@ func _ready():
 			tag_key_map[keycode] = tags[tag_name]
 			# add flag to tag
 			_flags_to_tag[tags[tag_name]] = tag_name
-				
+	
+	# test neighbours
+	var neighbours_data := Loader.load_neighbours_file("user://migration_200_neighbours.txt")
+	sequences[start_anim] = AnimatedMultiSequence.from_AnimatedSequence(sequences[start_anim], neighbours_data, 
+		Sequence.LoopType.LOOP, AnimatedMultiSequence.Mode.NEIGHBOURS)
+	
+	sequences[start_anim]._flags_to_tag = _flags_to_tag
+	
 	debug_info()
 
 	play(animation)
@@ -123,20 +124,33 @@ func _ready():
 func _on_frame_changed():
 	# update current frame
 	if not _requested_animation:
-		if current_sequence in sequences:
-			# TODO: support _backwards???
+		
+		# some hacky magic here, we don't want to update more than once
+		if current_frame[current_sequence] != frame:
+			current_frame[current_sequence] = sequences[current_sequence].next()
+			frame = current_frame[current_sequence]
 			
-			# some hacky magic here, we don't want to update more than once
-			if sequences[current_sequence].current_value() != frame:
-				current_frame[current_sequence] = sequences[current_sequence].next()
-				frame = current_frame[current_sequence]
-		else:
-			current_frame[animation] = frame
+			_current_texture = sequences[animation].get_frame_texture(sprite_frames, frame)
+#			if sequences[current_sequence].active_flags > 0:
+#				prints(frame, sequences[current_sequence].tags())
+			real_frame_changed.emit(frame)
+		
+		
+#		if current_sequence in sequences:
+#			# TODO: support _backwards???
+#
+#			# some hacky magic here, we don't want to update more than once
+#			if sequences[current_sequence].current_value() != frame:
+#				current_frame[current_sequence] = sequences[current_sequence].next()
+#				frame = current_frame[current_sequence]
+#
+#		else:
+#			current_frame[animation] = frame
 		#_current_texture = sprite_frames.get_frame_texture(animation, frame)
-		_current_texture = sequences[animation].get_frame_texture(sprite_frames, frame)
-		if sequences[current_sequence].active_flags > 0:
-			prints(frame, flags_to_tags(sequences[current_sequence].flag(frame), sequences[current_sequence].active_flags))
-		real_frame_changed.emit(frame)
+#		_current_texture = sequences[animation].get_frame_texture(sprite_frames, frame)
+#		if sequences[current_sequence].active_flags > 0:
+#			prints(frame, flags_to_tags(sequences[current_sequence].flag(frame), sequences[current_sequence].active_flags))
+#		real_frame_changed.emit(frame)
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -161,12 +175,17 @@ func _unhandled_input(event : InputEvent):
 		# note: do not check for pressed, 
 		#       as these events may have strength
 		#       that changes throughout a "press"
-		if valid_target(event.target):
-			print(event.as_text())
-			match event.action:
-				"set_speed":
+		#print(event.as_text())
+		match event.action:
+			"set_speed":
+				if valid_target(event.target):
 					set_speed(event.strength, event.target)
+			"set_flag":
+				var flag = int(event.target)
+				prints("set_flag", event, _flags_to_tag[flag])
+				sequences[animation].active_flags = flag
 
+				
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_RIGHT:
 			stop()
@@ -208,13 +227,6 @@ func _unhandled_input(event : InputEvent):
 	
 	# handle tags:
 	# activate tags for all keys that were pressed while shift was held
-#	if Input.is_physical_key_pressed(KEY_SHIFT):
-#		listening_for_tags = true
-#		print("shift held")
-#	else:
-#		listening_for_tags = false
-#		print("shift released")
-	
 	if event is InputEventKey:
 		if event.keycode == KEY_SHIFT:
 			if event.pressed:
@@ -223,7 +235,11 @@ func _unhandled_input(event : InputEvent):
 				listening_for_tags = false
 				# activate tags
 				var flags := 0
-				if _tag_keys_pressed.size() > 0:
+				if _tag_keys_pressed.size() == 0:
+					# clear tags
+					prints("deactivating tags")
+					sequences[current_sequence].active_flags = 0
+				else:
 					for keycode in _tag_keys_pressed:
 						if _tag_keys_pressed[keycode]:
 							_tag_keys_pressed[keycode] = false

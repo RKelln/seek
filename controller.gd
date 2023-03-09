@@ -11,9 +11,9 @@ enum Mode {OFF, ON, TEST}
 func _unhandled_input(event: InputEvent) -> void:
 	if mode == Mode.OFF: return
 	
-	if mode == Mode.TEST:
-		if not event is InputEventMouseMotion:
-			print(event)
+#	if mode == Mode.TEST:
+#		if not event is InputEventMouseMotion:
+#			prints("CustomController:", event)
 
 	_handle_input(event)
 

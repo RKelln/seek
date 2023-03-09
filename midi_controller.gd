@@ -53,50 +53,64 @@ func _handle_input(event : InputEvent) -> void:
 	
 	_print_midi_info(event)
 
-	var m = {'channel': event.channel, 'message': event.message, 'controller': event.controller_number}
 	var ev = InputEventTargetedAction.new()
 	ev.pressed = true
-	ev.strength = event.controller_value / midi_max_value
 	
-	match m:
-		knob_top_1:
-			ev.action = "set_speed"
-			ev.target = 0
-		knob_top_2:
-			ev.action = "set_speed"
-			ev.target = 1
-		knob_top_3:
-			ev.action = "set_speed"
-			ev.target = 2
-		knob_right_1:
-			ev.action = "set_transition_duration"
-			ev.target = 0
-		knob_right_2:
-			ev.action = "set_transition_duration"
-			ev.target = 1
-		knob_right_3:
-			ev.action = "set_transition_duration"
-			ev.target = 2
-		fader_1:
-			ev.action = "set_opacity"
-			ev.target = 0
-		fader_2:
-			ev.action = "set_opacity"
-			ev.target = 1
-		fader_3:
-			ev.action = "set_opacity"
-			ev.target = 2
+	var m = {'channel': event.channel, 'message': event.message}
+	
+	if event.controller_number > 0:
+		m['controller'] = event.controller_number
+		ev.strength = event.controller_value / midi_max_value
+		
+		match m:
+			knob_top_1:
+				ev.action = "set_speed"
+				ev.target = 0
+			knob_top_2:
+				ev.action = "set_speed"
+				ev.target = 1
+			knob_top_3:
+				ev.action = "set_speed"
+				ev.target = 2
+			knob_right_1:
+				ev.action = "set_transition_duration"
+				ev.target = 0
+			knob_right_2:
+				ev.action = "set_transition_duration"
+				ev.target = 1
+			knob_right_3:
+				ev.action = "set_transition_duration"
+				ev.target = 2
+			fader_1:
+				ev.action = "set_opacity"
+				ev.target = 0
+			fader_2:
+				ev.action = "set_opacity"
+				ev.target = 1
+			fader_3:
+				ev.action = "set_opacity"
+				ev.target = 2
+
+	if event.message == 9 or event.message == 8:
+		m['pitch'] = event.pitch
+		if event.message == 8:
+			ev.pressed = true
+		elif event.message == 9:
+			ev.pressed = false
+		# TEST: send tag and map pitch to tag
+		ev.action = "set_flag"
+		ev.target = 1 << int(event.pitch)
 
 	Input.parse_input_event(ev)
 
 
 func _print_midi_info(midi_event: InputEventMIDI):
 	print(midi_event)
-	print("Channel " + str(midi_event.channel))
-	print("Message " + str(midi_event.message))
-	print("Pitch " + str(midi_event.pitch))
-	print("Velocity " + str(midi_event.velocity))
-	print("Instrument " + str(midi_event.instrument))
-	print("Pressure " + str(midi_event.pressure))
-	print("Controller number: " + str(midi_event.controller_number))
-	print("Controller value: " + str(midi_event.controller_value))
+#	print("Channel " + str(midi_event.channel))
+#	print("Message " + str(midi_event.message))
+#	print("Pitch " + str(midi_event.pitch))
+#	print("Velocity " + str(midi_event.velocity))
+#	print("Instrument " + str(midi_event.instrument))
+#	print("Pressure " + str(midi_event.pressure))
+#	print("Controller number: " + str(midi_event.controller_number))
+#	print("Controller value: " + str(midi_event.controller_value))

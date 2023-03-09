@@ -3,11 +3,14 @@ class_name AnimatedSequence extends Sequence
 # Sequence with an associated animation name
 
 var animation : StringName
+var frame_count : int
 
-
-func _init(initial_values: Variant, animation : StringName, frame_count: int, loop_type := Sequence.LOOP_TYPE.LOOP) -> void:
-	super(initial_values, loop_type)
+func _init(initial_values: Variant, animation : StringName, frame_count: int, 
+	flags : Variant = [], loop_type := Sequence.LoopType.LOOP
+	) -> void:
+	super(initial_values, flags, loop_type)
 	self.animation = animation
+	self.frame_count = frame_count
 
 	# none of the values that refer to frame numbers can be more than the frame count
 	assert(max_value() < frame_count)

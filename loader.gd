@@ -124,6 +124,18 @@ func load_tag_file(filename : String) -> Array:
 	return [tags, tag_data, tag_key_map]
 
 
+func load_neighbours_file(filename) -> Array[Sequence]:
+	var data : Array[Sequence] = []
+	# each line is a list of neighbour indices
+	for line in _load_text_file(filename):
+		var neighbours := []
+		line = line.strip_edges().lstrip("[").rstrip("]")
+		for s in line.split(","):
+			neighbours.append(int(s.strip_edges()))
+		data.append(Sequence.new(neighbours))
+	return data
+
+
 func _load_text_file(filename) -> PackedStringArray:
 	var file = FileAccess.open(filename, FileAccess.READ)
 	if file:
