@@ -25,7 +25,7 @@ process_callback = 0
 [node name="Zoom" parent="CanvasGroup/Camera2D" instance=ExtResource("3_ui8t2")]
 min_val = 1.0
 max_val = 1.2
-amplitude = 0.0
+frequency = 0.1
 hold = 0.2
 value = 1.0
 frequency_input = &"ken_burns_zoom_freq"
@@ -37,6 +37,7 @@ amplitude_dec_input = &"ken_burns_zoom_dec"
 
 [node name="TranslateX" parent="CanvasGroup/Camera2D" instance=ExtResource("3_ui8t2")]
 max_val = 100.0
+amplitude = 0.0
 frequency = 1.0
 hold = 0.2
 fuzz = 1.0
@@ -50,6 +51,7 @@ amplitude_dec_input = &"ken_burns_translate_dec"
 
 [node name="TranslateY" parent="CanvasGroup/Camera2D" instance=ExtResource("3_ui8t2")]
 max_val = 100.0
+amplitude = 0.0
 frequency = 1.0
 hold = 0.2
 fuzz = 1.0
