@@ -141,7 +141,7 @@ func _unhandled_input(event : InputEvent) -> void:
 			$CanvasGroup/Camera2D/TranslateY.target = centered_pos.y
 			#$CanvasGroup/Camera2D/TranslateY.set_target(centered_pos.y)
 			get_viewport().set_input_as_handled()
-		return
+			return
 	
 	if event.is_action_pressed("beat_match", false, true):
 		beat_match()
