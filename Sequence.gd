@@ -25,8 +25,8 @@ const ALL_FLAGS = 9223372036854775807 # max int 64
 var current_index : int = 0:
 	get:
 		return current_index
-	set(value):
-		current_index = clampi(value, 0, values.size() - 1)
+	set(v):
+		current_index = clampi(v, 0, values.size() - 1)
 		
 var active_flags : int = 0: set = set_active_flags
 
@@ -39,7 +39,7 @@ var _direction : int = 1
 var mapping : TagFlagKeyMap
 
 
-func _init(initial_values : Variant, flags : Variant = [], loop_type := LoopType.LOOP) -> void:
+func _init(initial_values : Variant, initial_flags : Variant = [], loop_type := LoopType.LOOP) -> void:
 	assert(initial_values is int or initial_values is Array or initial_values is PackedInt32Array)
 	loop = loop_type
 	
@@ -48,11 +48,11 @@ func _init(initial_values : Variant, flags : Variant = [], loop_type := LoopType
 	else:
 		values = PackedInt32Array(initial_values)
 	
-	set_flags(flags)
+	set_flags(initial_flags)
 
 
-func set_mapping(mapping : TagFlagKeyMap) -> void:
-	self.mapping = mapping
+func set_mapping(new_mapping : TagFlagKeyMap) -> void:
+	self.mapping = new_mapping
 	
 
 func value(i : int = -1) -> int:
@@ -140,8 +140,12 @@ func get_active_index() -> int:
 ## Returns the current index
 func set_active_index(i : int) -> int:
 	if active_flags == 0:
+		if i < 0:
+			i = values.size() + i
 		current_index = i
 	else:
+		if i < 0:
+			i = filtered_indices.size() + i
 		current_f_index = i
 		current_index = filtered_indices[current_f_index]
 	return current_index
@@ -168,18 +172,24 @@ func filter_current_index() -> int:
 
 func next(inc : int = 1) -> int:
 	var i : int = get_active_index()
-	var size : int = get_active_size()
+	var active_size : int = get_active_size()
 
 	# edge case, start with the first
 	# (typically this is only when current_index isn't part of the filtered set)
 	if i < 0: i = 0
 	
-	if inc != 0 and size > 1:
+	if inc != 0 and active_size > 1:
 		match loop:
 			LoopType.LOOP:
-				i = (i + (_direction * inc)) % size
+				i = (i + (_direction * inc)) % active_size
+				if i < 0:
+					i = active_size + i
 			LoopType.NONE:
 				i += _direction * inc
+				if i < 0:
+					i = 0
+				if i >= active_size:
+					i = active_size - 1
 			LoopType.PINGPONG:
 				var steps : int = abs(inc)
 				while steps > 0:
@@ -188,9 +198,9 @@ func next(inc : int = 1) -> int:
 					if i < 0:
 						_direction = -_direction
 						i = 1 # one from start
-					elif i >= size:
+					elif i >= active_size:
 						_direction = -_direction
-						i = size - 2 # one from end
+						i = active_size - 2 # one from end
 
 		set_active_index(i)
 #		if active_flags == 0:

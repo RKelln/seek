@@ -36,7 +36,7 @@ var paused : bool = false
 var frame_counts : Dictionary
 var current_frame : Dictionary
 
-var _backwards := false
+var _direction : float = 1.0
 var _anim_fps : float = 0
 var _requested_animation : bool = false # tracks if animation change has been requested
 var _current_texture : Texture2D # reference to current texture
@@ -82,7 +82,7 @@ func _ready():
 	
 	debug_info()
 
-	play(animation)
+	play(animation, _direction)
 	paused = false
 
 
@@ -92,10 +92,11 @@ func _on_frame_changed():
 		
 		# some hacky magic here, we don't want to update more than once
 		if current_frame[animation] != frame:
-			current_frame[animation] = sprite_frames.sequences[animation].next()
+			var seq : AnimatedSequence = sequence()
+			current_frame[animation] = seq.next()
 			frame = current_frame[animation]
-			
-			_current_texture = sprite_frames.sequences[animation].get_frame_texture(sprite_frames, frame)
+			#printt(_index, "frame", frame)
+			_current_texture = seq.get_frame_texture(sprite_frames, frame)
 #			if sequences[current_sequence].active_flags > 0:
 #				prints(frame, sequences[current_sequence].tags())
 			real_frame_changed.emit(frame)
@@ -130,8 +131,8 @@ func _unhandled_input(event : InputEvent):
 					set_speed(event.strength, event.target)
 			"set_flag":
 				var flag = int(event.target)
-				prints("set_flag", event, sprite_frames.sequences[animation].mapping.flag_tag(flag))
-				sprite_frames.sequences[animation].active_flags = flag
+				prints("set_flag", event, sequence().mapping.flag_tag(flag))
+				sequence().active_flags = flag
 
 				
 	if event is InputEventMouseButton:
@@ -139,7 +140,7 @@ func _unhandled_input(event : InputEvent):
 			stop()
 			var w : float = float(get_viewport().get_visible_rect().size.x)
 			# NOTE: leave a small amount on each side the is always start and end of sequence
-			frame = int(remap(get_viewport().get_mouse_position().x, 0.1 * w, 0.9 * w, 0, frame_counts[animation]))
+			goto_frame(int(remap(get_viewport().get_mouse_position().x, 0.1 * w, 0.9 * w, 0, frame_counts[animation])))
 			#printt("jump to", get_viewport().get_mouse_position().x, frame)
 
 	# allow when playing or not:
@@ -175,7 +176,7 @@ func _unhandled_input(event : InputEvent):
 	
 	# handle tags:
 	# activate tags for all keys that were pressed while shift was held
-	if event is InputEventKey and is_instance_valid(sprite_frames.sequences[animation].mapping):
+	if event is InputEventKey and is_instance_valid(sequence().mapping):
 		print(event)
 		if event.keycode == KEY_SHIFT:
 			if event.pressed:
@@ -187,19 +188,19 @@ func _unhandled_input(event : InputEvent):
 				if _tag_keys_pressed.size() == 0:
 					# clear tags
 					prints("deactivating tags")
-					sprite_frames.sequences[animation].active_flags = 0
+					sequence().active_flags = 0
 				else:
 					for keycode in _tag_keys_pressed:
 						if _tag_keys_pressed[keycode]:
 							_tag_keys_pressed[keycode] = false
-							flags |= sprite_frames.sequences[animation].mapping.key_flag(keycode)
+							flags |= sequence().mapping.key_flag(keycode)
 					_tag_keys_pressed.clear()
-					prints("activating tags", sprite_frames.sequences[animation].mapping.flags_to_tags(flags))
-					sprite_frames.sequences[animation].active_flags = flags
+					prints("activating tags", sequence().mapping.flags_to_tags(flags))
+					sequence().active_flags = flags
 			return
 		elif event.shift_pressed: # shift is held
 			if event.pressed:
-				if sprite_frames.sequences[animation].mapping.key_exists(event.keycode):
+				if sequence().mapping.key_exists(event.keycode):
 					_tag_keys_pressed[event.keycode] = true
 					prints("selecting tag", event.keycode)
 					get_viewport().set_input_as_handled()
@@ -210,11 +211,11 @@ func _unhandled_input(event : InputEvent):
 	# repeatable actions:
 	if event.is_action_pressed("fast_forward", true, true): # allow echo
 		speed_scale = frame_skip * speed
-		play(animation, false)
+		play(animation, 1.0)
 		
 	elif event.is_action_pressed("fast_backward", true, true): # allow echo
 		speed_scale = frame_skip * speed
-		play(animation, true)
+		play(animation, -1.0)
 	# non-repeated actions:
 	elif event.is_action_pressed("skip_forward", true, true):
 		next_frame(frame_skip)
@@ -237,7 +238,7 @@ func _unhandled_input(event : InputEvent):
 		print("speed:", speed)
 		speed_scale = speed
 	elif event.is_action_pressed("random", false, true):
-		frame = randi() % frame_counts[animation]
+		goto_frame(randi() % frame_counts[animation])
 
 	# on release
 	elif (event.is_action_released("fast_forward", true)
@@ -245,9 +246,9 @@ func _unhandled_input(event : InputEvent):
 		# resume normal play
 		speed_scale = speed
 		if paused:
-			stop()
+			pause()
 		else:
-			play(animation, _backwards)
+			play(animation, _direction)
 	
 
 func valid_target(index : int = -1) -> bool:
@@ -295,14 +296,18 @@ func _add_animation(animation_name : String) -> void:
 func _change_animation(requested_animation : String) -> void:
 	printt(_index, "change animation to ", requested_animation, "_anim_fps:", _anim_fps, "frame_skip:", frame_skip, "speed:", speed)
 
+	if animation not in sprite_frames.sequences: 
+		printt(_index, "no animation found:", requested_animation)
+		return
+
 	# NOTE: when changing animations it signals frame_changed and sets the frame back to the start
 	_requested_animation = true # now that this is set, it won't update current_frame or signal real_frame_changed
 	animation = requested_animation
 	_requested_animation = false
 	
-	print(sprite_frames.sequences)
-	frame = sprite_frames.sequences[animation].current_value()
-	_current_texture = sprite_frames.sequences[animation].get_frame_texture(sprite_frames, frame)
+	print(animation, sprite_frames.sequences)
+	goto_frame(sequence().current_value())
+	_current_texture = sequence().get_frame_texture(sprite_frames, frame)
 	
 	if stretch: rescale()
 
@@ -386,19 +391,28 @@ func next_frame(increment : int = 1) -> void:
 	elif increment < 0 and increment > -1:
 		increment = -1
 	#frame = floor(fposmod(frame + increment, frame_counts[animation]))
-	frame = sprite_frames.sequences[animation].next(increment)
+	goto_frame(sequence().next(increment))
 
+
+func goto_frame(f : int) -> void:
+	current_frame[animation] = f
+	frame = f
+	_current_texture = sequence().get_frame_texture(sprite_frames, frame)
+
+
+func sequence() -> AnimatedSequence:
+	return sprite_frames.sequences[animation]
 
 # TODO: without underscore this overrides the existing pause and needs to be changed
 func _pause():
 	if is_playing():
-		stop()
+		pause()
 		paused = true
 
 
 func _resume():
 	if not is_playing():
-		play(animation, _backwards)
+		play(animation, _direction)
 		paused = false
 
 
@@ -440,7 +454,7 @@ func change_relative_speed(relative_speed : float = 0.0, layer : int = -1) -> vo
 	speed = clampf(speed, 0.0, max_speed)
 	speed_scale = speed 
 	if speed > 0:
-		play(animation, _backwards)
+		play(animation, _direction)
 
 
 func set_speed(normalized_speed : float = 0.0, layer : int = -1) -> void:
@@ -451,7 +465,7 @@ func set_speed(normalized_speed : float = 0.0, layer : int = -1) -> void:
 	
 	speed_scale = speed 
 	if not is_playing() and speed > 0:
-		play(animation, _backwards)
+		play(animation, _direction)
 
 
 
@@ -477,18 +491,18 @@ func change_relative_speed_normalized(normalized_speed : float = 0.0, layer : in
 	speed_scale = speed 
 	
 	if normalized_speed < 0:
-		_backwards = true
-		play(animation, _backwards)
+		_direction = -1.0
+		play(animation, _direction)
 	else:
-		_backwards = false
-		play(animation, _backwards)
+		_direction = 1.0
+		play(animation, _direction)
 
 
 func reverse(layer : int = -1) -> void:
 	if not valid_target(layer): return
 	
-	_backwards = !_backwards
-	play(animation, _backwards)
+	_direction = -_direction
+	play(animation, _direction)
 
 
 
