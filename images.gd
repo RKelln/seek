@@ -239,11 +239,20 @@ func set_image_frames(iframes : ImageFrames) -> void:
 
 
 func get_transition_tween(duration : float, percent : float, start_val : Variant, end_val : Variant) -> Tween:
+	var type = "clock"
 	var t : Tween = prev_img.create_tween()
 	var delay = max(0, (1.0 - transition_percent) * duration)
-	t.tween_property(prev_img, "modulate:a", end_val, duration * percent).from(start_val).set_delay(delay)
-	if delay > 0:
-		prev_img.modulate.a = 1.0
+	
+	if type == "fade":
+		t.tween_property(prev_img, "modulate:a", end_val, duration * percent).from(start_val).set_delay(delay)
+		if delay > 0:
+			prev_img.modulate.a = 1.0
+	elif type == "clock":
+		var material = prev_img.get_material()
+		material.set_shader_parameter("amount", 0.0)
+		t.tween_property(material, "shader_parameter/amount", 1.0, duration * percent)
+		if delay > 0:
+			prev_img.modulate.a = 1.0
 	return t
 
 
@@ -279,7 +288,7 @@ func _on_real_frame_changed( frame : int) -> void:
 		_prevTexture = cur_img.get_current_frame()
 		if prev_img.texture != null:
 			var duration = cur_img.get_frame_duration()
-			#printt("frame change", cur_img.frame, duration)
+			printt("frame change", cur_img.frame, duration)
 			
 			if duration > transition_cutoff:
 				prev_img.visible = true

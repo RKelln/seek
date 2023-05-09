@@ -1,8 +1,13 @@
-[gd_scene load_steps=4 format=3 uid="uid://btvxvr36m31xm"]
+[gd_scene load_steps=6 format=3 uid="uid://btvxvr36m31xm"]
 
 [ext_resource type="Script" path="res://AnimatedImage.gd" id="1_4ai3v"]
 [ext_resource type="Script" path="res://images.gd" id="1_bypof"]
+[ext_resource type="Shader" path="res://shaders/mask_test.gdshader" id="3_1htmb"]
 [ext_resource type="PackedScene" uid="uid://c5kyn206tymg" path="res://dynamic_movement.tscn" id="3_ui8t2"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_q74fx"]
+shader = ExtResource("3_1htmb")
+shader_parameter/amount = null
 
 [node name="Images" type="Node2D"]
 script = ExtResource("1_bypof")
@@ -16,6 +21,7 @@ script = ExtResource("1_4ai3v")
 
 [node name="PrevImage" type="Sprite2D" parent="CanvasGroup"]
 unique_name_in_owner = true
+material = SubResource("ShaderMaterial_q74fx")
 offset = Vector2(960, 540)
 
 [node name="Camera2D" type="Camera2D" parent="CanvasGroup"]

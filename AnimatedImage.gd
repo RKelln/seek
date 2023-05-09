@@ -355,8 +355,11 @@ func next_animation(inc : int) -> StringName:
 
 
 func get_frame_duration() -> float:
-	assert(_anim_fps > 0)
-	return (1.0 / _anim_fps) / speed_scale
+	var relative_duration = sprite_frames.get_frame_duration(animation, frame)
+	var absolute_duration = relative_duration / (sprite_frames.get_animation_speed(animation) * abs(get_playing_speed()))
+	return absolute_duration
+	#assert(_anim_fps > 0)
+	#return (1.0 / _anim_fps) / speed_scale
 
 
 func get_current_frame() -> Texture2D:
