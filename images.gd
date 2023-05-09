@@ -33,7 +33,7 @@ var transition := true
 var transition_out_tween : Tween
 var transition_in_tween : Tween
 var transition_cutoff := 0.042 # 24 fps = 0.042
-var transition_percent := 0.1 # scale transition time such that 0.1 = 10% transition, 90% hold on full image
+var transition_percent := 0.9 # scale transition time such that 0.1 = 10% transition, 90% hold on full image
 var _prevTexture : Texture2D
 var _next_transition_delay : SceneTreeTimer
 
@@ -236,7 +236,16 @@ func set_transition_duration(duration : float, layer : int = -1) -> void:
 
 func set_image_frames(iframes : ImageFrames) -> void:
 	$CanvasGroup/AnimatedSprite2D.sprite_frames = iframes
- 
+
+
+func get_transition_tween(duration : float, percent : float, start_val : Variant, end_val : Variant) -> Tween:
+	var t : Tween = prev_img.create_tween()
+	var delay = max(0, (1.0 - transition_percent) * duration)
+	t.tween_property(prev_img, "modulate:a", end_val, duration * percent).from(start_val).set_delay(delay)
+	if delay > 0:
+		prev_img.modulate.a = 1.0
+	return t
+
 
 func _on_real_frame_changed( frame : int) -> void:
 	#printt("_on_real_frame_changed", frame, get_current_frame_index(), cur_img, prev_img)
@@ -281,14 +290,10 @@ func _on_real_frame_changed( frame : int) -> void:
 					prev_img.offset = cur_img.offset
 				if transition_out_tween:
 					transition_out_tween.kill()
-				transition_out_tween = prev_img.create_tween()
 				# HACK: when duration is low then start more transparent
 				var from = clampf(duration * transition_percent * 2.0, 0.5, 1.0) 
 				var delay = (1.0 - transition_percent) * duration
-				var t = transition_out_tween.tween_property(prev_img, "modulate:a", 0.0, duration * transition_percent).from(from)
-				if delay > 0:
-					prev_img.modulate.a = 1.0
-					t.set_delay(delay)
+				transition_out_tween = get_transition_tween(duration, transition_percent, from, 0.0)
 
 				#printt("new transition", self, transition_out_tween, duration, from)
 				# if different size then fade in the new image
@@ -297,7 +302,7 @@ func _on_real_frame_changed( frame : int) -> void:
 					if transition_in_tween:
 						transition_in_tween.kill()
 					transition_in_tween = cur_img.create_tween()
-					t = transition_in_tween.tween_property(cur_img, "modulate:a", 1.0, duration * transition_percent).from(0.0)
+					var t = transition_in_tween.tween_property(cur_img, "modulate:a", 1.0, duration * transition_percent).from(0.0)
 					if delay > 0:
 						cur_img.modulate.a = 0
 						t.set_delay(delay)
