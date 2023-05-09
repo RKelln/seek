@@ -1,12 +1,12 @@
-[gd_scene load_steps=6 format=3 uid="uid://btvxvr36m31xm"]
+[gd_scene load_steps=6 format=3 uid="uid://collvwu368fwd"]
 
 [ext_resource type="Script" path="res://AnimatedImage.gd" id="1_4ai3v"]
 [ext_resource type="Script" path="res://images.gd" id="1_bypof"]
-[ext_resource type="Shader" path="res://shaders/mask_test.gdshader" id="3_1htmb"]
 [ext_resource type="PackedScene" uid="uid://c5kyn206tymg" path="res://dynamic_movement.tscn" id="3_ui8t2"]
+[ext_resource type="Shader" path="res://shaders/clock.gdshader" id="3_xhtm8"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_q74fx"]
-shader = ExtResource("3_1htmb")
+shader = ExtResource("3_xhtm8")
 shader_parameter/amount = null
 
 [node name="Images" type="Node2D"]

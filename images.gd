@@ -29,13 +29,14 @@ extends Node2D
 var gui := false
 
 # transitions
-var transition := true
+@export var transition : StringName = "" : set = change_transition
 var transition_out_tween : Tween
 var transition_in_tween : Tween
 var transition_cutoff := 0.042 # 24 fps = 0.042
 var transition_percent := 0.9 # scale transition time such that 0.1 = 10% transition, 90% hold on full image
 var _prevTexture : Texture2D
 var _next_transition_delay : SceneTreeTimer
+var transitions = ["fade", "clock"]
 
 # alpha
 var opacity_speed := 0.6
@@ -89,6 +90,8 @@ func _ready():
 	
 	_index = get_index()
 	cur_img._index = _index
+	
+	transition = "fade"
 	
 	# midi and movie maker do not work together
 	if not OS.has_feature("movie"):
@@ -155,7 +158,13 @@ func _unhandled_input(event : InputEvent) -> void:
 		change_opacity(0.1 * opacity_speed)
 	elif event.is_action_pressed("decrease_opacity", true, true) and modulate.a > 0:
 		change_opacity(-0.1 * opacity_speed)
-		
+	elif event.is_action_pressed("next_transition", true, true):
+		var i = transitions.find(transition)
+		i += 1
+		if i >= transitions.size():
+			i = 0
+		transition = transitions[i]
+	
 	# handle switching packs using keys
 	if event is InputEventKey:
 		if not event.pressed: # releaased
@@ -195,7 +204,7 @@ func change_animation(_dir : int = 0, layer : int = -1) -> void:
 	if not valid_target(layer): return
 	
 	#printt(_index, "images.change_animation_relative", _dir)
-	if transition:
+	if transition != "":
 		prev_img.visible = false
 		_prevTexture = null
 		if transition_out_tween:
@@ -234,26 +243,55 @@ func set_transition_duration(duration : float, layer : int = -1) -> void:
 	printt(_index, "set_transition_duration", transition_percent)
 
 
-func set_image_frames(iframes : ImageFrames) -> void:
-	$CanvasGroup/AnimatedSprite2D.sprite_frames = iframes
+func change_transition(transition_name : StringName) -> void:
+	if transition == transition_name: return
+	
+	# stop current transition?
+	if transition != "":
+		_kill_transition_tweens() 
+		
+	if transition_name == "fade" or transition_name == "modulate:a":
+		if transition != "":
+			prev_img.material.set_shader_parameter("amount", 0)
+		transition = "fade"
+	else: # shader transition
+		if transition_name not in transitions:
+			return
+		if transition == "fade" or transition == "modulate:a":
+			# create a one off tween to go back to full opacty
+			prev_img.modulate.a = 1.0
+			
+		# load shader:
+		var shader = load("res://shaders/"+transition_name+".gdshader")
+		if shader:
+			prev_img.material.shader = shader
+			transition = transition_name
+	printt("Change transition to:", transition)
 
 
-func get_transition_tween(duration : float, percent : float, start_val : Variant, end_val : Variant) -> Tween:
-	var type = "clock"
+
+func get_transition_tween(duration : float, percent : float) -> Tween:
 	var t : Tween = prev_img.create_tween()
+	if transition == "": return t
+	
 	var delay = max(0, (1.0 - transition_percent) * duration)
 	
-	if type == "fade":
-		t.tween_property(prev_img, "modulate:a", end_val, duration * percent).from(start_val).set_delay(delay)
+	if transition == "fade" or transition == "modulate:a":
+		# HACK: when duration is low then start more transparent
+		var from = clampf(duration * transition_percent * 2.0, 0.5, 1.0) 
+		t.tween_property(prev_img, "modulate:a", 0.0, duration * percent).from(from).set_delay(delay)
 		if delay > 0:
 			prev_img.modulate.a = 1.0
-	elif type == "clock":
+	else: # shader transition
 		var material = prev_img.get_material()
 		material.set_shader_parameter("amount", 0.0)
-		t.tween_property(material, "shader_parameter/amount", 1.0, duration * percent)
-		if delay > 0:
-			prev_img.modulate.a = 1.0
+		t.tween_property(material, "shader_parameter/amount", 1.0, duration * percent).from(0.0)
+
 	return t
+
+
+func set_image_frames(iframes : ImageFrames) -> void:
+	$CanvasGroup/AnimatedSprite2D.sprite_frames = iframes
 
 
 func _on_real_frame_changed( frame : int) -> void:
@@ -277,7 +315,7 @@ func _on_real_frame_changed( frame : int) -> void:
 	#$CrossfadeImage.material.set_shader_param("curTex", frames.get_frame(animation, frame))
 
 	# FIXME: bug with modulate and tweens causing flashing!?
-	if transition and modulate.a == 1.0:
+	if transition != "": #and modulate.a == 1.0:
 		assert(cur_img != null)
 		assert(prev_img != null)
 	
@@ -288,7 +326,7 @@ func _on_real_frame_changed( frame : int) -> void:
 		_prevTexture = cur_img.get_current_frame()
 		if prev_img.texture != null:
 			var duration = cur_img.get_frame_duration()
-			printt("frame change", cur_img.frame, duration)
+			#printt("frame change", cur_img.frame, duration)
 			
 			if duration > transition_cutoff:
 				prev_img.visible = true
@@ -299,10 +337,8 @@ func _on_real_frame_changed( frame : int) -> void:
 					prev_img.offset = cur_img.offset
 				if transition_out_tween:
 					transition_out_tween.kill()
-				# HACK: when duration is low then start more transparent
-				var from = clampf(duration * transition_percent * 2.0, 0.5, 1.0) 
-				var delay = (1.0 - transition_percent) * duration
-				transition_out_tween = get_transition_tween(duration, transition_percent, from, 0.0)
+				
+				transition_out_tween = get_transition_tween(duration, transition_percent)
 
 				#printt("new transition", self, transition_out_tween, duration, from)
 				# if different size then fade in the new image
@@ -312,6 +348,7 @@ func _on_real_frame_changed( frame : int) -> void:
 						transition_in_tween.kill()
 					transition_in_tween = cur_img.create_tween()
 					var t = transition_in_tween.tween_property(cur_img, "modulate:a", 1.0, duration * transition_percent).from(0.0)
+					var delay = (1.0 - transition_percent) * duration
 					if delay > 0:
 						cur_img.modulate.a = 0
 						t.set_delay(delay)
@@ -393,7 +430,13 @@ func info() -> Dictionary:
 	return cur_img.info()
 
 
-func pause():
+func _kill_transition_tweens() -> void:
+	if transition_out_tween and transition_out_tween.is_valid() and transition_out_tween.is_running():
+		transition_out_tween.kill()
+	if transition_in_tween and transition_in_tween.is_valid() and transition_in_tween.is_running():
+		transition_in_tween.kill()
+			
+func pause() -> void:
 	cur_img.pause()
 	if transition_out_tween and transition_out_tween.is_valid() and transition_out_tween.is_running():
 		transition_out_tween.pause()
@@ -401,14 +444,15 @@ func pause():
 		transition_in_tween.pause()
 	
 	
-func resume():
+func resume() -> void:
 	cur_img.resume()
 	if transition_out_tween and transition_out_tween.is_valid():
 		transition_out_tween.play()
 	if transition_in_tween and transition_in_tween.is_valid():
 		transition_in_tween.play()
 
-func restart():
+
+func restart() -> void:
 	cur_img.pause()
 	prev_img.visible = false
 	if transition_out_tween and transition_out_tween.is_valid() and transition_out_tween.is_running():
@@ -418,7 +462,7 @@ func restart():
 	cur_img.frame = 0
  
 
-func set_timing(duration_ms : float):
+func set_timing(duration_ms : float) -> void:
 	var dur_s = duration_ms / 1000.0
 	cur_img.set_frame_duration(dur_s)
 	if transition_out_tween and transition_out_tween.is_valid() and transition_out_tween.is_running():
