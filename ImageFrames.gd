@@ -24,6 +24,8 @@ var neighbours : Array[Sequence] : set = set_neighbours
 
 var sequences : Dictionary = {}
 
+var _all_fps : Dictionary = {}
+
 
 func get_total_frame_count() -> int:
 	var count := 0
@@ -44,10 +46,10 @@ func get_base_frame_count() -> int:
 
 
 func get_all_fps() -> Dictionary:
-	var all_fps = {}
-	for anim in get_animation_names():
-		all_fps[anim] = get_animation_speed(anim)
-	return all_fps
+	if _all_fps.size() == 0:
+		for anim in get_animation_names():
+			_all_fps[anim] = get_animation_speed(anim)
+	return _all_fps
 
 
 func get_fps(animation_name : String) -> float:

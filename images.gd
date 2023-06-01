@@ -465,26 +465,26 @@ func restart() -> void:
 func set_timing(duration_ms : float) -> void:
 	var dur_s = duration_ms / 1000.0
 	cur_img.set_frame_duration(dur_s)
-	if transition_out_tween and transition_out_tween.is_valid() and transition_out_tween.is_running():
-		transition_out_tween.stop()
+#	if transition_out_tween and transition_out_tween.is_valid() and transition_out_tween.is_running():
+#		transition_out_tween.stop()
 	if transition_in_tween and transition_in_tween.is_valid() and transition_in_tween.is_running():
 		transition_in_tween.stop()
 	prev_img.visible = false
 	#cur_img.next_frame() # immediately advance to sync to beat
 	
-	# try to adjust for transition
-	if dur_s > transition_cutoff:
-		if _next_transition_delay and _next_transition_delay.time_left > 0:
-			#printt(_index, "delay transition", dur_s / 2.0)
-			_next_transition_delay.time_left = dur_s / 2.0
-		else:
-			_next_transition_delay = get_tree().create_timer(dur_s / 2.0)
-			#printt(_index, "start delay", dur_s / 2.0)
-			await _next_transition_delay.timeout
-			#printt(_index, "offset transition")
-			cur_img.next_frame()
-	else:
-		cur_img.next_frame() # immediately advance to sync to beat
+#	# try to adjust for transition
+#	if dur_s > transition_cutoff:
+#		if _next_transition_delay and _next_transition_delay.time_left > 0:
+#			#printt(_index, "delay transition", dur_s / 2.0)
+#			_next_transition_delay.time_left = dur_s / 2.0
+#		else:
+#			_next_transition_delay = get_tree().create_timer(dur_s / 2.0)
+#			#printt(_index, "start delay", dur_s / 2.0)
+#			await _next_transition_delay.timeout
+#			#printt(_index, "offset transition")
+#			cur_img.next_frame()
+#	else:
+#		cur_img.next_frame() # immediately advance to sync to beat
 
 
 func beat_match(layer : int = -1) -> void:

@@ -272,17 +272,25 @@ func change_animation_relative(direction : int, layer : int = -1) -> void:
 	
 	
 func _init_animation(animation_name : String) -> void:
+	# ensure that values are there, and set as base animation if values missing
 	if animation_name in sprite_frames.sequences:
-		_anim_fps = sprite_frames.get_animation_speed(base_animation_name)
+		_anim_fps = sprite_frames.get_fps(animation_name)
+		if animation_name not in frame_counts:
+			frame_counts[animation_name] = sprite_frames.get_frame_count(animation_name)
 	else:
-		_anim_fps = sprite_frames.get_animation_speed(animation_name)
+		printt("Warning: init_animation:", animation_name, "not found, using base animation")
+		_anim_fps = sprite_frames.get_fps(base_animation_name)
+		if animation_name not in frame_counts:
+			frame_counts[animation_name] = sprite_frames.get_frame_count(base_animation_name)
+	if animation_name not in _speeds:
+		_speeds[animation_name] = 1.0
+	if animation_name not in current_frame:
+		current_frame[animation_name] = 0
 	assert(_anim_fps > 0)
 	
 	frame_skip = mini(max_frame_skip, maxi(1, floor(frame_counts[animation_name] * percent_frames_for_skip))) # % of frames
 	speed = _speeds[animation_name]
 	speed_scale = speed
-	if animation_name not in frame_counts:
-		frame_counts[animation_name] = sprite_frames.get_frame_count(animation_name)
 
 
 func _add_animation(animation_name : String) -> void:
@@ -299,6 +307,7 @@ func _add_animation(animation_name : String) -> void:
 			
 	if animation_name not in frame_counts or frame_counts[animation_name] <= 0:
 		frame_counts[animation_name] = frame_count
+
 
 # always changes animation, regardless of current and state
 func _change_animation(requested_animation : String) -> void:
@@ -326,7 +335,7 @@ func change_animation(requested_animation : String) -> void:
 	if frame_counts[requested_animation] <= 0:
 		return
 
-	# alsways set these:
+	# always set these:
 	_init_animation(requested_animation)
 	
 	if requested_animation == animation:
@@ -395,7 +404,7 @@ func set_frame_duration(duration_s : float) -> void:
 	speed_scale = speed
 	
 
-func next_frame(increment : int = 1) -> void:
+func next_frame(increment : int = _direction) -> void:
 	printt(_index, "next_frame", increment)
 	if increment > 0 and increment < 1:
 		increment = 1
@@ -485,20 +494,10 @@ func change_relative_speed_normalized(normalized_speed : float = 0.0, layer : in
 	
 	normalized_speed = clampf(normalized_speed, -1.0, 1.0)
 	
-	#var rdist2 = remap(normalized_speed, -0.5, 0.5, -0.2, 0.2) # less change near the middle
-	#speed = 0.5 * (abs(normalized_speed) + abs(rdist2)) * _anim_fps * 20.0 # FIXME: add fps here?
-	
 	var eased := ease(abs(normalized_speed), 2)
-	if _anim_fps < 1:
-		speed = remap(eased, 0, 1.0, 0, 10.0 + 90.0 * (1.0 - _anim_fps))
-	elif _anim_fps < 10:
-		speed = remap(eased, 0, 1.0, 0, 5.0 + 9.0 * (10.0 - _anim_fps))
-	else:
-		speed = remap(eased, 0, 1.0, 0, 5.0)
+	var max_speed = max(5.0, 30.0 / _anim_fps)
+	speed = remap(eased, 0, 1.0, 0, max_speed)
 	printt(_index, "change_normalized_speed", normalized_speed, eased, speed, _anim_fps)
-	
-	speed = clampf(speed, 0.0, 100.0)
-	
 	speed_scale = speed 
 	
 	if normalized_speed < 0:
