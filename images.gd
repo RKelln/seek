@@ -30,8 +30,8 @@ var gui := false
 
 # transitions
 @export var transition : StringName = "" : set = change_transition
-var transition_out_tween : Tween
-var transition_in_tween : Tween
+var transition_out_tween : Tween # transition from prev image to current
+var transition_in_tween : Tween  # used only when image sizes differ, to fade in the current image
 var transition_cutoff := 0.042 # 24 fps = 0.042
 var transition_percent := 0.9 # scale transition time such that 0.1 = 10% transition, 90% hold on full image
 var _prevTexture : Texture2D
@@ -202,13 +202,11 @@ func change_pause(layer : int = -1) -> void:
 
 func change_animation(_dir : int = 0, layer : int = -1) -> void:
 	if not valid_target(layer): return
-	
-	#printt(_index, "images.change_animation_relative", _dir)
+	printt(_index, "images.change_animation", _dir, "layer:", layer)
+	_prevTexture = cur_img.get_current_frame()
 	if transition != "":
-		prev_img.visible = false
-		_prevTexture = null
-		if transition_out_tween:
-			transition_out_tween.kill()
+#		if transition_out_tween:
+#			transition_out_tween.kill()
 		if transition_in_tween:
 			transition_in_tween.kill()
 			cur_img.modulate.a = 1.0
@@ -321,8 +319,8 @@ func _on_real_frame_changed( frame : int) -> void:
 	
 		if _prevTexture != null:
 			prev_img.texture = _prevTexture
-		else:
-			prev_img.texture = cur_img.get_current_frame()
+		else: # get the first frame texture, should otherwise always be set
+			prev_img.texture = cur_img.get_texture(get_sequence_name(), 0)
 		_prevTexture = cur_img.get_current_frame()
 		if prev_img.texture != null:
 			var duration = cur_img.get_frame_duration()

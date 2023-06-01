@@ -386,7 +386,8 @@ func get_current_frame() -> Texture2D:
 
 func get_texture(seq_name : String = "", index : int = -1) -> Texture2D:
 	if seq_name == "": seq_name = base_animation_name
-	return sprite_frames.sequences[seq_name].get_frame_texture(index) 
+	# FIXME: this is silly, there should be a better call path to this
+	return sprite_frames.sequences[seq_name].get_frame_texture(sprite_frames, index)
 
 
 func get_rect() -> Rect2:
