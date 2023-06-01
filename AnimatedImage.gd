@@ -89,11 +89,10 @@ func _ready():
 func _on_frame_changed():
 	# update current frame
 	if not _requested_animation:
-		
 		# some hacky magic here, we don't want to update more than once
 		if current_frame[animation] != frame:
 			var seq : AnimatedSequence = sequence()
-			current_frame[animation] = seq.next()
+			current_frame[animation] = seq.next(_direction)
 			frame = current_frame[animation]
 			#printt(_index, "frame", frame)
 			_current_texture = seq.get_frame_texture(sprite_frames, frame)
@@ -114,11 +113,25 @@ func _process(_delta):
 #		handle_input()
 
 
+func _mouse_control_speed() -> void:
+	var mpos := get_viewport().get_mouse_position()
+	var viewsize := get_viewport().get_visible_rect().size
+	var relative_dist = remap(mpos.x, 0, viewsize.x, -1.0, 1.0)
+	change_relative_speed_normalized(relative_dist)
+	get_viewport().set_input_as_handled()
+	#printt(viewsize.x, mpos.x, relative_dist)
+
+
 func _unhandled_input(event : InputEvent):
 	if not active:
 		return
 	# no mouse motion events handled here
-	if event is InputEventMouseMotion: return
+	if event is InputEventMouseMotion: 
+		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+			if Input.is_key_pressed(KEY_CTRL) or Input.is_key_pressed(KEY_ALT) or Input.is_key_pressed(KEY_SHIFT):
+				return
+			_mouse_control_speed()
+		return
 	
 	if event is InputEventTargetedAction:
 		# note: do not check for pressed, 
@@ -166,12 +179,7 @@ func _unhandled_input(event : InputEvent):
 			# no modifier keys pressed
 			if Input.is_key_pressed(KEY_CTRL) or Input.is_key_pressed(KEY_ALT) or Input.is_key_pressed(KEY_SHIFT):
 				return
-			var mpos := get_viewport().get_mouse_position()
-			var viewsize := get_viewport().get_visible_rect().size
-			var relative_dist = remap(mpos.x, 0, float(mpos.x), -1.0, 1.0)
-			change_relative_speed_normalized(relative_dist)
-			get_viewport().set_input_as_handled()
-			#printt(w, get_viewport().get_mouse_position().x, relative_dist, dist)
+			_mouse_control_speed()
 		return # no other mouse events below
 	
 	# handle tags:
