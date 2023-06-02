@@ -72,27 +72,30 @@ func add_frames(new_frames : ImageFrames, animation_name : String = '', offset :
 	else:
 		animation_names = [animation_name]
 	
+	# always do base anaimation first
+	if base_animation_name in animation_names:
+		for i in new_frames.get_frame_count(base_animation_name):
+			_add_frame(base_animation_name, i+offset, new_frames.get_frame_texture(base_animation_name, i))
+		animation_names.erase(base_animation_name)
+	
 	for aname in animation_names:
-		if aname == base_animation_name:
-			for i in new_frames.get_frame_count(aname):
-				_add_frame(aname, i+offset, new_frames.get_frame_texture(aname, i))
-		else:
-			if get_animation_names().has(aname):
-				printt("Warning duplicate animation names:", aname)
-				# TODO: prefix with pack name unless name is default?
-				continue
+		if get_animation_names().has(aname):
+			printt("Warning duplicate animation names:", aname)
+			# TODO: prefix with pack name unless name is default?
+			continue
 
-			var seq : Sequence
-			if aname in new_frames.sequences:
-				seq = new_frames.sequences[aname]
-			else:
-				seq = Sequence.new(range(new_frames.get_frame_count(aname)))
-			add_sequence(aname, seq) # adds andimations as needed
-			
-			# TODO: set up loop, flags, etc for Sequence
-			
-			set_animation_loop(aname, new_frames.get_animation_loop(aname))
-			set_animation_speed(aname, new_frames.get_animation_speed(aname))
+		var seq : Sequence
+		if aname in new_frames.sequences:
+			seq = new_frames.sequences[aname]
+		else:
+			seq = Sequence.new(range(new_frames.get_frame_count(aname)))
+		seq.rebase(offset)
+		add_sequence(aname, seq) # adds andimations as needed
+		
+		# TODO: set up loop, flags, etc for Sequence
+		
+		set_animation_loop(aname, new_frames.get_animation_loop(aname))
+		set_animation_speed(aname, new_frames.get_animation_speed(aname))
 
 
 

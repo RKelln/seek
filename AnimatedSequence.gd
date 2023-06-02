@@ -12,9 +12,6 @@ func _init(initial_values: Variant, animation_name : StringName, frame_count: in
 	self.animation = animation_name
 	self.frame_count = frame_count
 
-	# none of the values that refer to frame numbers can be more than the frame count
-	assert(max_value() < frame_count)
-
 
 func get_frame_texture(frames : SpriteFrames, index : int = -1) -> Texture2D:
 	if index == -1: index = current_index

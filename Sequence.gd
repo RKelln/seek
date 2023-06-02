@@ -50,6 +50,12 @@ func _init(initial_values : Variant, initial_flags : Variant = [], loop_type := 
 	
 	set_flags(initial_flags)
 
+# offset the values by a fixed amount
+func rebase(offset : int):
+	if offset == 0: return
+	for i in range(values.size()):
+		values[i] = values[i] + offset
+
 
 func set_mapping(new_mapping : TagFlagKeyMap) -> void:
 	self.mapping = new_mapping
