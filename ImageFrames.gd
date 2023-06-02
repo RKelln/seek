@@ -73,19 +73,27 @@ func add_frames(new_frames : ImageFrames, animation_name : String = '', offset :
 		animation_names = [animation_name]
 	
 	for aname in animation_names:
-		if aname != base_animation_name:
+		if aname == base_animation_name:
+			for i in new_frames.get_frame_count(aname):
+				_add_frame(aname, i+offset, new_frames.get_frame_texture(aname, i))
+		else:
 			if get_animation_names().has(aname):
 				printt("Warning duplicate animation names:", aname)
 				# TODO: prefix with pack name unless name is default?
 				continue
+
+			var seq : Sequence
+			if aname in new_frames.sequences:
+				seq = new_frames.sequences[aname]
 			else:
-				add_animation(aname)
+				seq = Sequence.new(range(new_frames.get_frame_count(aname)))
+			add_sequence(aname, seq) # adds andimations as needed
+			
+			# TODO: set up loop, flags, etc for Sequence
 			
 			set_animation_loop(aname, new_frames.get_animation_loop(aname))
 			set_animation_speed(aname, new_frames.get_animation_speed(aname))
-			
-		for i in new_frames.get_frame_count(aname):
-			_add_frame(aname, i+offset, new_frames.get_frame_texture(aname, i))
+
 
 
 func update_frames(animation_name : String, new_sequence : PackedInt32Array) -> void:
@@ -205,7 +213,7 @@ func get_sequence(seq_name : String = base_animation_name) -> Sequence:
 
 
 func add_sequence(seq_name : String, sequence : Sequence) -> void:
-	# adds an new animation given frame indexs of the default an imation
+	# adds an new animation given frame indexes of the default animation
 	if seq_name in get_animation_names():
 		printt("ImageFrames already has animation:", seq_name)
 		return
@@ -268,23 +276,12 @@ static func normalize_name(name : String) -> StringName:
 
 static func combine_image_packs(packs : Array[ImageFrames]) -> ImageFrames:
 	var combined := ImageFrames.new()
-	# FIXME: lots of bugs here, hack workaround, add default animations
-	# then just add the last animation
 	var offsets : Array[int] = []
 	var offset : int = 0
 	for p in packs:
 		offsets.append(offset)
-		combined.add_frames(p, base_animation_name, offset)
+		combined.add_frames(p, "", offset) # add all animations including base
 		offset += p.get_base_frame_count()
-	for i in packs.size():
-		var anims : Array = packs[i].get_valid_animation_names()
-		for anim_name in anims:
-			combined.add_frames(packs[i], anim_name, offsets[i])
-	
-	# TODO: FIXME: combine tags, mapping, neighbours
-	combined.tags = packs[0].tags
-	combined.neighbours = packs[0].neighbours
-	combined.mapping = packs[0].mapping
 	
 	return combined
 
