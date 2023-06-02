@@ -313,7 +313,7 @@ func _add_animation(animation_name : String) -> void:
 func _change_animation(requested_animation : String) -> void:
 	printt(_index, "change animation to ", requested_animation, "_anim_fps:", _anim_fps, "frame_skip:", frame_skip, "speed:", speed)
 
-	if animation not in sprite_frames.sequences: 
+	if requested_animation not in sprite_frames.sequences: 
 		printt(_index, "no animation found:", requested_animation)
 		return
 
