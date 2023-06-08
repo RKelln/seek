@@ -92,10 +92,11 @@ func _on_frame_changed():
 	if not _requested_animation:
 		# some hacky magic here, we don't want to update more than once
 		if current_frame[animation] != frame:
+			_requested_animation = true
 			var seq : AnimatedSequence = sequence()
 			current_frame[animation] = seq.next(_direction)
 			frame = current_frame[animation]
-			#printt(_index, "frame", frame)
+			_requested_animation = false
 			_current_texture = seq.get_frame_texture(sprite_frames, frame)
 #			if sequences[current_sequence].active_flags > 0:
 #				prints(frame, sequences[current_sequence].tags())
