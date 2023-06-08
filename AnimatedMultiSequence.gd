@@ -9,7 +9,7 @@ const MAX_TRIES := 10
 # PLAY_THROUGH: iterate through subsequence then move to next subsequence
 # NEIGHBOURS: subsequences are sorted neighbours list, pick closest
 enum Mode {CHOOSE_ONE, PLAY_THROUGH, NEIGHBOURS}
-var mode := Mode.CHOOSE_ONE : set = set_mode
+var mode := Mode.NEIGHBOURS : set = set_mode
 
 # subsequences contain indices to values
 var sub_sequences : Array[Sequence]

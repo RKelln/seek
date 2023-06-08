@@ -226,17 +226,17 @@ func add_sequence(seq_name : String, sequence : Sequence, offset : int = 0) -> v
 	
 	if sequence.size() != get_base_frame_count():
 		printt("Warning sequence size", sequence.size(), "doesn't match number of base animation frames", get_base_frame_count())
-	
+
 	_create_animation(seq_name)
-	
+
 	for i in sequence.values:
 		_add_frame(seq_name, i, get_frame_texture(base_animation_name, i + offset))
 	
 	# because we made a  new animation for this, replace the sequence values with standard range
-	sequence.reset_values()
+	#sequence.reset_values()
 	
-	#sequence.animation = base_animation_name # use base animation : FIXME
-	sequences[seq_name] = AnimatedSequence.from_Sequence(sequence, seq_name)
+	# sequence uses base animation
+	sequences[seq_name] = AnimatedSequence.from_Sequence(sequence, base_animation_name)
 
 
 func animation_to_sequence(anim_name : String) -> AnimatedSequence:
@@ -272,8 +272,10 @@ func set_neighbours(n : Array[Sequence]):
 		if sequences[s] is AnimatedMultiSequence:
 			var ams := sequences[s] as AnimatedMultiSequence
 			ams.neighbours = n
+			ams.mode = AnimatedMultiSequence.Mode.NEIGHBOURS
 		elif sequences[s] is AnimatedSequence:
 			sequences[s] = AnimatedMultiSequence.from_AnimatedSequence(sequences[s], n)
+			sequences[s].mode = AnimatedMultiSequence.Mode.NEIGHBOURS
 		else:
 			assert(false, "Invalid sequence type for sequence: %s" % s)
 

@@ -54,6 +54,7 @@ const migrations_tags := {
 	37: 1 << 4,  # polka
 	36: 1 << 5,  # lebanese
 	33: 1 << 6,  # techno
+	39: 0        # disable
 }
 
 
@@ -132,7 +133,6 @@ func _pitch_to_tag_flag(pitch: int, mapping : Dictionary ) -> int:
 	
 	if pitch not in mapping:
 		printt("Pitch not found in mapping", pitch, mapping)
-		tag_flag = 1 << pitch
 	else:
 		tag_flag = mapping[pitch]
 	

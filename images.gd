@@ -338,7 +338,7 @@ func _on_real_frame_changed( frame : int) -> void:
 		if _prevTexture != null:
 			prev_img.texture = _prevTexture
 		else: # get the first frame texture, should otherwise always be set
-			prev_img.texture = cur_img.get_texture(get_sequence_name(), 0)
+			prev_img.texture = cur_img.get_texture(get_sequence_name(), frame)
 		_prevTexture = cur_img.get_current_frame()
 		if prev_img.texture != null:
 			var duration = cur_img.get_frame_duration()
@@ -418,8 +418,8 @@ func get_textures(anim_name : String = "") -> Array[Texture2D]:
 	return f
 
 
-func get_current_frame_index() -> int:
-	return cur_img.frame
+#func get_current_frame_index() -> int:
+#	return cur_img.frame
 
 
 func get_sequence_name() -> StringName:

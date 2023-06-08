@@ -44,6 +44,7 @@ var _current_texture : Texture2D # reference to current texture
 var _index : int
 var _speeds : Dictionary # stores current speeds for each animation
 var _tag_keys_pressed : Dictionary = {} # "key": bool where True is pressed
+var _sprite : Sprite2D
 
 var listening_for_tags := false
 
@@ -52,6 +53,8 @@ signal real_frame_changed(frame: int)
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	#if not sprite_frames: return
+	
+	_sprite = %NextImage
 	
 	self.frame_changed.connect(_on_frame_changed)
 	
@@ -91,17 +94,19 @@ func _on_frame_changed():
 	# update current frame
 	if not _requested_animation:
 		# some hacky magic here, we don't want to update more than once
-		if current_frame[animation] != frame:
-			_requested_animation = true
-			var seq : AnimatedSequence = sequence()
-			current_frame[animation] = seq.next(_direction)
-			frame = current_frame[animation]
-			_requested_animation = false
-			printt(_index, "frame", frame, animation)
-			_current_texture = seq.get_frame_texture(sprite_frames, frame)
-			if seq.active_flags > 0 and seq.has_mapping():
-				prints(frame, seq.tags())
-			real_frame_changed.emit(frame)
+		#if current_frame[animation] != frame:
+		_requested_animation = true
+		var seq : AnimatedSequence = sequence()
+		current_frame[animation] = seq.next(_direction)
+		# frame = current_frame[animation]
+		_current_texture = seq.get_frame_texture(sprite_frames, current_frame[animation])
+		_sprite.texture = _current_texture
+		_requested_animation = false
+		printt(_index, "frame", current_frame[animation], frame, animation)
+		
+		if seq.active_flags > 0 and seq.has_mapping():
+			prints(current_frame[animation], seq.tags(current_frame[animation]))
+		real_frame_changed.emit(current_frame[animation])
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -150,7 +155,9 @@ func _unhandled_input(event : InputEvent):
 			"set_flag":
 				var flag = int(event.target)
 				printt("set_flag", flag)
-				if sequence().has_mapping(flag):
+				if flag == 0:
+					sequence().active_flags = 0
+				elif sequence().has_mapping(flag):
 					prints("set_flag", event, sequence().mapping.flag_tag(flag))
 					sequence().active_flags = flag
 			
@@ -337,7 +344,8 @@ func _change_animation(requested_animation : String) -> void:
 	
 	print(animation, sprite_frames.sequences)
 	goto_frame(sequence().current_value())
-	_current_texture = sequence().get_frame_texture(sprite_frames, frame)
+	_current_texture = sequence().get_frame_texture(sprite_frames, current_frame[animation])
+	_sprite.texture = _current_texture
 	
 	if stretch: rescale()
 
@@ -386,7 +394,7 @@ func next_animation(inc : int) -> StringName:
 
 
 func get_frame_duration() -> float:
-	var relative_duration = sprite_frames.get_frame_duration(animation, frame)
+	var relative_duration = sprite_frames.get_frame_duration(animation, current_frame[animation])
 	var absolute_duration = relative_duration / (sprite_frames.get_animation_speed(animation) * abs(get_playing_speed()))
 	return absolute_duration
 	#assert(_anim_fps > 0)
@@ -394,7 +402,7 @@ func get_frame_duration() -> float:
 
 
 func get_current_frame() -> Texture2D:
-	#return sprite_frames.get_frame_texture(animation, frame)
+	#return sprite_frames.get_frame_texture(animation, current_frame[animation])
 	return _current_texture
 
 
@@ -431,12 +439,14 @@ func next_frame(increment : int = _direction) -> void:
 
 func goto_frame(f : int) -> void:
 	current_frame[animation] = f
-	frame = f
-	_current_texture = sequence().get_frame_texture(sprite_frames, frame)
+	#frame = f
+	_current_texture = sequence().get_frame_texture(sprite_frames, current_frame[animation])
+	_sprite.texture = _current_texture
 
 
 func sequence() -> AnimatedSequence:
 	return sprite_frames.sequences[animation]
+
 
 # TODO: without underscore this overrides the existing pause and needs to be changed
 func _pause():
