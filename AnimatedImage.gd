@@ -369,6 +369,7 @@ func debug_info():
 func next_animation(inc : int) -> StringName:
 	var anim_names = sprite_frames.get_valid_animation_names()
 	var i = anim_names.find(animation)
+	if i < 0: return sprite_frames.get_valid_animation_names()[0]
 	for anim in anim_names: # loop maximum of once
 		i = fposmod(i + inc, anim_names.size())
 		# never switch to base animation and

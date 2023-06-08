@@ -185,8 +185,7 @@ func _unhandled_input(event : InputEvent) -> void:
 				if selected_anim >= 0 and selected_anim < count:
 					#printt(_index, "input", event.keycode, selected_anim)
 					if get_sequence_name() != anims[selected_anim]:
-						change_animation()
-						cur_img.change_animation(anims[selected_anim])
+						change_animation(anims[selected_anim])
 		return
 
 # called eery process from the movement_tween that does a sin-like movement
@@ -205,9 +204,7 @@ func change_pause(layer : int = -1) -> void:
 	pause()
 
 
-func change_animation(_dir : int = 0, layer : int = -1) -> void:
-	if not valid_target(layer): return
-	printt(_index, "images.change_animation", _dir, "layer:", layer)
+func _before_change_animation() -> void:
 	_prevTexture = cur_img.get_current_frame()
 	if transition != "":
 #		if transition_out_tween:
@@ -215,6 +212,20 @@ func change_animation(_dir : int = 0, layer : int = -1) -> void:
 		if transition_in_tween:
 			transition_in_tween.kill()
 			cur_img.modulate.a = 1.0
+
+
+func change_animation(anim_or_dir : Variant = 0, layer : int = -1) -> void:
+	if not valid_target(layer): return
+	printt(_index, "images.change_animation", anim_or_dir, "layer:", layer)
+	
+	if anim_or_dir is int:
+		if anim_or_dir > 0 or get_sequence_name() not in get_valid_animation_names():
+			_before_change_animation()
+			cur_img.next_animation(anim_or_dir)
+	elif anim_or_dir is String:
+		if get_sequence_name() != anim_or_dir:
+			_before_change_animation()
+			cur_img.change_animation(anim_or_dir)
 
 
 func change_opacity(amount : float, layer : int = -1) -> void:

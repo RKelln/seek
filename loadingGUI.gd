@@ -83,6 +83,9 @@ func create_info_panel(save_path : String, info : Dictionary) -> void:
 
 
 func combine_image_packs(packs : Array) -> ImageFrames:
+	if packs.size() == 1:
+		return packs[0]
+	
 	var combined :=  ImageFrames.combine_image_packs(packs)
 		
 	# clear out loaded packs and info

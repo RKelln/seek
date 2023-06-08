@@ -46,9 +46,8 @@ func get_base_frame_count() -> int:
 
 
 func get_all_fps() -> Dictionary:
-	if _all_fps.size() == 0:
-		for anim in get_animation_names():
-			_all_fps[anim] = get_animation_speed(anim)
+	for anim in get_animation_names():
+		_all_fps[anim] = get_animation_speed(anim)
 	return _all_fps
 
 
@@ -72,11 +71,11 @@ func add_frames(new_frames : ImageFrames, animation_name : String = '', offset :
 	else:
 		animation_names = [animation_name]
 	
-	# always do base anaimation first
+	# always do base animation first
 	if base_animation_name in animation_names:
 		for i in new_frames.get_frame_count(base_animation_name):
 			_add_frame(base_animation_name, i+offset, new_frames.get_frame_texture(base_animation_name, i))
-		animation_names.erase(base_animation_name)
+		animation_names.erase(String(base_animation_name))
 	
 	for aname in animation_names:
 		if get_animation_names().has(aname):
@@ -89,8 +88,8 @@ func add_frames(new_frames : ImageFrames, animation_name : String = '', offset :
 			seq = new_frames.sequences[aname]
 		else:
 			seq = Sequence.new(range(new_frames.get_frame_count(aname)))
-		seq.rebase(offset)
-		add_sequence(aname, seq) # adds andimations as needed
+		# TODO, FIXME: make sequences use base animation only, not their own animations
+		add_sequence(aname, seq, offset) # adds andimations as needed
 		
 		# TODO: set up loop, flags, etc for Sequence
 		
@@ -135,7 +134,8 @@ func info() -> Dictionary:
 	var current_info := {
 		'pack_name' : pack_name,
 		'frames': get_base_frame_count(),
-		'sequences': get_animation_names(),
+		'animations': get_animation_names(),
+		'sequences': sequences.keys(),
 		'frame_counts': get_frame_counts(),
 		'fps': get_all_fps()
 	}
@@ -198,11 +198,12 @@ func _add_frame(animation_name : String, i : int, tex : Texture2D, flags : int =
 
 func save(file_path : String) -> int:
 	print("Saving: ", file_path)
+	info()
 	var start := Time.get_ticks_msec()
 	#printt(frames, frames.get_class(), ImageFrames.new().get_class())
 	#frames = ImageFrames.new()
 	#printt(frames, frames.get_class())
-	#var result := ResourceSaver.save(frames, file_path, ResourceSaver.FLAG_CHANGE_PATH | ResourceSaver.FLAG_BUNDLE_RESOURCES)
+	#var result := ResourceSaver.save(self, file_path, ResourceSaver.FLAG_CHANGE_PATH | ResourceSaver.FLAG_BUNDLE_RESOURCES)
 	var result := ResourceSaver.save(self, file_path, ResourceSaver.FLAG_CHANGE_PATH)
 	print("Saving time (sec): ", (Time.get_ticks_msec() - start) / 1000.0 )
 	return result
@@ -215,7 +216,7 @@ func get_sequence(seq_name : String = base_animation_name) -> Sequence:
 	return sequences[seq_name]
 
 
-func add_sequence(seq_name : String, sequence : Sequence) -> void:
+func add_sequence(seq_name : String, sequence : Sequence, offset : int = 0) -> void:
 	# adds an new animation given frame indexes of the default animation
 	if seq_name in get_animation_names():
 		printt("ImageFrames already has animation:", seq_name)
@@ -229,8 +230,12 @@ func add_sequence(seq_name : String, sequence : Sequence) -> void:
 	_create_animation(seq_name)
 	
 	for i in sequence.values:
-		_add_frame(seq_name, i, get_frame_texture(base_animation_name, i))
-
+		_add_frame(seq_name, i, get_frame_texture(base_animation_name, i + offset))
+	
+	# because we made a  new animation for this, replace the sequence values with standard range
+	sequence.reset_values()
+	
+	#sequence.animation = base_animation_name # use base animation : FIXME
 	sequences[seq_name] = AnimatedSequence.from_Sequence(sequence, seq_name)
 
 
