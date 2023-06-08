@@ -132,6 +132,11 @@ func _unhandled_input(event : InputEvent) -> void:
 					set_opacity(event.strength, event.target)
 				"set_transition_duration":
 					set_transition_duration(event.strength, event.target)
+				"play":
+					if event.pressed:
+						resume()
+					else:
+						pause()
 		return
 	
 	if event is InputEventMouseButton:
@@ -433,9 +438,10 @@ func _kill_transition_tweens() -> void:
 		transition_out_tween.kill()
 	if transition_in_tween and transition_in_tween.is_valid() and transition_in_tween.is_running():
 		transition_in_tween.kill()
-			
+
+
 func pause() -> void:
-	cur_img.pause()
+	cur_img._pause()
 	if transition_out_tween and transition_out_tween.is_valid() and transition_out_tween.is_running():
 		transition_out_tween.pause()
 	if transition_in_tween and transition_in_tween.is_valid() and transition_in_tween.is_running():
@@ -443,7 +449,7 @@ func pause() -> void:
 	
 	
 func resume() -> void:
-	cur_img.resume()
+	cur_img._resume()
 	if transition_out_tween and transition_out_tween.is_valid():
 		transition_out_tween.play()
 	if transition_in_tween and transition_in_tween.is_valid():

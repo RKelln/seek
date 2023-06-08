@@ -30,6 +30,7 @@ const percent_frames_for_skip = 0.02
 const max_frame_skip = 10
 var frame_skip = 10
 var stretch := true
+var mouse_controls := false
 
 var paused : bool = false
 
@@ -125,13 +126,15 @@ func _mouse_control_speed() -> void:
 func _unhandled_input(event : InputEvent):
 	if not active:
 		return
-	# no mouse motion events handled here
-	if event is InputEventMouseMotion: 
-		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-			if Input.is_key_pressed(KEY_CTRL) or Input.is_key_pressed(KEY_ALT) or Input.is_key_pressed(KEY_SHIFT):
-				return
-			_mouse_control_speed()
-		return
+		
+	if mouse_controls:
+		# no mouse motion events handled here
+		if event is InputEventMouseMotion: 
+			if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+				if Input.is_key_pressed(KEY_CTRL) or Input.is_key_pressed(KEY_ALT) or Input.is_key_pressed(KEY_SHIFT):
+					return
+				_mouse_control_speed()
+			return
 	
 	if event is InputEventTargetedAction:
 		# note: do not check for pressed, 
@@ -144,17 +147,14 @@ func _unhandled_input(event : InputEvent):
 					set_speed(event.strength, event.target)
 			"set_flag":
 				var flag = int(event.target)
-				prints("set_flag", event, sequence().mapping.flag_tag(flag))
-				sequence().active_flags = flag
-
-				
-	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_RIGHT:
-			stop()
-			var w : float = float(get_viewport().get_visible_rect().size.x)
-			# NOTE: leave a small amount on each side the is always start and end of sequence
-			goto_frame(int(remap(get_viewport().get_mouse_position().x, 0.1 * w, 0.9 * w, 0, frame_counts[animation])))
-			#printt("jump to", get_viewport().get_mouse_position().x, frame)
+	if mouse_controls:
+		if event is InputEventMouseButton:
+			if event.button_index == MOUSE_BUTTON_RIGHT:
+				stop()
+				var w : float = float(get_viewport().get_visible_rect().size.x)
+				# NOTE: leave a small amount on each side the is always start and end of sequence
+				goto_frame(int(remap(get_viewport().get_mouse_position().x, 0.1 * w, 0.9 * w, 0, frame_counts[animation])))
+				#printt("jump to", get_viewport().get_mouse_position().x, frame)
 
 	# allow when playing or not:
 
@@ -174,13 +174,14 @@ func _unhandled_input(event : InputEvent):
 		# other input requires scenes to be playing:
 		return
 	
-	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			# no modifier keys pressed
-			if Input.is_key_pressed(KEY_CTRL) or Input.is_key_pressed(KEY_ALT) or Input.is_key_pressed(KEY_SHIFT):
-				return
-			_mouse_control_speed()
-		return # no other mouse events below
+	if mouse_controls:
+		if event is InputEventMouseButton:
+			if event.button_index == MOUSE_BUTTON_LEFT:
+				# no modifier keys pressed
+				if Input.is_key_pressed(KEY_CTRL) or Input.is_key_pressed(KEY_ALT) or Input.is_key_pressed(KEY_SHIFT):
+					return
+				_mouse_control_speed()
+			return # no other mouse events below
 	
 	# handle tags:
 	# activate tags for all keys that were pressed while shift was held
@@ -224,17 +225,22 @@ func _unhandled_input(event : InputEvent):
 	elif event.is_action_pressed("fast_backward", true, true): # allow echo
 		speed_scale = frame_skip * speed
 		play(animation, -1.0)
+	elif event.is_action_pressed("step_forward", true, true): # allow echo
+		next_frame(1)
+	elif event.is_action_pressed("step_backward", true, true): # allow echo
+		next_frame(-1)
+	
 	# non-repeated actions:
-	elif event.is_action_pressed("skip_forward", true, true):
+	elif event.is_action_pressed("skip_forward", false, true):
 		next_frame(frame_skip)
-	elif event.is_action_pressed("skip_backward", true, true):
+	elif event.is_action_pressed("skip_backward", false, true):
 		next_frame(-frame_skip)
-	elif event.is_action_pressed("faster", true, true):
-		speed *= 1.25
+	elif event.is_action_pressed("faster", false, true):
+		speed *= 1.05
 		print("speed:", speed)
 		speed_scale = speed
-	elif event.is_action_pressed("slower", true, true):
-		speed /= 1.25
+	elif event.is_action_pressed("slower", false, true):
+		speed /= 1.05
 		print("speed:", speed)
 		speed_scale = speed
 	elif event.is_action_pressed("reverse", false, true):
