@@ -50,6 +50,7 @@ func _init(initial_values : Variant, initial_flags : Variant = [], loop_type := 
 	
 	set_flags(initial_flags)
 
+
 # offset the values by a fixed amount
 func rebase(offset : int):
 	if offset == 0: return
@@ -102,6 +103,11 @@ func flag(i : int = -1) -> int:
 	return flags[i]
 
 
+func tags(i : int = -1) -> String:
+	if i == -1: i = current_index
+	return mapping.flags_to_tags(flag(i))
+
+
 func filter_values(bitmask : int = 0) -> void:
 	if active_flags == bitmask: return
 	filtered_indices.clear()
@@ -126,6 +132,17 @@ func get_values() -> PackedInt32Array:
 	if active_flags > 0:
 		return get_filtered_values()
 	return values
+
+
+func reset_values() -> void:
+	values = PackedInt32Array(range(values.size()))
+
+
+func has_mapping(flag : int = 0) -> bool:
+	if flag == 0:
+		return mapping and mapping.size() > 0
+	else:
+		return mapping and mapping.size() > 0 and mapping.flag_exists(flag)
 
 
 func max_value() -> int:
