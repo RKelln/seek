@@ -17,7 +17,7 @@ var compress := true
 		if not active and not on: return
 		active = on
 
-const max_speed : float = 10.0
+const max_speed : float = 100.0
 const max_speed_fps : float = 30.0
 var speed : float = 1.0 :
 	get:
@@ -95,17 +95,17 @@ func _on_frame_changed():
 	if not _requested_animation:
 		# some hacky magic here, we don't want to update more than once
 		#if current_frame[animation] != frame:
-		_requested_animation = true
+		#_requested_animation = true
 		var seq : AnimatedSequence = sequence()
 		current_frame[animation] = seq.next(_direction)
 		# frame = current_frame[animation]
 		_current_texture = seq.get_frame_texture(sprite_frames, current_frame[animation])
 		_sprite.texture = _current_texture
-		_requested_animation = false
-		printt(_index, "frame", current_frame[animation], frame, animation)
-		
-		if seq.active_flags > 0 and seq.has_mapping():
-			prints(current_frame[animation], seq.tags(current_frame[animation]))
+		#_requested_animation = false
+		#printt(_index, "frame", current_frame[animation], frame, animation)
+#		if seq.active_flags > 0 and seq.has_mapping():
+#			prints(current_frame[animation], seq.tags(current_frame[animation]))
+
 		real_frame_changed.emit(current_frame[animation])
 
 
@@ -154,11 +154,12 @@ func _unhandled_input(event : InputEvent):
 					set_speed(event.strength, event.target)
 			"set_flag":
 				var flag = int(event.target)
-				printt("set_flag", flag)
+				#printt("set_flag", flag)
 				if flag == 0:
+					print("Turn off flags")
 					sequence().active_flags = 0
 				elif sequence().has_mapping(flag):
-					prints("set_flag", event, sequence().mapping.flag_tag(flag))
+					prints("set_flag", sequence().mapping.flag_tag(flag))
 					sequence().active_flags = flag
 			
 
@@ -307,6 +308,10 @@ func _init_animation(animation_name : String) -> void:
 	if animation_name not in current_frame:
 		current_frame[animation_name] = 0
 	assert(_anim_fps > 0)
+	
+	# HACK: for performance:
+	_anim_fps = 1.0 / 30.0 # 1 second per frame
+	sprite_frames.set_animation_speed(animation_name, _anim_fps)
 	
 	frame_skip = mini(max_frame_skip, maxi(1, floor(frame_counts[animation_name] * percent_frames_for_skip))) # % of frames
 	speed = _speeds[animation_name]
@@ -507,7 +512,26 @@ func change_relative_speed(relative_speed : float = 0.0, layer : int = -1) -> vo
 func set_speed(normalized_speed : float = 0.0, layer : int = -1) -> void:
 	if not valid_target(layer): return
 	
-	speed = remap(normalized_speed, 0.0, 1.0, 0.0, max_speed)
+	# linear below 0.25, smooth step above
+	var s : float
+	if normalized_speed < 0.25:
+		s = remap(normalized_speed, 0.0, 0.25, 0.0, 1.0)
+	elif normalized_speed < 0.75:
+		s = smoothstep(0.25, 0.75, normalized_speed)
+		s = remap(s, 0.0, 1.0, 1.0, max_speed)
+	else:
+		#var s := remap(normalized_speed, 0.5, 1.0, 1.0, max_speed)
+		s = smoothstep(0.75, 1.0, normalized_speed)
+		# map to max fps
+		s = remap(s, 0.0, 1.0, max_speed, max_speed_fps / _anim_fps)
+
+	speed = s
+#	if normalized_speed < 0.1:
+#		speed = remap(normalized_speed, 0.0, 0.5, 0.0, 1.0)
+#	elif normalized_speed < 0.9:
+#		speed = remap(normalized_speed, 0.1, 0.9, 1.0, 10.0)
+#	else:
+#		speed = remap(normalized_speed, 0.9, 1.0, 10.0, max_speed)
 	printt(_index, "set_speed", normalized_speed, speed)
 	
 	speed_scale = speed 
@@ -519,8 +543,8 @@ func change_relative_speed_normalized(normalized_speed : float = 0.0, layer : in
 	normalized_speed = clampf(normalized_speed, -1.0, 1.0)
 	
 	var eased := ease(abs(normalized_speed), 2)
-	var max_speed = max(5.0, 30.0 / _anim_fps)
-	speed = remap(eased, 0, 1.0, 0, max_speed)
+	var _max_speed = max(5.0, 30.0 / _anim_fps)
+	speed = remap(eased, 0, 1.0, 0, _max_speed)
 	printt(_index, "change_normalized_speed", normalized_speed, eased, speed, _anim_fps)
 	speed_scale = speed 
 	

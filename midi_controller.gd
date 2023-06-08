@@ -72,7 +72,7 @@ func _handle_input(event : InputEvent) -> void:
 #	if mode == Mode.TEST:
 #		_print_midi_info(event)
 	
-	_print_midi_info(event)
+	#_print_midi_info(event)
 
 	var ev = InputEventTargetedAction.new()
 	ev.pressed = true
@@ -123,6 +123,9 @@ func _handle_input(event : InputEvent) -> void:
 			ev.action = "play"
 			ev.target = int(event.pitch) - toggle_button_pitch
 			# on /off determined by velocity
+			ev.pressed = _velocity_to_note_on(event)
+		elif event.pitch == 99:
+			ev.action = "beat"
 			ev.pressed = _velocity_to_note_on(event)
 
 	Input.parse_input_event(ev)

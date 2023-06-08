@@ -128,7 +128,7 @@ func _unhandled_input(event : InputEvent) -> void:
 		#       as these events may have strength
 		#       that changes throughout a "press"
 		if valid_target(event.target):
-			prints("InputEventTargetedAction", event.as_text())
+			#prints("InputEventTargetedAction", event.as_text())
 			match event.action:
 				"set_opacity":
 					set_opacity(event.strength, event.target)
@@ -139,6 +139,9 @@ func _unhandled_input(event : InputEvent) -> void:
 						resume()
 					else:
 						pause()
+				"beat":
+					if event.pressed:
+						beat_match()
 		return
 	
 	if event is InputEventMouseButton:

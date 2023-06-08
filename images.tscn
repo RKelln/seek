@@ -21,7 +21,7 @@ script = ExtResource("1_4ai3v")
 
 [node name="NextImage" type="Sprite2D" parent="CanvasGroup/AnimatedSprite2D"]
 unique_name_in_owner = true
-centered = false
+offset = Vector2(960, 540)
 
 [node name="PrevImage" type="Sprite2D" parent="CanvasGroup"]
 unique_name_in_owner = true
