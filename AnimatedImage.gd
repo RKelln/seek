@@ -97,9 +97,10 @@ func _on_frame_changed():
 			current_frame[animation] = seq.next(_direction)
 			frame = current_frame[animation]
 			_requested_animation = false
+			printt(_index, "frame", frame, animation)
 			_current_texture = seq.get_frame_texture(sprite_frames, frame)
-#			if sequences[current_sequence].active_flags > 0:
-#				prints(frame, sequences[current_sequence].tags())
+			if seq.active_flags > 0 and seq.has_mapping():
+				prints(frame, seq.tags())
 			real_frame_changed.emit(frame)
 
 
@@ -148,6 +149,12 @@ func _unhandled_input(event : InputEvent):
 					set_speed(event.strength, event.target)
 			"set_flag":
 				var flag = int(event.target)
+				printt("set_flag", flag)
+				if sequence().has_mapping(flag):
+					prints("set_flag", event, sequence().mapping.flag_tag(flag))
+					sequence().active_flags = flag
+			
+
 	if mouse_controls:
 		if event is InputEventMouseButton:
 			if event.button_index == MOUSE_BUTTON_RIGHT:
@@ -222,7 +229,6 @@ func _unhandled_input(event : InputEvent):
 	if event.is_action_pressed("fast_forward", true, true): # allow echo
 		speed_scale = frame_skip * speed
 		play(animation, 1.0)
-		
 	elif event.is_action_pressed("fast_backward", true, true): # allow echo
 		speed_scale = frame_skip * speed
 		play(animation, -1.0)
@@ -435,12 +441,14 @@ func sequence() -> AnimatedSequence:
 # TODO: without underscore this overrides the existing pause and needs to be changed
 func _pause():
 	if is_playing():
+		printt(_index, "pause", animation)
 		pause()
 		paused = true
 
 
 func _resume():
 	if not is_playing():
+		printt(_index, "play", animation)
 		play(animation, _direction)
 		paused = false
 
@@ -493,9 +501,6 @@ func set_speed(normalized_speed : float = 0.0, layer : int = -1) -> void:
 	printt(_index, "set_speed", normalized_speed, speed)
 	
 	speed_scale = speed 
-	if not is_playing() and speed > 0:
-		play(animation, _direction)
-
 
 
 func change_relative_speed_normalized(normalized_speed : float = 0.0, layer : int = -1) -> void:

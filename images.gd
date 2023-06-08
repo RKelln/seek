@@ -93,6 +93,8 @@ func _ready():
 	
 	transition = "fade"
 	
+	pause()  # start paused
+	
 	# midi and movie maker do not work together
 	if not OS.has_feature("movie"):
 		controller = preload("res://midi_controller.gd").new()

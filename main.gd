@@ -39,7 +39,7 @@ func _ready() -> void:
 	
 	%SavePackFileDialog.file_selected.connect(func(path : String): Loader.images.save(path))
 	
-	%ImageGridControl.set_images(images.get_textures(), 5, images.get_current_frame_index())
+	#%ImageGridControl.set_images(images.get_textures(), 5, images.get_current_frame_index())
 
 	#Controller.mode = Controller.Mode.SKIP  # uncomment to turn on controller
 
@@ -58,23 +58,23 @@ func _input(event : InputEvent) -> void:
 			pause() 
 			help.popup()
 		
-	if event.is_action_released("image_grid", true):
-		if %ImageGridControl.visible:
-			%ImageGridControl.visible = false
-			# update sequence with changes from image grid
-			var seq_name = images.get_sequence_name()
-			var seq = %ImageGridControl.get_sequence(seq_name)
-			var cur_seq = images.get_sequence(seq_name)
-			# if equivalent size
-			if seq.size() == cur_seq.size():
-				if seq != cur_seq: # if not already equal then update
-					images.update_sequence(seq_name, seq)
-			else:
-				printt("Error: image grid sequence and images sequence don't match", seq, images.get_sequence())
-		else:
-			pause()
-			%ImageGridControl.visible = true
-			%ImageGridControl.set_center(images.get_current_frame_index())
+#	if event.is_action_released("image_grid", true):
+#		if %ImageGridControl.visible:
+#			%ImageGridControl.visible = false
+#			# update sequence with changes from image grid
+#			var seq_name = images.get_sequence_name()
+#			var seq = %ImageGridControl.get_sequence(seq_name)
+#			var cur_seq = images.get_sequence(seq_name)
+#			# if equivalent size
+#			if seq.size() == cur_seq.size():
+#				if seq != cur_seq: # if not already equal then update
+#					images.update_sequence(seq_name, seq)
+#			else:
+#				printt("Error: image grid sequence and images sequence don't match", seq, images.get_sequence())
+#		else:
+#			pause()
+#			%ImageGridControl.visible = true
+#			%ImageGridControl.set_center(images.get_current_frame_index())
 
 	if event.is_action_released("duplicate_layer", true):
 		if $Stage.get_child_count() >= 3: return
@@ -84,6 +84,7 @@ func _input(event : InputEvent) -> void:
 #		var n = orig.duplicate(DUPLICATE_GROUPS | DUPLICATE_SCRIPTS )
 		var n = Images.instantiate()
 		n.set_image_frames(orig.get_image_frames().duplicate())
+		# TODO: set animation
 		orig.active = false
 		$Stage.add_child(n)
 		n.active = true
