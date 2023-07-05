@@ -71,8 +71,18 @@ func flag_exists(flag : int) -> bool:
 	return flag in _flags_map
 
 
-func flags_to_tags(flags : int, active_flags : int = 0) -> String:
-	var tags = []
+func tags() -> Array[String]:
+	return _tags
+
+func flags() -> int:
+	var flags : int = 0
+	for f in _flags:
+		flags |= f
+	return flags 
+
+
+func flags_to_tags(flags : int, active_flags : int = 0) -> Array[String]:
+	var tags : Array[String] = []
 	for flag in _flags:
 		if flags & flag != 0:
 			var tag = _tags[_flags_map[flag]]
@@ -80,7 +90,4 @@ func flags_to_tags(flags : int, active_flags : int = 0) -> String:
 				tag = tag.to_upper()
 			tags.append(tag)
 	tags.sort()
-	var s := ""
-	for t in tags:
-		s += t + ", "
-	return s.trim_suffix(", ")
+	return tags

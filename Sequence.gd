@@ -103,9 +103,29 @@ func flag(i : int = -1) -> int:
 	return flags[i]
 
 
-func tags(i : int = -1) -> String:
+func tags(i : int = -1) -> Array[String]:
 	if i == -1: i = current_index
+	if not has_mapping():
+		return []
 	return mapping.flags_to_tags(flag(i))
+
+func all_tags() -> Array[String]:
+	if not has_mapping():
+		return []
+	return mapping.tags()
+
+func active_tags() -> Array[String]:
+	if not has_mapping():
+		return []
+	return mapping.flags_to_tags(active_flags)
+
+
+# toggle flag on/off or all off if no params or 0
+func toggle_flag(bitmask : int = 0) -> void:
+	if bitmask == 0:
+		set_active_flags(bitmask)
+	else:
+		set_active_flags (bitmask ^ active_flags)
 
 
 func filter_values(bitmask : int = 0) -> void:
