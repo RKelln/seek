@@ -43,7 +43,24 @@ func _ready() -> void:
 
 	#Controller.mode = Controller.Mode.SKIP  # uncomment to turn on controller
 
-	
+
+func _layers_keys_pressed() -> bool:
+	return (Input.is_key_pressed(KEY_KP_1) or 
+			Input.is_key_pressed(KEY_KP_2) or 
+			Input.is_key_pressed(KEY_KP_3) or
+			Input.is_key_pressed(KEY_KP_4) or
+			Input.is_key_pressed(KEY_KP_5) or
+			Input.is_key_pressed(KEY_KP_6) or
+			Input.is_key_pressed(KEY_KP_7) or
+			Input.is_key_pressed(KEY_KP_8) or
+			Input.is_key_pressed(KEY_KP_9))
+
+# returns -1 if no layer
+func _get_layer_from_event(event : InputEvent) -> int:
+	if event.keycode >= KEY_KP_1 and event.keycode <= KEY_KP_9:
+		return event.keycode - KEY_KP_1
+	return -1
+		
 
 func _input(event : InputEvent) -> void:
 	if event.is_action_released('help', true):
@@ -99,27 +116,25 @@ func _input(event : InputEvent) -> void:
 	if event.is_action_released("save", true):
 		%SavePackFileDialog.popup()
 
-
-	# number key: change active layer
+	# change active layer
 	# set active layers by checking all keys that are pressed
 	if event is InputEventKey:
-		if event.keycode >= KEY_KP_1 and event.keycode <= KEY_KP_3:
-			var layer = event.keycode - KEY_KP_1
+		var layer = _get_layer_from_event(event)
+		if layer >= 0:
 			# on press add to active
 			if event.pressed and event.echo == false:
 				#printt("numpad", layer, $Stage.get_child_count(), event)
 				if layer <= $Stage.get_child_count():
 					var n = $Stage.get_child(layer)
 					if n:
-						prints("activate", layer)
+						prints("activate layer", layer)
 						n.active = true
 						active_layers.append(layer)
 	
 			# release: anything not in active_layers gets turned off
 			# once all layer keys are released
 			if not event.pressed: 
-				if Input.is_key_pressed(KEY_KP_1) or Input.is_key_pressed(KEY_KP_2) or Input.is_key_pressed(KEY_KP_3):
-					return
+				if _layers_keys_pressed(): return
 				# release active layers
 				for i in $Stage.get_child_count():
 					if not active_layers.has(i):

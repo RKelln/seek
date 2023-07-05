@@ -52,6 +52,9 @@ var prev_img : Sprite2D
 
 var controller : CustomController
 
+enum NumberKeyMode {OFF, ANIMATIONS, TAGS}
+var number_key_mode : NumberKeyMode = NumberKeyMode.ANIMATIONS
+
 var _index : int
 
 func _init_node(nodeOrPath, defaultPath) -> Node:
@@ -177,20 +180,47 @@ func _unhandled_input(event : InputEvent) -> void:
 	
 	# handle switching packs using keys
 	if event is InputEventKey:
-		if not event.pressed: # releaased
+		if not event.pressed: # released
 			if event.keycode >= KEY_0 and event.keycode <= KEY_9:
-				var anims : PackedStringArray = get_valid_animation_names()
-				var count := anims.size()
-				var selected_anim : int = event.keycode - KEY_1
+				var index : int = event.keycode - KEY_1
 				# KEY_0 ihas lowest keycode but is rightmost on keyboard
 				if event.keycode == KEY_0:
-					selected_anim = 10
+					index = 10
 				elif event.shift_pressed:
-					selected_anim += 10
-				if selected_anim >= 0 and selected_anim < count:
-					#printt(_index, "input", event.keycode, selected_anim)
-					if get_sequence_name() != anims[selected_anim]:
-						change_animation(anims[selected_anim])
+					index += 10
+				
+				if number_key_mode == NumberKeyMode.ANIMATIONS:
+					var anims : PackedStringArray = get_valid_animation_names()
+					if index >= 0 and index < anims.size():
+						if get_sequence_name() != anims[index]:
+							change_animation(anims[index])
+				
+				elif number_key_mode == NumberKeyMode.TAGS:
+					var selected_anim : int = event.keycode - KEY_1
+					var seq := get_sequence()
+					var flag := seq.flag(index)
+					if seq.has_mapping(flag):
+						seq.toggle_flag(flag)
+						print(_index, "active tags", seq.active_tags())
+		
+			# use keypad number keys for tags instead of animations
+#			elif event.keycode >= KEY_KP_0 and event.keycode <= KEY_KP_9:
+#				var index : int = event.keycode - KEY_KP_1
+#				# KEY_0 ihas lowest keycode but is rightmost on keyboard
+#				if event.keycode == KEY_KP_0:
+#					index = 10
+#				elif event.shift_pressed:
+#					index += 10
+#				var seq := get_sequence()
+#				var tags := seq.all_tags()
+#				if index < tags.size():
+#					var flag := seq.mapping.tag_flag(tags[index])
+#					if seq.active_flags == flag:
+#						seq.active_flags = 0
+#					else:
+#						seq.active_flags = 0 # for now disable all other tags
+#						seq.toggle_flag(flag)
+#					prints(_index, "active tags: ", seq.active_tags())
 		return
 
 # called eery process from the movement_tween that does a sin-like movement
