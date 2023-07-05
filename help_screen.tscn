@@ -15,7 +15,7 @@ size_flags_vertical = 3
 mouse_filter = 1
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
-anchors_preset = 15
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
@@ -23,39 +23,28 @@ grow_vertical = 2
 theme = ExtResource("1_3j5ae")
 
 [node name="CenterContainer" type="CenterContainer" parent="MarginContainer"]
-offset_left = 50.0
-offset_top = 25.0
-offset_right = 1870.0
-offset_bottom = 1055.0
+layout_mode = 2
 size_flags_vertical = 3
 
 [node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/CenterContainer"]
-offset_left = 410.0
-offset_top = 144.0
-offset_right = 1410.0
-offset_bottom = 886.0
+layout_mode = 2
 theme_override_constants/separation = 100
 
 [node name="VBoxContainerLeft" type="VBoxContainer" parent="MarginContainer/CenterContainer/HBoxContainer"]
-offset_right = 450.0
-offset_bottom = 742.0
+layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 3
 theme = ExtResource("1_3j5ae")
 
 [node name="ControlsTitleLabel" type="Label" parent="MarginContainer/CenterContainer/HBoxContainer/VBoxContainerLeft"]
-offset_right = 450.0
-offset_bottom = 42.0
+layout_mode = 2
 theme = ExtResource("1_3j5ae")
 theme_type_variation = &"HeaderLarge"
 text = "Controls"
 horizontal_alignment = 1
 
 [node name="RichTextLabel" type="RichTextLabel" parent="MarginContainer/CenterContainer/HBoxContainer/VBoxContainerLeft"]
-custom_minimum_size = Vector2i(450, 0)
-offset_top = 52.0
-offset_right = 450.0
-offset_bottom = 742.0
+custom_minimum_size = Vector2(450, 0)
+layout_mode = 2
 size_flags_vertical = 3
 theme = ExtResource("1_3j5ae")
 theme_override_constants/table_h_separation = 6
@@ -70,33 +59,27 @@ text = "[table=2]
 [cell][b]I[/b]:[/cell][cell]Image grid[/cell]
 
 [/table]"
-fit_content_height = true
+fit_content = true
 scroll_active = false
 shortcut_keys_enabled = false
 meta_underlined = false
 hint_underlined = false
 
 [node name="VBoxContainerRight" type="VBoxContainer" parent="MarginContainer/CenterContainer/HBoxContainer"]
-offset_left = 550.0
-offset_right = 1000.0
-offset_bottom = 742.0
+layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 3
 theme = ExtResource("1_3j5ae")
 
 [node name="ControlsTitleLabel" type="Label" parent="MarginContainer/CenterContainer/HBoxContainer/VBoxContainerRight"]
-offset_right = 450.0
-offset_bottom = 42.0
+layout_mode = 2
 theme = ExtResource("1_3j5ae")
 theme_type_variation = &"HeaderLarge"
 text = "VJ Controls"
 horizontal_alignment = 1
 
 [node name="RichTextLabel" type="RichTextLabel" parent="MarginContainer/CenterContainer/HBoxContainer/VBoxContainerRight"]
-custom_minimum_size = Vector2i(450, 0)
-offset_top = 52.0
-offset_right = 450.0
-offset_bottom = 742.0
+custom_minimum_size = Vector2(450, 0)
+layout_mode = 2
 size_flags_vertical = 3
 theme = ExtResource("1_3j5ae")
 theme_override_constants/table_h_separation = 6
@@ -114,8 +97,6 @@ text = "[table=2]
 [cell][b]M[/b]:[/cell][cell]Fast backward[/cell]
 [cell][b]V[/b]:[/cell][cell]Reset speed[/cell]
 [cell][b]B[/b]:[/cell][cell]Random jump[/cell]
-[cell][b]Left mouse button[/b]:[/cell][cell]Forwards / backwards speed[/cell]
-[cell][b]Right mouse button[/b]:[/cell][cell]Go to frame based on position[/cell]
 [cell][b]Enter / return[/b]:[/cell][cell]Tap for beat matching[/cell]
 [cell] [/cell][cell] [/cell]
 [cell][b]+[/b] (plus):[/cell][cell]Increase opacity (fade in)[/cell]
@@ -126,9 +107,9 @@ text = "[table=2]
 [cell][b]1 - 9, 0[/b]:[/cell][cell]Select sequence[/cell]
 [cell] [/cell][cell] [/cell]
 [cell][b]D[/b]:[/cell][cell]Duplicate layer[/cell]
-[cell][b]Numpad 1 - 3[/b]:[/cell][cell]Set active layer[/cell]
+[cell][b]Numpad 1 - 9[/b]:[/cell][cell]Set active layer[/cell]
 [/table]"
-fit_content_height = true
+fit_content = true
 scroll_active = false
 shortcut_keys_enabled = false
 meta_underlined = false
