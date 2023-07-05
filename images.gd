@@ -429,8 +429,8 @@ func get_sequence_name() -> StringName:
 	return cur_img.animation
 
 
-func get_sequence(seq_name : String = "") -> PackedInt32Array:
-	return cur_img.sprite_frames.get_sequence(seq_name).values
+func get_sequence(seq_name : String = "") -> Sequence:
+	return cur_img.sequence(seq_name)
 
 
 func update_sequence(seq_name : String, sequence : PackedInt32Array) -> void:

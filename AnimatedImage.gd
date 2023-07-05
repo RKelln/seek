@@ -93,20 +93,9 @@ func _ready():
 func _on_frame_changed():
 	# update current frame
 	if not _requested_animation:
-		# some hacky magic here, we don't want to update more than once
-		#if current_frame[animation] != frame:
-		#_requested_animation = true
-		var seq : AnimatedSequence = sequence()
-		current_frame[animation] = seq.next(_direction)
-		# frame = current_frame[animation]
-		_current_texture = seq.get_frame_texture(sprite_frames, current_frame[animation])
-		_sprite.texture = _current_texture
-		#_requested_animation = false
-		#printt(_index, "frame", current_frame[animation], frame, animation)
+		goto_frame(sequence().next(_direction))
 #		if seq.active_flags > 0 and seq.has_mapping():
 #			prints(current_frame[animation], seq.tags(current_frame[animation]))
-
-		real_frame_changed.emit(current_frame[animation])
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -443,14 +432,17 @@ func next_frame(increment : int = _direction) -> void:
 
 
 func goto_frame(f : int) -> void:
-	current_frame[animation] = f
-	#frame = f
-	_current_texture = sequence().get_frame_texture(sprite_frames, current_frame[animation])
-	_sprite.texture = _current_texture
+	if current_frame[animation] != f:
+		current_frame[animation] = f
+		_current_texture = sequence().get_frame_texture(sprite_frames, current_frame[animation])
+		_sprite.texture = _current_texture
+		real_frame_changed.emit(current_frame[animation])
 
 
-func sequence() -> AnimatedSequence:
-	return sprite_frames.sequences[animation]
+func sequence(sequence_name : String = "") -> AnimatedSequence:
+	if sequence_name == "":
+		sequence_name = animation
+	return sprite_frames.sequences[sequence_name]
 
 
 # TODO: without underscore this overrides the existing pause and needs to be changed
