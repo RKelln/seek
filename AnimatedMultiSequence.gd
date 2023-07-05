@@ -3,7 +3,7 @@ class_name AnimatedMultiSequence extends AnimatedSequence
 # Animated sequence composed of sub-Sequences
 # Initial data is an Array of Array of ints (indexes to initial values)
 
-const MAX_TRIES := 10
+const MAX_TRIES := 100
 
 # CHOOSE_ONE: choose randomly from subsequence, 
 # PLAY_THROUGH: iterate through subsequence then move to next subsequence
@@ -80,10 +80,6 @@ func set_mode(new_mode : Mode) -> void:
 		for s in sub_sequences:
 			s.loop = Sequence.LoopType.NONE
 
-#func filter_values(bitmask : int = 0) -> void:
-#	super(bitmask)
-#	sub_sequences[current_index].filter_values(bitmask)
-
 
 func current_value() -> int:
 	assert(current_index >= 0)
@@ -91,6 +87,11 @@ func current_value() -> int:
 		return values[current_index]
 	else:
 		return values[sub_sequences[current_index].value()]
+
+
+func _sort_by_use(a, b) -> bool:
+	return _display_counts[a] < _display_counts[b]
+
 
 
 func next(inc : int = 1) -> int:
@@ -128,21 +129,29 @@ func next(inc : int = 1) -> int:
 			var s : Sequence = sub_sequences[current_index]
 			s.filter_current_index()
 			var start_index := s.current_value()
+			var values := Array(s.get_values())
+			# find the least used
+			var least_count = values.map( func(v): return _display_counts[v] ).min()
 			var next_index := s.next(sign(inc)) 
 			var start_count := _display_counts[start_index]
 			var next_count := _display_counts[next_index]
 			var attempts := 0
-			var max_attempts : int = mini(MAX_TRIES, s.get_active_size())
+			var active_size = s.get_active_size()
+			var max_attempts : int = mini(MAX_TRIES, active_size)
+			if active_size <= 5:
+				print("Warning: too few filtered images:", active_size)
 			if start_count == 0:
 				# haven't displayed the first value yet, use it
 				i = start_index
 			else:
-				while ((current_index == next_index or next_count >= start_count)
+				while ((current_index == next_index or next_count > least_count)
 					and attempts < max_attempts 
 					and start_index != next_index):
 					next_index = s.next(sign(inc))
 					next_count = _display_counts[next_index]
 					attempts += 1
+				if attempts == max_attempts:
+					printt("Warning: reached max attempts for tag filter", max_attempts, active_size, "active size")
 				i = next_index
 			current_index = i
 	
