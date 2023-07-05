@@ -125,7 +125,7 @@ func toggle_flag(bitmask : int = 0) -> void:
 	if bitmask == 0:
 		set_active_flags(bitmask)
 	else:
-		set_active_flags (bitmask ^ active_flags)
+		set_active_flags(bitmask ^ active_flags)
 
 
 func filter_values(bitmask : int = 0) -> void:
