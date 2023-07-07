@@ -111,8 +111,8 @@ layout_mode = 2
 rounded = true
 
 [node name="ImagesFileDialog" type="FileDialog" parent="."]
-initial_position = 1
 title = "Open a Directory"
+initial_position = 1
 size = Vector2i(600, 400)
 wrap_controls = false
 min_size = Vector2i(600, 400)
@@ -123,8 +123,8 @@ file_mode = 2
 access = 2
 
 [node name="SequenceFileDialog" type="FileDialog" parent="."]
-initial_position = 1
 title = "Open a File"
+initial_position = 1
 size = Vector2i(786, 400)
 min_size = Vector2i(600, 400)
 ok_button_text = "Open"
@@ -134,8 +134,8 @@ access = 2
 filters = PackedStringArray("*.txt", "*.seq")
 
 [node name="TagsFileDialog" type="FileDialog" parent="."]
-initial_position = 1
 title = "Open a File"
+initial_position = 1
 size = Vector2i(786, 400)
 min_size = Vector2i(600, 400)
 ok_button_text = "Open"
@@ -145,8 +145,8 @@ access = 2
 filters = PackedStringArray("*.txt", "*.tags")
 
 [node name="NeighboursFileDialog" type="FileDialog" parent="."]
-initial_position = 1
 title = "Open a File"
+initial_position = 1
 size = Vector2i(786, 400)
 min_size = Vector2i(600, 400)
 ok_button_text = "Open"
@@ -156,8 +156,8 @@ access = 2
 filters = PackedStringArray("*.txt", "*.neighbours")
 
 [node name="PackFileDialog" type="FileDialog" parent="."]
-initial_position = 1
 title = "Open a File"
+initial_position = 1
 size = Vector2i(600, 400)
 min_size = Vector2i(600, 400)
 ok_button_text = "Open"
