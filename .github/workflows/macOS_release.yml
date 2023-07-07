@@ -35,8 +35,8 @@ jobs:
         run: |
           echo "version=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
           echo "package=${FILENAME}-v${VERSION}-${PRESET}.zip" >> $GITHUB_ENV
-      - name: Install Godot
-        if: ${{ matrix.preset == 'macOS' }}
+      - name: Install Godot (non-stable)
+        if: ${{ matrix.preset == 'macOS' && env.godot_release != 'stable'}}
         env:
           GODOT_VERSION: ${{ env.godot_version }}
           GODOT_RELEASE: ${{ env.godot_release }}
@@ -50,7 +50,25 @@ jobs:
           unzip Godot_v${GODOT_FULL_VERSION}_macos.universal.zip
 
           mkdir -p ${TEMPLATES_DIR}
-          wget -q https://github.com/GodotBuilder/godot-builds/releases/download/4.0-prerelease-templates/Godot_v${GODOT_FULL_VERSION}_export_templates.tpz
+          wget -q https://github.com/GodotBuilder/godot-builds/releases/download/${GODOT_VERSION}-prerelease-templates/Godot_v${GODOT_FULL_VERSION}_export_templates.tpz
+          unzip Godot_v${GODOT_FULL_VERSION}_export_templates.tpz
+          mv -v templates/* ${TEMPLATES_DIR}
+      - name: Install Godot (stable)
+        if: ${{ matrix.preset == 'macOS' && env.godot_release == 'stable'}}
+        env:
+          GODOT_VERSION: ${{ env.godot_version }}
+          GODOT_RELEASE: ${{ env.godot_release }}
+        run: |
+          export GODOT_FULL_VERSION="${GODOT_VERSION}-${GODOT_RELEASE}"
+          echo "$GODOT_FULL_VERSION"
+          export XDG_DATA_HOME="$(pwd)/xdg_data_home"
+          export TEMPLATES_DIR="${XDG_DATA_HOME}/Godot/export_templates/${GODOT_VERSION}.${GODOT_RELEASE}/"
+          
+          wget -q https://downloads.tuxfamily.org/godotengine/${GODOT_VERSION}/Godot_v${GODOT_FULL_VERSION}_macos.universal.zip
+          unzip Godot_v${GODOT_FULL_VERSION}_macos.universal.zip
+
+          mkdir -p ${TEMPLATES_DIR}
+          wget -q https://downloads.tuxfamily.org/godotengine/${GODOT_VERSION}/Godot_v${GODOT_FULL_VERSION}_export_templates.tpz
           unzip Godot_v${GODOT_FULL_VERSION}_export_templates.tpz
           mv -v templates/* ${TEMPLATES_DIR}
       - name: Export macOS
