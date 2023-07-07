@@ -196,7 +196,6 @@ func _unhandled_input(event : InputEvent) -> void:
 							change_animation(anims[index])
 				
 				elif number_key_mode == NumberKeyMode.TAGS:
-					var selected_anim : int = event.keycode - KEY_1
 					var seq := get_sequence()
 					var flag := seq.flag(index)
 					if seq.has_mapping(flag):
@@ -332,9 +331,9 @@ func get_transition_tween(duration : float, percent : float) -> Tween:
 		if delay > 0:
 			prev_img.modulate.a = 1.0
 	else: # shader transition
-		var material = prev_img.get_material()
-		material.set_shader_parameter("amount", 0.0)
-		t.tween_property(material, "shader_parameter/amount", 1.0, duration * percent).from(0.0)
+		var mat = prev_img.get_material()
+		mat.set_shader_parameter("amount", 0.0)
+		t.tween_property(mat, "shader_parameter/amount", 1.0, duration * percent).from(0.0)
 
 	return t
 

@@ -15,16 +15,13 @@ script = ExtResource("1_bypof")
 [node name="CanvasGroup" type="CanvasGroup" parent="."]
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="CanvasGroup"]
-unique_name_in_owner = true
 offset = Vector2(960, 540)
 script = ExtResource("1_4ai3v")
 
 [node name="NextImage" type="Sprite2D" parent="CanvasGroup/AnimatedSprite2D"]
-unique_name_in_owner = true
 offset = Vector2(960, 540)
 
 [node name="PrevImage" type="Sprite2D" parent="CanvasGroup"]
-unique_name_in_owner = true
 material = SubResource("ShaderMaterial_q74fx")
 offset = Vector2(960, 540)
 

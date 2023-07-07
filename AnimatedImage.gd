@@ -54,7 +54,7 @@ signal real_frame_changed(frame: int)
 func _ready():
 	#if not sprite_frames: return
 	
-	_sprite = %NextImage
+	_sprite = $NextImage
 	
 	self.frame_changed.connect(_on_frame_changed)
 	
@@ -90,6 +90,11 @@ func _ready():
 	paused = false
 
 
+# IMPORTANT: HACK: FIXME: the image of the animation sprite_frames is never actually shown, 
+# rather it is hidden behind the sprite NextImage, instead what we are interested in is
+# the frame change. This means that per frame durations will not work, since the animation
+# image may not match the sequence image. I need to write ImageFrames extension that handles
+# this better, but currently this workaround works well enough.
 func _on_frame_changed():
 	# update current frame
 	if not _requested_animation:
@@ -191,7 +196,6 @@ func _unhandled_input(event : InputEvent):
 	# handle tags:
 	# activate tags for all keys that were pressed while shift was held
 	if event is InputEventKey and is_instance_valid(sequence().mapping):
-		print(event)
 		if event.keycode == KEY_SHIFT:
 			if event.pressed:
 				listening_for_tags = true
@@ -297,10 +301,6 @@ func _init_animation(animation_name : String) -> void:
 	if animation_name not in current_frame:
 		current_frame[animation_name] = 0
 	assert(_anim_fps > 0)
-	
-	# HACK: for performance:
-	_anim_fps = 1.0 / 30.0 # 1 second per frame
-	sprite_frames.set_animation_speed(animation_name, _anim_fps)
 	
 	frame_skip = mini(max_frame_skip, maxi(1, floor(frame_counts[animation_name] * percent_frames_for_skip))) # % of frames
 	speed = _speeds[animation_name]

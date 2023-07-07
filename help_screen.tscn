@@ -54,10 +54,6 @@ text = "[table=2]
 
 [cell][b]esc[/b]:[/cell][cell]Toggle this menu on/off[/cell]
 [cell][b]F[/b]:[/cell][cell]Toggle fullscreen[/cell]
-[cell] [/cell][cell] [/cell]
-[cell][u]Editing controls:[/u][/cell][cell] [/cell]
-[cell][b]I[/b]:[/cell][cell]Image grid[/cell]
-
 [/table]"
 fit_content = true
 scroll_active = false
@@ -106,8 +102,8 @@ text = "[table=2]
 [cell][b]A[/b]:[/cell][cell]Next sequence[/cell]
 [cell][b]1 - 9, 0[/b]:[/cell][cell]Select sequence[/cell]
 [cell] [/cell][cell] [/cell]
-[cell][b]D[/b]:[/cell][cell]Duplicate layer[/cell]
-[cell][b]Numpad 1 - 9[/b]:[/cell][cell]Set active layer[/cell]
+[cell][u]Tags:[/u][/cell][cell] [/cell]
+[cell][b]Shift+<letter>[/b]:[/cell][cell]Toggle tag[/cell]
 [/table]"
 fit_content = true
 scroll_active = false
