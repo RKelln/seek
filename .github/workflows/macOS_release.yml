@@ -83,7 +83,7 @@ jobs:
 
           mkdir -p ${XDG_DATA_HOME}/.godot
           mkdir -p ${BUILD_DIR}
-          Godot.app/Contents/MacOS/Godot --headless --export ${PRESET} ${BUILD_DIR}/${FILENAME}
+          Godot.app/Contents/MacOS/Godot --headless --export-release ${PRESET} ${BUILD_DIR}/${FILENAME}
       - name: Upload package
         uses: actions/upload-artifact@v3
         with:
