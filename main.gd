@@ -1,6 +1,5 @@
 extends Node2D
 
-# 'user://test_godot4_framedata_plant_stills_hd_1994.res'
 const Images = preload("res://images.tscn")
 
 var default_image_pack = 'user://framedata_laura_164.res'
@@ -93,18 +92,23 @@ func _input(event : InputEvent) -> void:
 #			%ImageGridControl.visible = true
 #			%ImageGridControl.set_center(images.get_current_frame_index())
 
-	if event.is_action_released("duplicate_layer", true):
-		if $Stage.get_child_count() >= 3: return
-		printt("duplicating layer")
-		var orig = $Stage.get_child(get_active_layer()) # TODO: get active
-		#var n = orig.duplicate(DUPLICATE_GROUPS | DUPLICATE_SCRIPTS | DUPLICATE_SIGNALS)
-#		var n = orig.duplicate(DUPLICATE_GROUPS | DUPLICATE_SCRIPTS )
-		var n = Images.instantiate()
-		n.set_image_frames(orig.get_image_frames().duplicate())
-		# TODO: set animation
-		orig.active = false
-		$Stage.add_child(n)
-		n.active = true
+#	if event.is_action_released("duplicate_layer", true):
+#		if $Stage.get_child_count() >= 9: return
+#		printt("duplicating layer")
+#		var orig = $Stage.get_child(get_active_layer()) # TODO: get active
+#		#var n = orig.duplicate(DUPLICATE_GROUPS | DUPLICATE_SCRIPTS | DUPLICATE_SIGNALS)
+#		#var n = orig.duplicate(DUPLICATE_GROUPS | DUPLICATE_SCRIPTS )
+#
+#		# FIXME: duplication currently not working, may require setup_local_to_scene()
+#		var n = Images.instantiate()
+#		var dupe_image_frames : ImageFrames = orig.get_image_frames().duplicate()
+#		print(dupe_image_frames.get_animation_names())
+#		n.set_image_frames(orig.get_image_frames().duplicate())
+#		orig.active = false
+#		$Stage.add_child(n)
+#		# set animation
+#		n.change_animation(orig.get_sequence_name()) 
+#		n.active = true
 		
 	if event.is_action_released("fullscreen_toggle", true):
 		if get_tree().get_root().mode == Window.MODE_FULLSCREEN:
