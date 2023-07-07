@@ -6,9 +6,17 @@ Godot-based image sequencer for artists. Designed for large image datasets and r
 ## News
 
 * ### 2022-Oct-11: First prototype made available: 
-    * supports basic creating and loading of images and real-time playback
-    * requires Godot 4.0 beta 2
-    * machine learning aspects not released yet
+	* supports basic creating and loading of images and real-time playback
+	* requires Godot 4.0 beta 2
+	* machine learning aspects not released yet
+
+* ### 2023-July: Second prototype (v0.4.1):
+  * supports basic VJ capabilities
+  * requires Godot 4.1
+  * adds concepts of image tags and image neighbours
+  * basic midi support
+  * basic custom transition support
+  * simple Ken Burns camera effects
 
 
 ## What? Who is this for?
@@ -26,8 +34,8 @@ Seek is designed to allow artists to explore large image collections, or still i
   * Use machine learning models to compare by perceptual image similarity (“energy” or “feel”)
 * Classification
   * Use machine learning to classify all the images, creating a value for each class
-    * 0-100% confidence that the image contains a cat, i.e. cat-iest to least cat-ty
-    * Saddest to happiest image (sentiment score)
+	* 0-100% confidence that the image contains a cat, i.e. cat-iest to least cat-ty
+	* Saddest to happiest image (sentiment score)
    * Segmentation: Amount of image that is of a class (“cat”, “sky”, etc)
 
 Seek will process a dataset of images and identify the relationships between the images (currently done as separate python scripts).
@@ -42,8 +50,8 @@ A simple example would be to display each image from darkest to lightest. A more
 
 ### For developers or custom changes
 
-1. Download Godot 4.0 (beta 2): https://downloads.tuxfamily.org/godotengine/4.0/beta2/
-2. Clone the repo
+1. Download Godot 4.1: https://godotengine.org/download/
+2. Clone this repo
 3. Import project file in Godot
 
 
@@ -65,7 +73,9 @@ You can also make new sequences from the images to play them back in different o
 ```
 Would create a sequence, starting with the second image, then third, fourth and finally the first (of images in the folder sorted by name).
 
-Sequences can be viewed and modified very basically using the `i` or `e` key, but this functionality is mostly placeholder at the moment.
+After creating or loading images you can click Start. The first image will be displayed but __playback starts paused__. Press `spacebar` to unpause.
+
+Sequences can be viewed and modified very basically using the `i` or `e` key, but this functionality is mostly placeholder at the moment. [RK: July 2023: currently disabled until properly implemented]
 
 ### Controls
 
@@ -74,7 +84,7 @@ Sequences can be viewed and modified very basically using the `i` or `e` key, bu
 
 #### Editing / sequencing controls
 
-* `I`: Image grid
+* `I`: Image grid (currently disabled)
 
 #### VJ Controls
 
@@ -82,14 +92,14 @@ Sequences can be viewed and modified very basically using the `i` or `e` key, bu
 * `Z`: Reverse direction
 * `X`, `down arrow`: Slower
 * `C`, `up arrow`: Faster
-* `>`, `left arrow`: Skip forward / next
-* `<`, `right arrow`: Skip backwards / previous
+* `left arrow`: Step forward / next
+* `right arrow`: Step backwards / previous
+* `>`: Skip forward
+* `<`: Skip backwards
 * `/`: Fast forward
 * `M`: Fast backward
 * `V`: Reset speed
 * `B`: Random jump
-* `Left mouse button`: Forwards / backwards speed
-* `Right mouse button`: Go to frame based on position
 * `Enter / return`: Tap for beat matching
 
 * `+` (plus): Increase opacity (fade in)
@@ -99,10 +109,17 @@ Sequences can be viewed and modified very basically using the `i` or `e` key, bu
 * `A`: Next sequence
 * `1 - 9, 0`: Select sequence
 
-* `D`: Duplicate layer
-* `Numpad 1 - 3`: Set active layer
 
 
 ## Known Issues
 
-* TODO
+* transition duration and opacity don't interact well (no duration if opacity < 1.0)
+* transitions don't start immediately and have weird interactions with skipping/stepping forward/backwards
+
+
+## TODO
+
+* [ ] add strech, frameskip, movement to animation information
+  * [ ] auto-detect stretch (if all images are the same size then no stretch)
+* [ ] user adjustable input mappings
+  * [ ] user adjustable midi mappings
