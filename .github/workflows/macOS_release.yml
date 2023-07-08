@@ -43,8 +43,7 @@ jobs:
         run: |
           export GODOT_FULL_VERSION="${GODOT_VERSION}-${GODOT_RELEASE}"
           echo "$GODOT_FULL_VERSION"
-          export XDG_DATA_HOME="$(pwd)/xdg_data_home"
-          export TEMPLATES_DIR="${XDG_DATA_HOME}/Godot/export_templates/${GODOT_VERSION}.${GODOT_RELEASE}/"
+          export TEMPLATES_DIR="$HOME/Library/Application Support/Godot/export_templates/${GODOT_VERSION}.${GODOT_RELEASE}/"
           
           wget -q https://downloads.tuxfamily.org/godotengine/${GODOT_VERSION}/${GODOT_RELEASE}/Godot_v${GODOT_FULL_VERSION}_macos.universal.zip
           unzip Godot_v${GODOT_FULL_VERSION}_macos.universal.zip
@@ -61,7 +60,7 @@ jobs:
         run: |
           export GODOT_FULL_VERSION="${GODOT_VERSION}-${GODOT_RELEASE}"
           echo "$GODOT_FULL_VERSION"
-          export TEMPLATES_DIR="~/Library/Application Support/Godot/export_templates/${GODOT_VERSION}.${GODOT_RELEASE}/"
+          export TEMPLATES_DIR="$HOME/Library/Application Support/Godot/export_templates/${GODOT_VERSION}.${GODOT_RELEASE}/"
           
           wget -q https://downloads.tuxfamily.org/godotengine/${GODOT_VERSION}/Godot_v${GODOT_FULL_VERSION}_macos.universal.zip
           unzip Godot_v${GODOT_FULL_VERSION}_macos.universal.zip
@@ -78,7 +77,7 @@ jobs:
           FILENAME: ${{ env.package }}
         run: |
           export XDG_DATA_HOME="$(pwd)/xdg_data_home"
-          export TEMPLATES_DIR="~/Library/Application Support/Godot/export_templates/${GODOT_VERSION}.${GODOT_RELEASE}/"
+          export TEMPLATES_DIR="$HOME/Library/Application Support/Godot/export_templates/${GODOT_VERSION}.${GODOT_RELEASE}/"
 
           mkdir -p ${XDG_DATA_HOME}/.godot
           mkdir -p ${BUILD_DIR}
