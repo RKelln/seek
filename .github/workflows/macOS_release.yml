@@ -49,10 +49,10 @@ jobs:
           wget -q https://downloads.tuxfamily.org/godotengine/${GODOT_VERSION}/${GODOT_RELEASE}/Godot_v${GODOT_FULL_VERSION}_macos.universal.zip
           unzip Godot_v${GODOT_FULL_VERSION}_macos.universal.zip
 
-          mkdir -p ${TEMPLATES_DIR}
+          mkdir -p "${TEMPLATES_DIR}"
           wget -q https://github.com/GodotBuilder/godot-builds/releases/download/${GODOT_VERSION}-prerelease-templates/Godot_v${GODOT_FULL_VERSION}_export_templates.tpz
           unzip Godot_v${GODOT_FULL_VERSION}_export_templates.tpz
-          mv -v templates/* ${TEMPLATES_DIR}
+          mv -v templates/* "${TEMPLATES_DIR}"
       - name: Install Godot (stable)
         if: ${{ matrix.preset == 'macOS' && env.godot_release == 'stable'}}
         env:
@@ -61,15 +61,15 @@ jobs:
         run: |
           export GODOT_FULL_VERSION="${GODOT_VERSION}-${GODOT_RELEASE}"
           echo "$GODOT_FULL_VERSION"
-          export TEMPLATES_DIR="~/Library/Application\ Support/Godot/export_templates/${GODOT_VERSION}.${GODOT_RELEASE}/"
+          export TEMPLATES_DIR="~/Library/Application Support/Godot/export_templates/${GODOT_VERSION}.${GODOT_RELEASE}/"
           
           wget -q https://downloads.tuxfamily.org/godotengine/${GODOT_VERSION}/Godot_v${GODOT_FULL_VERSION}_macos.universal.zip
           unzip Godot_v${GODOT_FULL_VERSION}_macos.universal.zip
 
-          mkdir -p ${TEMPLATES_DIR}
+          mkdir -p "${TEMPLATES_DIR}""
           wget -q https://downloads.tuxfamily.org/godotengine/${GODOT_VERSION}/Godot_v${GODOT_FULL_VERSION}_export_templates.tpz
           unzip Godot_v${GODOT_FULL_VERSION}_export_templates.tpz
-          mv -v templates/* ${TEMPLATES_DIR}
+          mv -v templates/* "${TEMPLATES_DIR}"
       - name: Export macOS
         if: ${{ matrix.preset == 'macOS' }}
         env:
@@ -78,7 +78,7 @@ jobs:
           FILENAME: ${{ env.package }}
         run: |
           export XDG_DATA_HOME="$(pwd)/xdg_data_home"
-          export TEMPLATES_DIR="~/Library/Application\ Support/Godot/export_templates/${GODOT_VERSION}.${GODOT_RELEASE}/"
+          export TEMPLATES_DIR="~/Library/Application Support/Godot/export_templates/${GODOT_VERSION}.${GODOT_RELEASE}/"
 
           mkdir -p ${XDG_DATA_HOME}/.godot
           mkdir -p ${BUILD_DIR}
