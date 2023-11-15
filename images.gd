@@ -37,7 +37,7 @@ var transition_percent := 0.9 # scale transition time such that 0.1 = 10% transi
 var _prevTexture : Texture2D
 var _next_transition_delay : SceneTreeTimer
 var transitions = ["fade", "clock"]
-var manual_transition : bool = true:
+var manual_transition : bool = false:
 	get:
 		return manual_transition
 	set(on):
@@ -109,7 +109,6 @@ func _ready():
 	cur_img._index = _index
 	
 	transition = "fade"
-	manual_transition = true
 	
 	pause()  # start paused
 	
@@ -145,6 +144,7 @@ func _process(delta : float) -> void:
 					if (prev_manual_transition < 1.0 and cur_manual_transition == 1.0) or \
 					   (cur_manual_transition < prev_manual_transition and prev_manual_transition > 0.8):
 						cur_img.next_frame()
+						beat_match()
 						cur_manual_transition = 1.0
 						prev_manual_transition = 1.0
 						manual_transition_direction = -1.0
@@ -152,6 +152,7 @@ func _process(delta : float) -> void:
 					if (prev_manual_transition > 0.0 and cur_manual_transition == 0.0) or \
 						(cur_manual_transition > prev_manual_transition and prev_manual_transition < 0.2):
 						cur_img.next_frame()
+						beat_match()
 						cur_manual_transition = 0.0
 						prev_manual_transition = 0.0
 						manual_transition_direction = 1.0
@@ -394,6 +395,7 @@ func get_transition_tween(duration : float, percent : float) -> Tween:
 func update_transition(value : float) -> void:
 	if prev_img == null: return
 	if transition == "": return
+	prints("update_transition", value)
 	if transition == "fade" or transition == "modulate:a":
 		prev_img.modulate.a = 1.0 - value
 	else: # shader transition
