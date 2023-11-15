@@ -17,7 +17,7 @@ var compress := true
 		if not active and not on: return
 		active = on
 
-const max_speed : float = 100.0
+const max_speed : float = 10.0
 const max_speed_fps : float = 30.0
 var speed : float = 1.0 :
 	get:
@@ -504,29 +504,27 @@ func change_relative_speed(relative_speed : float = 0.0, layer : int = -1) -> vo
 		play(animation, _direction)
 
 
-func set_speed(normalized_speed : float = 0.0, layer : int = -1) -> void:
-	if not valid_target(layer): return
-	
-	# linear below 0.25, smooth step above
+func remap_speed(normalized_speed : float) -> float:
+	# linear below 0.5, smooth step above
 	var s : float
 	if normalized_speed < 0.25:
 		s = remap(normalized_speed, 0.0, 0.25, 0.0, 1.0)
-	elif normalized_speed < 0.75:
-		s = smoothstep(0.25, 0.75, normalized_speed)
+	elif normalized_speed < 0.5:
+		s = remap(normalized_speed, 0.25, 0.5, 1.0, 2.0)
+	elif normalized_speed < 0.8:
+		s = smoothstep(0.5, 0.8, normalized_speed)
 		s = remap(s, 0.0, 1.0, 1.0, max_speed)
 	else:
-		#var s := remap(normalized_speed, 0.5, 1.0, 1.0, max_speed)
-		s = smoothstep(0.75, 1.0, normalized_speed)
+		s = smoothstep(0.8, 1.0, normalized_speed)
 		# map to max fps
 		s = remap(s, 0.0, 1.0, max_speed, max_speed_fps / _anim_fps)
+	return s
 
-	speed = s
-#	if normalized_speed < 0.1:
-#		speed = remap(normalized_speed, 0.0, 0.5, 0.0, 1.0)
-#	elif normalized_speed < 0.9:
-#		speed = remap(normalized_speed, 0.1, 0.9, 1.0, 10.0)
-#	else:
-#		speed = remap(normalized_speed, 0.9, 1.0, 10.0, max_speed)
+
+func set_speed(normalized_speed : float = 0.0, layer : int = -1) -> void:
+	if not valid_target(layer): return
+	
+	speed = remap_speed(normalized_speed)
 	printt(_index, "set_speed", normalized_speed, speed)
 	
 	speed_scale = speed 

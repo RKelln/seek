@@ -188,6 +188,9 @@ func _unhandled_input(event : InputEvent) -> void:
 		if valid_target(event.target):
 			#prints("InputEventTargetedAction", event.as_text())
 			match event.action:
+				"set_speed":
+					# NOTE: animation speed set in AnimatedImage, but we adjus the transitions
+					update_transition_speed(event.strength, event.target)
 				"set_opacity":
 					set_opacity(event.strength, event.target)
 				"set_transition_duration":
@@ -378,7 +381,6 @@ func change_transition(transition_name : StringName) -> void:
 	printt("Change transition to:", transition)
 
 
-
 func get_transition_tween(duration : float, percent : float) -> Tween:
 	var t : Tween = prev_img.create_tween()
 	if transition == "": return t
@@ -398,6 +400,7 @@ func get_transition_tween(duration : float, percent : float) -> Tween:
 
 	return t
 
+
 # value is amount of transition to next image
 func update_transition(value : float) -> void:
 	if prev_img == null: return
@@ -408,6 +411,17 @@ func update_transition(value : float) -> void:
 	else: # shader transition
 		var mat = prev_img.get_material()
 		mat.set_shader_parameter("amount", 1.0 - value)
+
+
+func update_transition_speed(normalized_speed : float = 1.0, layer : int = -1) -> void:
+	if not valid_target(layer): return
+	if cur_img == null: return
+	var s := cur_img.remap_speed(normalized_speed)
+	
+	if transition_out_tween and transition_out_tween.is_valid() and transition_out_tween.is_running():
+		transition_out_tween.set_speed_scale(s)
+	if transition_in_tween and transition_in_tween.is_valid() and transition_in_tween.is_running():
+		transition_in_tween.set_speed_scale(s)
 
 
 func set_image_frames(iframes : ImageFrames) -> void:
