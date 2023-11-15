@@ -41,16 +41,22 @@ var manual_transition : bool = false:
 	get:
 		return manual_transition
 	set(on):
+		if manual_transition == on: return
+		if on:
+			paused_before_manual = cur_img.paused
 		manual_transition = on
 		# stop automatic playback
 		if manual_transition and cur_img:
 			pause()
+			_kill_transition_tweens()
 		elif cur_img:
-			resume()
+			if not paused_before_manual:
+				resume()
 var cur_manual_transition : float = 0.0 # current value of transition
 var prev_manual_transition : float = 0.0 # previous value of transition
 var manual_transition_speed = 1.0 # also modified by transition_percent
 var manual_transition_direction := 1.0;
+var paused_before_manual : bool = false
 
 # alpha
 var opacity_speed := 0.6
@@ -187,10 +193,11 @@ func _unhandled_input(event : InputEvent) -> void:
 				"set_transition_duration":
 					set_transition_duration(event.strength, event.target)
 				"play":
-					if event.pressed:
-						resume()
-					else:
-						pause()
+					if not manual_transition:
+						if event.pressed:
+							resume()
+						else:
+							pause()
 				"beat":
 					if event.pressed:
 						beat_match()
@@ -566,29 +573,20 @@ func restart() -> void:
 	cur_img.frame = 0
  
 
-func set_timing(duration_ms : float) -> void:
-	var dur_s = duration_ms / 1000.0
+func set_timing(duration_ms : float, onset_time_ms : int) -> void:
+	var dur_s : float = duration_ms / 1000.0
+	var progress : float = cur_img.get_frame_duration_passed() * 1000.0 # seconds -> ms
 	cur_img.set_frame_duration(dur_s)
+	
+	if manual_transition: return # only calculate durations, don't affect tweens or visibility
+	
 #	if transition_out_tween and transition_out_tween.is_valid() and transition_out_tween.is_running():
 #		transition_out_tween.stop()
 	if transition_in_tween and transition_in_tween.is_valid() and transition_in_tween.is_running():
 		transition_in_tween.stop()
-	prev_img.visible = false
-	#cur_img.next_frame() # immediately advance to sync to beat
-	
-#	# try to adjust for transition
-#	if dur_s > transition_cutoff:
-#		if _next_transition_delay and _next_transition_delay.time_left > 0:
-#			#printt(_index, "delay transition", dur_s / 2.0)
-#			_next_transition_delay.time_left = dur_s / 2.0
-#		else:
-#			_next_transition_delay = get_tree().create_timer(dur_s / 2.0)
-#			#printt(_index, "start delay", dur_s / 2.0)
-#			await _next_transition_delay.timeout
-#			#printt(_index, "offset transition")
-#			cur_img.next_frame()
-#	else:
-#		cur_img.next_frame() # immediately advance to sync to beat
+	#prev_img.visible = false
+	if progress >= dur_s:
+		cur_img.next_frame() # immediately advance to sync to beat
 
 
 func beat_match(layer : int = -1) -> void:
@@ -601,8 +599,8 @@ func beat_match(layer : int = -1) -> void:
 		last_beat_ms = Time.get_ticks_msec()
 		return
 	
-	var now = Time.get_ticks_msec()
-	var diff = now - last_beat_ms
+	var now : int = Time.get_ticks_msec()
+	var diff : int = now - last_beat_ms
 	
 	if diff < 100:
 		return # disregard, something probably went wrong
@@ -643,4 +641,4 @@ func beat_match(layer : int = -1) -> void:
 		beat_average = sum / (timings.size() - 1)
 		#printt("beats no worst", beat_average)
 		
-		set_timing(beat_average)
+		set_timing(beat_average, now)

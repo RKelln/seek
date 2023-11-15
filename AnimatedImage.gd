@@ -394,6 +394,9 @@ func get_frame_duration() -> float:
 	#assert(_anim_fps > 0)
 	#return (1.0 / _anim_fps) / speed_scale
 
+# seconds that the frame as been visible for
+func get_frame_duration_passed() -> float:
+	return get_frame_duration() * frame_progress
 
 func get_current_frame() -> Texture2D:
 	#return sprite_frames.get_frame_texture(animation, current_frame[animation])
