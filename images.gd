@@ -37,6 +37,20 @@ var transition_percent := 0.9 # scale transition time such that 0.1 = 10% transi
 var _prevTexture : Texture2D
 var _next_transition_delay : SceneTreeTimer
 var transitions = ["fade", "clock"]
+var manual_transition : bool = true:
+	get:
+		return manual_transition
+	set(on):
+		manual_transition = on
+		# stop automatic playback
+		if manual_transition and cur_img:
+			pause()
+		elif cur_img:
+			resume()
+var cur_manual_transition : float = 0.0 # current value of transition
+var prev_manual_transition : float = 0.0 # previous value of transition
+var manual_transition_speed = 1.0 # also modified by transition_percent
+var manual_transition_direction := 1.0;
 
 # alpha
 var opacity_speed := 0.6
@@ -95,6 +109,7 @@ func _ready():
 	cur_img._index = _index
 	
 	transition = "fade"
+	manual_transition = true
 	
 	pause()  # start paused
 	
@@ -115,6 +130,39 @@ func _process(delta : float) -> void:
 		if Input.is_action_pressed("decrease_opacity") and modulate.a > 0:
 			change_opacity(-delta * opacity_speed)
 
+		if manual_transition:
+			# FIXME:
+			if Input.is_action_pressed("manual_transition_increase"):
+				cur_manual_transition += manual_transition_direction * manual_transition_speed * delta * cur_img.speed
+			elif Input.is_action_pressed("manual_transition_decrease"):
+				cur_manual_transition -= manual_transition_direction * manual_transition_speed * delta * cur_img.speed
+
+			cur_manual_transition = clampf(cur_manual_transition, 0.0, 1.0)
+			
+			if prev_manual_transition != cur_manual_transition:
+				# switch images when we get to the end points or close to end and reverse
+				if manual_transition_direction > 0:
+					if (prev_manual_transition < 1.0 and cur_manual_transition == 1.0) or \
+					   (cur_manual_transition < prev_manual_transition and prev_manual_transition > 0.8):
+						cur_img.next_frame()
+						cur_manual_transition = 1.0
+						prev_manual_transition = 1.0
+						manual_transition_direction = -1.0
+				elif manual_transition_direction < 0:
+					if (prev_manual_transition > 0.0 and cur_manual_transition == 0.0) or \
+						(cur_manual_transition > prev_manual_transition and prev_manual_transition < 0.2):
+						cur_img.next_frame()
+						cur_manual_transition = 0.0
+						prev_manual_transition = 0.0
+						manual_transition_direction = 1.0
+				
+				if manual_transition_direction > 0:
+					update_transition(cur_manual_transition)
+				else:
+					update_transition(1.0 - cur_manual_transition)
+				prev_manual_transition = cur_manual_transition
+				#prints("man tran:", cur_manual_transition)
+				
 		# camera movement
 		$CanvasGroup/Camera2D.zoom.x = $CanvasGroup/Camera2D/Zoom.process(delta)
 		$CanvasGroup/Camera2D.zoom.y = $CanvasGroup/Camera2D.zoom.x
@@ -145,6 +193,11 @@ func _unhandled_input(event : InputEvent) -> void:
 				"beat":
 					if event.pressed:
 						beat_match()
+				"manual_transition":
+					manual_transition = event.pressed
+					prints("manual transition:", manual_transition)
+				"set_manual_transition":
+					cur_manual_transition = event.strength
 		return
 	
 	if event is InputEventMouseButton:
@@ -337,6 +390,16 @@ func get_transition_tween(duration : float, percent : float) -> Tween:
 
 	return t
 
+# value is amount of transition to next image
+func update_transition(value : float) -> void:
+	if prev_img == null: return
+	if transition == "": return
+	if transition == "fade" or transition == "modulate:a":
+		prev_img.modulate.a = 1.0 - value
+	else: # shader transition
+		var mat = prev_img.get_material()
+		mat.set_shader_parameter("amount", 1.0 - value)
+
 
 func set_image_frames(iframes : ImageFrames) -> void:
 	$CanvasGroup/AnimatedSprite2D.sprite_frames = iframes
@@ -344,23 +407,6 @@ func set_image_frames(iframes : ImageFrames) -> void:
 
 func _on_real_frame_changed( frame : int) -> void:
 	#printt("_on_real_frame_changed", frame, get_current_frame_index(), cur_img, prev_img)
-	
-	# update GUI
-#	if gui:
-#		_frameNode.text = str(cur_img.frame)
-#		if cur_img.animation == cur_img.custom_animation:
-#			_actualFrameNode.text = str(cur_img.current_sequence[cur_img.frame])
-#		else:
-#			_actualFrameNode.text = str(cur_img.frame)
-#		_runningTotalFramesNode.text = str( _runningTotalFramesNode.text.to_int() + 1)
-#		_totalFramesNode.text = str(cur_img.frame_counts[cur_img.animation])
-	
-	# update crossfade
-	# https://stackoverflow.com/questions/68765045/tween-the-texture-on-a-texturebutton-texturerect-fade-out-image1-while-simult
-	#$CrossfadeImage.material.set_shader_param("startTime", Time.get_ticks_msec() / 1000.0)
-	#$CrossfadeImage.material.set_shader_param("duration", speed_scale / fps)
-	#$CrossfadeImage.material.set_shader_param("prevTex", $CrossfadeImage.material.get_shader_param("curTex"))
-	#$CrossfadeImage.material.set_shader_param("curTex", frames.get_frame(animation, frame))
 
 	# FIXME: bug with modulate and tweens causing flashing!?
 	if transition != "": #and modulate.a == 1.0:
@@ -372,39 +418,46 @@ func _on_real_frame_changed( frame : int) -> void:
 		else: # get the first frame texture, should otherwise always be set
 			prev_img.texture = cur_img.get_texture(get_sequence_name(), frame)
 		_prevTexture = cur_img.get_current_frame()
-		if prev_img.texture != null:
-			var duration = cur_img.get_frame_duration()
-			#printt("frame change", cur_img.frame, duration)
-			
-			if duration > transition_cutoff:
-				prev_img.visible = true
-				# copy scale and offset
-				# (luckily this works because this signal seems to be processed before the AnimatedSprite is updated, phew)
-				if cur_img.stretch:
-					prev_img.scale = cur_img.scale
-					prev_img.offset = cur_img.offset
-				if transition_out_tween:
-					transition_out_tween.kill()
-				
-				transition_out_tween = get_transition_tween(duration, transition_percent)
+		
+		if not manual_transition:
+			handle_automatic_transition()
 
-				#printt("new transition", self, transition_out_tween, duration, from)
-				# if different size then fade in the new image
-				if prev_img.get_rect().size != cur_img.get_rect().size:
-					#printt("not same size", prev_img.get_rect(), cur_img.get_rect())
-					if transition_in_tween:
-						transition_in_tween.kill()
-					transition_in_tween = cur_img.create_tween()
-					var t = transition_in_tween.tween_property(cur_img, "modulate:a", 1.0, duration * transition_percent).from(0.0)
-					var delay = (1.0 - transition_percent) * duration
-					if delay > 0:
-						cur_img.modulate.a = 0
-						t.set_delay(delay)
-				elif cur_img.modulate.a != 1:
-					cur_img.modulate.a = 1.0
-			else:
-				prev_img.visible = false
 
+func handle_automatic_transition() -> void:
+	if cur_img == null or prev_img.texture == null:
+		return
+		
+	var duration = cur_img.get_frame_duration()
+	#printt("frame change", cur_img.frame, duration)
+	
+	if duration > transition_cutoff:
+		prev_img.visible = true
+		# copy scale and offset
+		# (luckily this works because this signal seems to be processed before the AnimatedSprite is updated, phew)
+		if cur_img.stretch:
+			prev_img.scale = cur_img.scale
+			prev_img.offset = cur_img.offset
+		if transition_out_tween:
+			transition_out_tween.kill()
+		
+		transition_out_tween = get_transition_tween(duration, transition_percent)
+
+		#printt("new transition", self, transition_out_tween, duration, from)
+		# if different size then fade in the new image
+		if prev_img.get_rect().size != cur_img.get_rect().size:
+			#printt("not same size", prev_img.get_rect(), cur_img.get_rect())
+			if transition_in_tween:
+				transition_in_tween.kill()
+			transition_in_tween = cur_img.create_tween()
+			var t = transition_in_tween.tween_property(cur_img, "modulate:a", 1.0, duration * transition_percent).from(0.0)
+			var delay = (1.0 - transition_percent) * duration
+			if delay > 0:
+				cur_img.modulate.a = 0
+				t.set_delay(delay)
+		elif cur_img.modulate.a != 1:
+			cur_img.modulate.a = 1.0
+	else:
+		prev_img.visible = false
 
 #func load_sequence(file_path : String):
 #	var sequence = Loader.load_sequence_file(file_path)

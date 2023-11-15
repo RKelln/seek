@@ -9,7 +9,7 @@ var midi_max_value := 127.0
 const knob_top_1 := { 'channel': 0, 'message': 11, 'controller': 48 }
 const knob_top_2 := { 'channel': 0, 'message': 11, 'controller': 49 }
 const knob_top_3 := { 'channel': 0, 'message': 11, 'controller': 50 }
-#const knob_top_4 := { 'channel': 0, 'message': 11, 'controller': 51 }
+const knob_top_4 := { 'channel': 0, 'message': 11, 'controller': 51 }
 #const knob_top_5 := { 'channel': 0, 'message': 11, 'controller': 52 }
 #const knob_top_6 := { 'channel': 0, 'message': 11, 'controller': 53 }
 #const knob_top_7 := { 'channel': 0, 'message': 11, 'controller': 54 }
@@ -34,27 +34,27 @@ const fader_3 := { 'channel': 2, 'message': 11, 'controller': 7 }
 #const fader_6 := { 'channel': 5, 'message': 11, 'controller': 7 }
 #const fader_7 := { 'channel': 6, 'message': 11, 'controller': 7 }
 #const fader_8 := { 'channel': 7, 'message': 11, 'controller': 7 }
-#const fader_master := { 'channel': 0, 'message': 11, 'controller': 14 }
+const fader_master := { 'channel': 0, 'message': 11, 'controller': 14 }
 
 # clip stop buttons
 # APC40.ch{0..7}.note52
 
 # numbred toggle buttons above faders
 # APC40.ch{0..7}.note50
-const toggle_button_pitch := 50
+const toggle_button_pitch := 58
 const message_note_on := 9
 const message_note_off := 8
 
 # HACK: FIXME:
 const migrations_tags := {
-	34: 1,       # latin
-	32: 1 << 1,  # african
-	35: 1 << 2,  # indian
-	38: 1 << 3,  # hip hop
-	37: 1 << 4,  # polka
-	36: 1 << 5,  # lebanese
-	33: 1 << 6,  # techno
-	39: 0        # disable
+	24: 1 << 1,  # african
+	25: 1 << 6,  # techno
+	26: 1,       # latin
+	27: 1 << 2,  # indian
+	28: 1 << 5,  # lebanese
+	29: 1 << 4,  # polka
+	30: 1 << 3,  # hip hop
+	31: 0        # disable
 }
 
 
@@ -85,50 +85,80 @@ func _handle_input(event : InputEvent) -> void:
 		
 		match m:
 			knob_top_1:
-				ev.action = "set_speed"
-				ev.target = 0
+				ev.action = &"set_speed"
+				ev.target = 2
 			knob_top_2:
-				ev.action = "set_speed"
-				ev.target = 1
+				ev.action = &"set_transition_duration"
+				ev.target = 2
 			knob_top_3:
-				ev.action = "set_speed"
+				ev.action = &"set_opacity"
+				ev.target = 2
+			knob_top_4:
+				ev.action = &"set_manual_transition"
 				ev.target = 2
 			knob_right_1:
-				ev.action = "set_transition_duration"
+				ev.action = &"set_speed"
 				ev.target = 0
 			knob_right_2:
-				ev.action = "set_transition_duration"
-				ev.target = 1
+				ev.action = &"set_transition_duration"
+				ev.target = 0
 			knob_right_3:
-				ev.action = "set_transition_duration"
-				ev.target = 2
+				ev.action = &"set_opacity"
+				ev.target = 0
+			knob_right_4:
+				ev.action = &"set_manual_transition"
+				ev.target = 0
+			knob_right_5:
+				ev.action = &"set_speed"
+				ev.target = 1
+			knob_right_6:
+				ev.action = &"set_transition_duration"
+				ev.target = 1
+			knob_right_7:
+				ev.action = &"set_opacity"
+				ev.target = 1
+			knob_right_8:
+				ev.action = &"set_manual_transition"
+				ev.target = 1
 			fader_1:
-				ev.action = "set_opacity"
+				ev.action = &"set_opacity"
 				ev.target = 0
 			fader_2:
-				ev.action = "set_opacity"
+				ev.action = &"set_opacity"
 				ev.target = 1
 			fader_3:
-				ev.action = "set_opacity"
+				ev.action = &"set_opacity"
 				ev.target = 2
+			fader_master:
+				ev.action = &"set_manual_transition"
+				ev.target = 0
 
 	# note events
 	if event.message == message_note_on or event.message == message_note_off:
 
 		if event.pitch > 0 and event.pitch <= 40: 
 			# TEST: send tag and map pitch to tag
-			ev.action = "set_flag"
+			ev.action = &"set_flag"
 			ev.target = _pitch_to_tag_flag(int(event.pitch), migrations_tags)
-		elif event.pitch >= 50 and event.pitch <= 58:
-			ev.action = "play"
+		elif event.pitch >= toggle_button_pitch and event.pitch <= toggle_button_pitch + 2:
+			ev.action = &"play"
 			ev.target = int(event.pitch) - toggle_button_pitch
-			# on /off determined by velocity
-			ev.pressed = _velocity_to_note_on(event)
-		elif event.pitch == 99:
-			ev.action = "beat"
-			ev.pressed = _velocity_to_note_on(event)
+			ev.pressed = _message_to_note_on(event)
+			prints(ev, ev.action, ev.target, ev.pressed)
+		elif event.pitch == 61:
+			ev.action = &"manual_transition"
+			ev.target = 0
+			ev.pressed = _message_to_note_on(event)
+			prints(ev, ev.action, ev.target, ev.pressed)
+		elif event.pitch == 62:
+			ev.action = &"beat"
+			ev.pressed = _message_to_note_on(event)
 
-	Input.parse_input_event(ev)
+	if ev.action == "":
+		prints("Received unhandled midi: ")
+		_print_midi_info(event)
+	else:
+		Input.parse_input_event(ev)
 
 
 func _pitch_to_tag_flag(pitch: int, mapping : Dictionary ) -> int:
@@ -147,7 +177,7 @@ func _velocity_to_note_on(event) -> bool:
 
 
 func _message_to_note_on(event) -> bool:
-	return event.pitch == message_note_on
+	return event.message == message_note_on
 
 
 func _print_midi_info(midi_event: InputEventMIDI):
