@@ -575,18 +575,24 @@ func restart() -> void:
 
 func set_timing(duration_ms : float, onset_time_ms : int) -> void:
 	var dur_s : float = duration_ms / 1000.0
-	var progress : float = cur_img.get_frame_duration_passed() * 1000.0 # seconds -> ms
+	var orig_dur = cur_img.get_frame_duration()
 	cur_img.set_frame_duration(dur_s)
 	
 	if manual_transition: return # only calculate durations, don't affect tweens or visibility
+
+	var progress : float = cur_img.get_frame_duration_passed() # seconds
 	
-#	if transition_out_tween and transition_out_tween.is_valid() and transition_out_tween.is_running():
-#		transition_out_tween.stop()
 	if transition_in_tween and transition_in_tween.is_valid() and transition_in_tween.is_running():
 		transition_in_tween.stop()
 	#prev_img.visible = false
 	if progress >= dur_s:
 		cur_img.next_frame() # immediately advance to sync to beat
+	else:
+		if transition_out_tween and transition_out_tween.is_valid() and transition_out_tween.is_running():
+			if transition_out_tween.get_total_elapsed_time() > dur_s:
+				transition_out_tween.stop()
+			else:
+				transition_out_tween.set_speed_scale(dur_s / orig_dur)
 
 
 func beat_match(layer : int = -1) -> void:
