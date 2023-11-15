@@ -29,7 +29,7 @@ var speed : float = 1.0 :
 const percent_frames_for_skip = 0.02
 const max_frame_skip = 10
 var frame_skip = 10
-var stretch := true
+var stretch := false
 var mouse_controls := false
 
 var paused : bool = false
