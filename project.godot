@@ -12,7 +12,7 @@ config_version=5
 
 config/name="Seek"
 run/main_scene="res://loading.tscn"
-config/features=PackedStringArray("4.1")
+config/features=PackedStringArray("4.2")
 boot_splash/image="res://seek_icon_v2.png"
 config/icon="res://icon.png"
 boot_splash/minimum_display_time=500
@@ -29,14 +29,13 @@ formats/zstd/long_distance_matching=true
 
 window/size/viewport_width=1920
 window/size/viewport_height=1080
-window/vsync/vsync_mode=0
 window/size/width=1920
 window/size/height=1080
 
 [editor]
 
-movie_writer/mjpeg_quality=0.8
-movie_writer/movie_file="/home/ryankelln/Documents/Projects/Art/PIF_2023/songs/migration/migration_3_test.avi"
+movie_writer/mjpeg_quality=0.95
+movie_writer/movie_file="/home/ryankelln/Documents/Projects/Art/PIF_2023/songs/migration/seek_exports/techno_1.avi"
 movie_writer/fps=30
 
 [input]
@@ -252,6 +251,20 @@ step_backward={
 , Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194319,"key_label":0,"unicode":0,"echo":false,"script":null)
 ]
 }
+manual_transition_increase={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":39,"key_label":0,"unicode":39,"echo":false,"script":null)
+]
+}
+manual_transition_decrease={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":59,"key_label":0,"unicode":59,"echo":false,"script":null)
+]
+}
+set_manual_transition={
+"deadzone": 0.5,
+"events": []
+}
 
 [physics]
 
@@ -259,7 +272,6 @@ common/enable_pause_aware_picking=true
 
 [rendering]
 
-renderer/rendering_method="gl_compatibility"
 textures/vram_compression/import_etc2_astc=true
 environment/defaults/default_clear_color=Color(0, 0, 0, 1)
 threads/thread_model=2
