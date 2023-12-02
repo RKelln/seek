@@ -3,10 +3,10 @@ name: MacOS_Release
 # Based on: https://github.com/robpc/maze-test-game/blob/osx-test/.github/workflows/release-macos.yml
 
 env:
-  godot_version: "4.1"
+  godot_version: "4.2"
   godot_release: stable
   filename: seek
-  version: "0.4.1"
+  version: "0.4.3"
 
 on:
   push:
