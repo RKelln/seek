@@ -18,6 +18,11 @@ Godot-based image sequencer for artists. Designed for large image datasets and r
   * basic custom transition support
   * simple Ken Burns camera effects
 
+* ### 2023-Nov: Third prototype (v0.4.3):
+  * requires Godot 4.2
+  * manual control over transition
+  * small tweaks and fixes for November concerts
+
 
 ## What? Who is this for?
 
@@ -50,7 +55,7 @@ A simple example would be to display each image from darkest to lightest. A more
 
 ### For developers or custom changes
 
-1. Download Godot 4.1: https://godotengine.org/download/
+1. Download Godot 4.2: https://godotengine.org/download/
 2. Clone this repo
 3. Import project file in Godot
 
@@ -110,15 +115,64 @@ Sequences can be viewed and modified very basically using the `i` or `e` key, bu
 * `1 - 9, 0`: Select sequence
 
 
+## Under development features
+
+These are barely working features, but have been used in performance. Use at your own risk.
+
+### Image tags and neighbours
+
+Each image can have multiple tags and a list of neighbours. This allows for selecting which tags are currently active. When combined with image nieghbours information you can continue to traverse the images by nearest neighbour even with an active subset of the total images. The default algorithm tries to avoid repetition of images while still choosing nearby neighbours.
+
+Image tag file format is simple:
+```
+tagA,tagB,tagC
+tagD
+```
+Where image #1 in the image pack (the first image) would be tagged with tagA, tagB, and tagC while the second image would have tagD.
+
+Image neighbours file format:
+```
+[1,2,3]
+[2,5,6]
+etc...
+```
+Where each line is an array of other image indexes. The array should be sorted by closest to further in similarity and I have found that approximately 10-20% of the size of the entire image pack seems to work, but hasn't been thoroughly tested.
+
+Note that neighbours info can be used without tags (i.e. no sequence file loaded, just nieghbours), but tags require neighbours to work (because there is no single sequence for any subset).
+
+Tags can be activated by using shift-<letter> where <letter> is the first letter of the tag. When more than one tag share starting letters subsequent letters will be use, avoiding vowels.
+
+
+### Midi control
+
+There is very hacky and basic support for midi control, but requires hacking on the code to set up for your controller. See `midi_controller.gd`. 
+
+
+### Auto Ken Burns effect
+
+Images will slowly pan and zoom to give a bit more movement. This can be controlled but currently is done automatically.
+
+
+### Custom transitions
+
+The transition between images can be any shader but defaults to alpha blend. See `clock` and `shaders/clock.gdshader` for an exmaple of how to add your own. 
+
+
+### Manual transition timing
+
+You can control the transition manually now, but is currently only hooked up to the midi controls (you'll want some sort of input that smoothly ranges from 0 to 1). "Rocking" the input back and forth will control the forward progression and transitions.
+
 
 ## Known Issues
 
-* transition duration and opacity don't interact well (no duration if opacity < 1.0)
 * transitions don't start immediately and have weird interactions with skipping/stepping forward/backwards
 
 
 ## TODO
 
+* [ ] improved usability and UI
+* [ ] bring back and improve sequence editing in app
+* [ ] save all info into an image pack or create a "scene" save file with all settings
 * [ ] add strech, frameskip, movement to animation information
   * [ ] auto-detect stretch (if all images are the same size then no stretch)
 * [ ] user adjustable input mappings
