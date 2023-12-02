@@ -45,7 +45,7 @@ const toggle_button_pitch := 58
 const message_note_on := 9
 const message_note_off := 8
 
-# HACK: FIXME:
+# HACK: hardcoded for top row of buttons
 const migrations_tags := {
 	24: 1 << 1,  # african
 	25: 1 << 6,  # techno
